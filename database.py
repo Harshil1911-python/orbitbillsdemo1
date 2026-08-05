@@ -66,6 +66,10 @@ _LOCK = threading.Lock()
 # "admin" is intentionally not selectable from the public sign-up form (see
 # signin.html) -- there is exactly one admin account, seeded below. It can
 # still be assigned from inside the admin panel itself if truly needed.
+# NOTE: "billing" and "accountant" also get one fixed seeded account each
+# (see DEFAULT_USERS below), same idea as the admin one -- a guaranteed way
+# in for each of those roles. Unlike admin, more billing/accountant accounts
+# can still be created freely through the public sign-up form.
 VALID_ROLES = {"admin", "billing", "accountant", "client"}
 PUBLIC_SIGNUP_ROLES = {"billing", "accountant", "client"}
 
@@ -77,11 +81,19 @@ ROLE_REDIRECTS = {
     "client": "/client-portal.html",
 }
 
-# Fixed default admin account, handed to the client so they always have a
-# way into the admin panel, even before they've created any other accounts.
+# Fixed default accounts, handed to the client so they always have a way in
+# for each of these three roles, even before they've created any other
+# accounts. "client" has no fixed default -- clients are expected to be
+# created ad hoc (by the admin, or via public sign-up).
 DEFAULT_ADMIN_EMAIL = "admin@techserenia.com"
 DEFAULT_ADMIN_PASSWORD = "TechSerenia@2026"
 DEFAULT_ADMIN_NAME = "Admin"
+
+DEFAULT_USERS = [
+    {"name": "Admin", "email": "admin@techserenia.com", "password": "TechSerenia@2026", "role": "admin"},
+    {"name": "Billing", "email": "billing@techserenia.com", "password": "TechSerenia@2026", "role": "billing"},
+    {"name": "Accountant", "email": "accountant@techserenia.com", "password": "TechSerenia@2026", "role": "accountant"},
+]
 
 
 def _hash_password(password: str, salt: bytes = None):
@@ -115,23 +127,31 @@ def _write_all(data):
 
 
 def init_db():
-    """Create the JSON store if it doesn't exist yet, and seed the one
-    fixed admin account so the client always has a way in."""
+    """Create the JSON store if it doesn't exist yet, and seed the fixed
+    default accounts (admin, billing, accountant) so the client always has
+    a way in for each of those roles. Each default is only added if an
+    account with that exact email doesn't already exist, so this is safe
+    to call on every startup."""
     with _LOCK:
         data = _read_all()
-        has_admin = any(u["role"] == "admin" for u in data["users"])
-        if not has_admin:
-            pw_hash, salt = _hash_password(DEFAULT_ADMIN_PASSWORD)
+        existing_emails = {u["email"] for u in data["users"]}
+        changed = False
+        for default in DEFAULT_USERS:
+            if default["email"] in existing_emails:
+                continue
+            pw_hash, salt = _hash_password(default["password"])
             data["users"].append({
                 "id": data["next_id"],
-                "name": DEFAULT_ADMIN_NAME,
-                "email": DEFAULT_ADMIN_EMAIL,
+                "name": default["name"],
+                "email": default["email"],
                 "password_hash": pw_hash,
                 "salt": salt,
-                "role": "admin",
+                "role": default["role"],
                 "created_at": "seed",
             })
             data["next_id"] += 1
+            changed = True
+        if changed:
             _write_all(data)
 
 
@@ -155,6 +175,8 @@ def create_user(name: str, email: str, password: str, role: str, allow_admin: bo
         return None, "That role isn't recognized."
     if role == "admin" and not allow_admin:
         return None, "There's already an admin account for this project."
+    if email in {u["email"] for u in DEFAULT_USERS}:
+        return None, "That email is reserved for a default account."
     if len(password) < 6:
         return None, "Password must be at least 6 characters."
 

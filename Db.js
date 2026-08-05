@@ -18,7 +18,7 @@
   ---------------------------------------------------------------------------
   Sign in / sign up now checks IndexedDB locally first (fast, works offline,
   and is seeded with a fixed default admin so this project always has a way
-  in on a fresh browser -- see TS_DEFAULT_ADMIN below). The real, cross-
+  in on a fresh browser -- see TS_DEFAULT_USERS below). The real, cross-
   device account list still lives on the server (see database.py), since
   IndexedDB is per-browser storage: an account created in one browser will
   not exist in another browser or on another device until it's used there
@@ -32,15 +32,15 @@
 const TS_DB_NAME = "techserenia_pos";
 const TS_DB_VERSION = 2;
 
-// Fixed default admin, seeded into IndexedDB on first load so the client
-// always has a way into the admin panel even before any other account
-// exists. Keep this in sync with DEFAULT_ADMIN_* in database.py.
-const TS_DEFAULT_ADMIN = {
-  name: "Admin",
-  email: "admin@techserenia.com",
-  password: "TechSerenia@2026",
-  role: "admin",
-};
+// Fixed default accounts, seeded into IndexedDB on first load so the
+// client always has a way in for each of these roles, even before any
+// other account exists. Keep this in sync with DEFAULT_USERS in
+// database.py.
+const TS_DEFAULT_USERS = [
+  { name: "Admin", email: "admin@techserenia.com", password: "TechSerenia@2026", role: "admin" },
+  { name: "Billing", email: "billing@techserenia.com", password: "TechSerenia@2026", role: "billing" },
+  { name: "Accountant", email: "accountant@techserenia.com", password: "TechSerenia@2026", role: "accountant" },
+];
 
 // Where each role lands after signing in. Keep in sync with
 // ROLE_REDIRECTS in database.py.
@@ -168,18 +168,20 @@ async function tsVerifyUserLocally(email, password) {
   return safe;
 }
 
-// Seeds the fixed default admin account into IndexedDB if it isn't there
-// yet. Safe to call on every page load.
+// Seeds the fixed default accounts (admin, billing, accountant) into
+// IndexedDB if they aren't there yet. Safe to call on every page load.
 async function tsSeedDefaultAdmin() {
-  const existing = await tsGetUserByEmail(TS_DEFAULT_ADMIN.email);
-  if (existing) return;
-  await tsPutUser({
-    name: TS_DEFAULT_ADMIN.name,
-    email: TS_DEFAULT_ADMIN.email,
-    role: TS_DEFAULT_ADMIN.role,
-    password: TS_DEFAULT_ADMIN.password,
-    createdAt: "seed",
-  });
+  for (const user of TS_DEFAULT_USERS) {
+    const existing = await tsGetUserByEmail(user.email);
+    if (existing) continue;
+    await tsPutUser({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      password: user.password,
+      createdAt: "seed",
+    });
+  }
 }
 
 async function tsGetAll(storeName) {
