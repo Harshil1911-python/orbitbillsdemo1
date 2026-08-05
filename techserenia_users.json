@@ -1,0 +1,32 @@
+{
+  "next_id": 4,
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@techserenia.com",
+      "password_hash": "794e12c93fcf5da6ce733a0d6d350fdb48d81a96cac0ae0b54bd57581f632c21",
+      "salt": "2148ec1887797d2339feeb74e9e4f2ce",
+      "role": "admin",
+      "created_at": "seed"
+    },
+    {
+      "id": 2,
+      "name": "accountant",
+      "email": "accountant@techserenia.com",
+      "password_hash": "0338ed3aa18f9929fda0799188654ba2e763babceb673effe1a15e9b351a71fc",
+      "salt": "dcb650518526aa8bab09441886d39a87",
+      "role": "accountant",
+      "created_at": "now"
+    },
+    {
+      "id": 3,
+      "name": "Billing",
+      "email": "billing@techserenia.com",
+      "password_hash": "b95432549f59525c02256d7dffec6043ff45c8ebeaef94544b02868351451378",
+      "salt": "756a7e3017924af0c69e23647d02b414",
+      "role": "billing",
+      "created_at": "now"
+    }
+  ]
+}

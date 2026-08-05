@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in TechSerenia</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#ffffff;
+    --ink:#101a2b;
+    --slate:#5b6b82;
+    --blue-deep:#0b3d91;
+    --blue:#2f6feb;
+    --blue-tint:#eaf1fc;
+    --blue-tint-2:#f5f8fe;
+    --border:#dfe7f5;
+    --radius:14px;
+    --error:#c0392b;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  body{
+    font-family:'Inter', sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg, var(--blue-tint-2) 0%, var(--white) 60%);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+  }
+
+  h1,h2,h3,.brand{font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:20px;
+    color:var(--ink);
+    margin-bottom:28px;
+  }
+
+  .brand-mark{height:34px;display:flex;align-items:center;flex-shrink:0;}
+  .brand-mark img{height:100%;width:auto;display:block;}
+
+  .auth-card{
+    width:100%;
+    max-width:420px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:36px;
+    box-shadow:0 20px 45px -20px rgba(11,61,145,0.2);
+  }
+
+  .auth-tabs{
+    display:flex;
+    background:var(--blue-tint-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:28px;
+  }
+
+  .auth-tab{
+    flex:1;
+    text-align:center;
+    padding:10px 0;
+    font-size:14px;
+    font-weight:600;
+    color:var(--slate);
+    border-radius:8px;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:'Inter', sans-serif;
+  }
+
+  .auth-tab.active{
+    background:var(--blue-deep);
+    color:#fff;
+  }
+
+  .auth-card h2{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  .auth-card p.sub{
+    font-size:14px;
+    color:var(--slate);
+    margin-bottom:24px;
+  }
+
+  .form-field{margin-bottom:18px;}
+
+  .form-field label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+
+  .form-field input,
+  .form-field select{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    background:var(--white);
+  }
+
+  .form-field input:focus,
+  .form-field select:focus{
+    outline:2px solid var(--blue);
+    outline-offset:1px;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:12px 22px;
+    border-radius:10px;
+    border:1px solid transparent;
+    cursor:pointer;
+    background:var(--blue-deep);
+    color:#fff;
+    margin-top:6px;
+  }
+
+  .btn:hover{background:#092f70;}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+  .form-msg{
+    font-size:13px;
+    margin-top:14px;
+    text-align:center;
+  }
+
+  .form-msg.error{color:var(--error);}
+  .form-msg.success{color:#158a53;}
+
+  .back-link{
+    margin-top:22px;
+    font-size:14px;
+    color:var(--slate);
+    text-align:center;
+  }
+
+  .back-link a{color:var(--blue-deep);font-weight:600;}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+  <a href="index.html" class="brand">
+    <span class="brand-mark"><img src="logo.png" alt="Techserenia"></span>
+  </a>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="tabLogin">Sign in</button>
+      <button type="button" class="auth-tab" id="tabSignup">Create account</button>
+    </div>
+
+    <!-- Sign in form: for staff who already have an account -->
+    <div id="loginPanel">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in with your company account. You'll be sent to the dashboard for your role.</p>
+      <form id="loginForm">
+        <div class="form-field">
+          <label for="loginEmail">Work email</label>
+          <input type="email" id="loginEmail" name="email" placeholder="you@techserenia.com" required>
+        </div>
+        <div class="form-field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn" id="loginSubmit">Sign in</button>
+      </form>
+      <div class="form-msg" id="loginMsg"></div>
+    </div>
+
+    <!-- Sign up form: for new staff accounts, role picked here -->
+    <div id="signupPanel" class="hidden">
+      <h2>Create your account</h2>
+      <p class="sub">Set up access for your team. Pick the role that matches your job so you land on the right dashboard.</p>
+      <form id="signupForm">
+        <div class="form-field">
+          <label for="signupName">Full name</label>
+          <input type="text" id="signupName" name="name" placeholder="Your name" required>
+        </div>
+        <div class="form-field">
+          <label for="signupEmail">Work email</label>
+          <input type="email" id="signupEmail" name="email" placeholder="you@techserenia.com" required>
+        </div>
+        <div class="form-field">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" name="password" placeholder="Create a password" required>
+        </div>
+        <div class="form-field">
+          <label for="signupRole">Role</label>
+          <select id="signupRole" name="role" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="billing">Billing team</option>
+            <option value="accountant">Accountant</option>
+            <option value="client">Client</option>
+          </select>
+        </div>
+        <button type="submit" class="btn" id="signupSubmit">Create account</button>
+      </form>
+      <div class="form-msg" id="signupMsg"></div>
+    </div>
+
+    <div class="back-link"><a href="index.html">Back to home</a></div>
+  </div>
+
+<script src="Db.js"></script>
+<script>
+  // Seed the fixed default admin into IndexedDB so this project always has
+  // a way in on a fresh browser, even before the server has been reached.
+  tsSeedDefaultAdmin().catch(() => {});
+</script>
+<script>
+  // A random ID generated once per browser and kept in localStorage. The
+  // server combines this with the browser's User-Agent to bind a sign-in
+  // to "this device" (see session_manager.py) -- sent as X-Device-Id on
+  // every /api/login and /api/signup call below.
+  function tsDeviceId(){
+    let id = localStorage.getItem('ts_device_id');
+    if (!id) {
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('dev-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+      localStorage.setItem('ts_device_id', id);
+    }
+    return id;
+  }
+</script>
+<script>
+  // ---------- tab switching ----------
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
+  const loginPanel = document.getElementById('loginPanel');
+  const signupPanel = document.getElementById('signupPanel');
+
+  tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    tabSignup.classList.remove('active');
+    loginPanel.classList.remove('hidden');
+    signupPanel.classList.add('hidden');
+  });
+
+  tabSignup.addEventListener('click', () => {
+    tabSignup.classList.add('active');
+    tabLogin.classList.remove('active');
+    signupPanel.classList.remove('hidden');
+    loginPanel.classList.add('hidden');
+  });
+
+  // ---------- small local cache of the last signed-in session (browser only, not the auth source of truth) ----------
+  function cacheSessionLocally(user){
+    if (!('indexedDB' in window)) return;
+    const req = indexedDB.open('techserenia_session', 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore('session', { keyPath: 'id' });
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('session', 'readwrite');
+      tx.objectStore('session').put({ id: 'current', ...user, savedAt: Date.now() });
+    };
+  }
+
+  // ---------- sign in ----------
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('loginMsg');
+    const submitBtn = document.getElementById('loginSubmit');
+    msg.textContent = '';
+    msg.className = 'form-msg';
+    submitBtn.disabled = true;
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Device-Id': tsDeviceId() },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        msg.textContent = data.error || 'Could not sign in with those details.';
+        msg.className = 'form-msg error';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      msg.textContent = 'Signed in. Redirecting...';
+      msg.className = 'form-msg success';
+      cacheSessionLocally({ email, role: data.role });
+      // Mirror into the local IndexedDB cache (with the password, so this
+      // account can also be checked offline next time) for convenience.
+      tsPutUser({ name: data.name || '', email, role: data.role, password }).catch(() => {});
+      window.location.href = data.redirect;
+    } catch (err) {
+      // Server unreachable -- fall back to whatever's cached locally in
+      // IndexedDB (e.g. the seeded default admin, or an account this
+      // browser has signed into before) so the app still works offline.
+      const local = await tsVerifyUserLocally(email, password).catch(() => null);
+      if (local) {
+        msg.textContent = 'Signed in offline. Redirecting...';
+        msg.className = 'form-msg success';
+        cacheSessionLocally({ email, role: local.role });
+        window.location.href = TS_ROLE_REDIRECTS[local.role] || '/index.html';
+        return;
+      }
+      msg.textContent = 'Something went wrong reaching the server. Please try again.';
+      msg.className = 'form-msg error';
+      submitBtn.disabled = false;
+    }
+  });
+
+  // ---------- sign up ----------
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('signupMsg');
+    const submitBtn = document.getElementById('signupSubmit');
+    msg.textContent = '';
+    msg.className = 'form-msg';
+    submitBtn.disabled = true;
+
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const role = document.getElementById('signupRole').value;
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Device-Id': tsDeviceId() },
+        body: JSON.stringify({ name, email, password, role })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        msg.textContent = data.error || 'Could not create that account.';
+        msg.className = 'form-msg error';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      msg.textContent = 'Account created. Redirecting...';
+      msg.className = 'form-msg success';
+      cacheSessionLocally({ email, role: data.role });
+      // Mirror into the local IndexedDB cache so this device can also sign
+      // this account in offline afterwards.
+      tsPutUser({ name, email, role: data.role, password }).catch(() => {});
+      window.location.href = data.redirect;
+    } catch (err) {
+      msg.textContent = 'Could not reach the server to create the account. Please check your connection and try again.';
+      msg.className = 'form-msg error';
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live sale TechSerenia</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--white:#fff;--ink:#101a2b;--slate:#5b6b82;--blue-deep:#0b3d91;--blue-tint:#eaf1fc;--border:#dfe7f5;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:#fff;background:linear-gradient(160deg,var(--blue-deep) 0%,#092f70 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 24px;}
+  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .brand .divider{opacity:0.5;}
+  .tagline{opacity:0.75;font-size:14px;margin-bottom:36px;}
+  .feed{width:100%;max-width:560px;display:flex;flex-direction:column;gap:12px;}
+  .feed-item{
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:var(--radius);
+    padding:18px 22px;display:flex;justify-content:space-between;align-items:center;
+    animation:fadeIn 0.35s ease;
+  }
+  .feed-item .name{font-weight:700;font-size:18px;font-family:'Space Grotesk',sans-serif;}
+  .feed-item .qty{font-size:14px;opacity:0.8;margin-top:2px;}
+  .feed-item .time{font-size:12px;opacity:0.6;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .empty{opacity:0.7;text-align:center;padding:60px 0;font-size:15px;}
+  .status-dot{width:9px;height:9px;border-radius:50%;background:#3ddc84;display:inline-block;margin-right:6px;box-shadow:0 0 0 4px rgba(61,220,132,0.25);}
+  .status{font-size:13px;opacity:0.8;margin-bottom:20px;}
+</style>
+</head>
+<body>
+  <div class="brand"><span>TechSerenia</span><span class="divider">|</span><span>OrbitBills</span></div>
+  <div class="tagline">Live sale display</div>
+  <div class="status"><span class="status-dot"></span><span id="statusText">Connecting...</span></div>
+  <div class="feed" id="feed">
+    <div class="empty">Waiting for items to be added at the counter...</div>
+  </div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session");
+  let since = 0;
+
+  function fmtTime(ts){
+    return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  function renderEvents(events){
+    const feed = document.getElementById("feed");
+    if (!events.length) return;
+    feed.innerHTML = events.slice().reverse().map(e => `
+      <div class="feed-item">
+        <div><div class="name">${e.name}</div><div class="qty">qty ${e.qty}</div></div>
+        <div class="time">${fmtTime(e.ts)}</div>
+      </div>
+    `).join("");
+  }
+
+  async function poll(){
+    if (!sessionId) {
+      document.getElementById("statusText").textContent = "No session link provided.";
+      return;
+    }
+    try {
+      const res = await fetch(`/api/live/${sessionId}/events?since=${since}`);
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById("statusText").textContent = "Connected \u2014 live";
+        if (data.events.length) {
+          since = data.events[data.events.length - 1].ts;
+          renderEvents(data.all_events);
+        }
+      } else {
+        document.getElementById("statusText").textContent = "Session not found.";
+      }
+    } catch (err) {
+      document.getElementById("statusText").textContent = "Reconnecting...";
+    }
+  }
+
+  poll();
+  setInterval(poll, 1500);
+</script>
+</body>
+</html>

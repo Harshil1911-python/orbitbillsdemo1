@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accountant · OrbitBills</title>
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#101a2b;--slate:#5b6b82;--blue-deep:#0b3d91;--blue:#2f6feb;--blue-tint:#eaf1fc;--blue-tint-2:#f5f8fe;--border:#dfe7f5;--radius:14px;--green:#158a53;--red:#c0392b;--amber:#b8860b}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;color:var(--ink);background:var(--blue-tint-2)}
+.brand,h1,h2,h3{font-family:'Space Grotesk',sans-serif}button{font-family:Inter,sans-serif;cursor:pointer}
+header{background:#fff;border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.brand{font-weight:700;font-size:16px;display:flex;gap:8px;align-items:center}.brand .sub{font-size:12px;color:var(--slate);font-weight:500;font-family:Inter,sans-serif}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+main{max-width:1080px;margin:0 auto;padding:22px 20px 60px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.summary-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.summary-card .label{font-size:12px;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.summary-card .value{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.summary-card.paid .value{color:var(--green)}.summary-card.unpaid .value{color:var(--red)}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.card h2{font-size:16px;margin-bottom:12px}
+.toolbar-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar-row input,.toolbar-row select{padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px}
+.toolbar-row input{flex:1;min-width:160px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:left}
+th{font-size:11px;color:var(--slate);text-transform:uppercase}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.pill.open{background:#e8f6ee;color:var(--green)}.pill.closed{background:#fdecea;color:var(--red)}
+.empty{color:var(--slate);font-size:13px;text-align:center;padding:20px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;padding:8px 12px;border-radius:9px;border:1px solid transparent}
+.btn-ghost{background:transparent;color:var(--blue-deep);border-color:var(--border)}
+.note{font-size:12px;color:var(--slate);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">TechSerenia <span style="color:var(--border)">|</span> OrbitBills <span class="sub">Accountant</span></div>
+  <div class="header-actions">
+    <span class="sub" id="currencyLabel">₹</span>
+    <button class="btn btn-ghost" id="signOutBtn">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <div class="summary-grid">
+    <div class="summary-card"><div class="label">Invoices</div><div class="value" id="statCount">0</div></div>
+    <div class="summary-card"><div class="label">Total billed</div><div class="value" id="statTotal">0</div></div>
+    <div class="summary-card paid"><div class="label">Paid</div><div class="value" id="statPaid">0</div></div>
+    <div class="summary-card unpaid"><div class="label">Unpaid</div><div class="value" id="statUnpaid">0</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Tax slabs on file</h2>
+    <table>
+      <thead><tr><th>Name</th><th>Percentage</th><th>Default</th></tr></thead>
+      <tbody id="taxTableBody"></tbody>
+    </table>
+    <div class="empty" id="taxEmpty" style="display:none">No tax slabs configured yet.</div>
+  </div>
+
+  <div class="card">
+    <h2>Invoices</h2>
+    <div class="toolbar-row">
+      <input id="invoiceSearch" placeholder="Search invoice # or client">
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+        <option value="paid">Paid</option>
+        <option value="unpaid">Unpaid</option>
+      </select>
+    </div>
+    <table>
+      <thead><tr><th>Invoice #</th><th>Client</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody id="invoiceTableBody"></tbody>
+    </table>
+    <div class="empty" id="invoiceEmpty" style="display:none">No invoices found.</div>
+    <p class="note">This is a read-only view. Creating or editing invoices happens from Billing.</p>
+  </div>
+</main>
+
+<script>
+let allInvoices = [];
+let currency = "₹";
+
+async function api(path){
+  const res = await fetch("/api/admin" + path, { credentials: "same-origin" });
+  return res.json();
+}
+
+function money(n){ return currency + Number(n || 0).toFixed(2); }
+
+function renderInvoices(){
+  const q = document.getElementById("invoiceSearch").value.trim().toLowerCase();
+  const status = document.getElementById("statusFilter").value;
+  let rows = allInvoices;
+  if (status) rows = rows.filter(i => (i.status || "").toLowerCase() === status);
+  if (q) rows = rows.filter(i =>
+    (i.invoice_number || "").toLowerCase().includes(q) ||
+    (i.client_name || "").toLowerCase().includes(q)
+  );
+
+  const tbody = document.getElementById("invoiceTableBody");
+  tbody.innerHTML = rows.map(i => `
+    <tr>
+      <td>${i.invoice_number || ""}</td>
+      <td>${i.client_name || "—"}</td>
+      <td>${money(i.subtotal)}</td>
+      <td>${money(i.tax_amount)}</td>
+      <td>${money(i.total)}</td>
+      <td><span class="pill ${(i.status||"").toLowerCase()==="paid" ? "open" : "closed"}">${i.status || "unpaid"}</span></td>
+      <td>${(i.created_at || "").slice(0, 10)}</td>
+    </tr>
+  `).join("");
+  document.getElementById("invoiceEmpty").style.display = rows.length ? "none" : "block";
+
+  document.getElementById("statCount").textContent = allInvoices.length;
+  document.getElementById("statTotal").textContent = money(allInvoices.reduce((s, i) => s + Number(i.total || 0), 0));
+  document.getElementById("statPaid").textContent = money(allInvoices.filter(i => (i.status||"").toLowerCase()==="paid").reduce((s, i) => s + Number(i.total || 0), 0));
+  document.getElementById("statUnpaid").textContent = money(allInvoices.filter(i => (i.status||"").toLowerCase()!=="paid").reduce((s, i) => s + Number(i.total || 0), 0));
+}
+
+async function loadInvoices(){
+  const data = await api("/invoices");
+  allInvoices = data.ok ? (data.invoices || []) : [];
+  renderInvoices();
+}
+
+async function loadTaxSlabs(){
+  const data = await api("/tax-slabs");
+  const rows = data.ok ? (data.taxSlabs || data.tax_slabs || []) : [];
+  const tbody = document.getElementById("taxTableBody");
+  tbody.innerHTML = rows.map(t => `
+    <tr><td>${t.name || ""}</td><td>${t.percentage}%</td><td>${t.is_default ? "Yes" : ""}</td></tr>
+  `).join("");
+  document.getElementById("taxEmpty").style.display = rows.length ? "none" : "block";
+}
+
+document.getElementById("invoiceSearch").addEventListener("input", renderInvoices);
+document.getElementById("statusFilter").addEventListener("change", renderInvoices);
+
+document.getElementById("signOutBtn").addEventListener("click", async () => {
+  try { await fetch("/api/logout", { method: "POST", credentials: "same-origin" }); } catch (e) {}
+  location.href = "/signin.html";
+});
+
+(async function init(){
+  const who = await fetch("/api/whoami", { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ ok: false }));
+  if (!who.ok || (who.role !== "admin" && who.role !== "accountant")) { location.href = "/signin.html"; return; }
+
+  const branding = await api("/branding");
+  if (branding.ok && branding.branding && branding.branding.currency_symbol) {
+    currency = branding.branding.currency_symbol;
+    document.getElementById("currencyLabel").textContent = currency;
+  }
+
+  await loadTaxSlabs();
+  await loadInvoices();
+})();
+</script>
+</body>
+</html>

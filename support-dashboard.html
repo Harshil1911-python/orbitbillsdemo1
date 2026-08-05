@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support dashboard TechSerenia</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--white:#fff;--ink:#101a2b;--slate:#5b6b82;--blue-deep:#0b3d91;--blue-tint:#eaf1fc;--border:#dfe7f5;--radius:14px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--blue-tint);min-height:100vh;}
+  header{background:#fff;border-bottom:1px solid var(--border);padding:18px 32px;display:flex;justify-content:space-between;align-items:center;}
+  header .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;}
+  header a.logout{font-size:14px;font-weight:600;color:var(--blue-deep);text-decoration:none;}
+  main{max-width:900px;margin:48px auto;padding:0 24px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:32px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:10px;}
+  p{color:var(--slate);}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">TechSerenia · Support</div>
+    <a class="logout" href="signin.html">Sign out</a>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Support dashboard</h1>
+      <p>You're signed in as a support team member. This is a placeholder for open tickets, customer messages, and response tools.</p>
+    </div>
+  </main>
+</body>
+</html>
