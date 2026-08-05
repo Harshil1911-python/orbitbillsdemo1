@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="Db.js"></script>
 <style>
   :root{--brand:#0b3d91;--muted:#64748b;
     --white:#ffffff; --ink:#101a2b; --slate:#5b6b82;
@@ -1515,9 +1516,11 @@ async function api(path, options){
   let data;
   try { data = await res.json(); } catch (e) { data = { ok: false, error: "Unexpected server response." }; }
   if (!res.ok && data.ok !== false) data.ok = false;
-  if (res.status === 401 && path !== "/sessions") {
-    window.location.href = "signin.html";
-  }
+  // NOTE: this app no longer authenticates against the server (login is
+  // local-only, see signin.html/Db.js), so /api/admin/* calls are expected
+  // to 401 until this page's data calls are migrated to IndexedDB. Do NOT
+  // redirect to signin on 401 anymore -- that was bouncing every page load
+  // back to the login screen.
   return data;
 }
 
@@ -2623,8 +2626,8 @@ document.getElementById("productsCsvBtn").addEventListener("click", async () => 
 // =========================================================================
 const signOutBtn = document.getElementById("signOutBtn");
 if (signOutBtn) {
-  signOutBtn.addEventListener("click", async () => {
-    try { await fetch("/api/logout", { method: "POST", credentials: "same-origin" }); } catch (e) {}
+  signOutBtn.addEventListener("click", () => {
+    tsClearSession();
     window.location.href = "signin.html";
   });
 }
@@ -2856,16 +2859,9 @@ document.getElementById("invoiceStatusFilter")?.addEventListener("change", () =>
 document.getElementById("invoiceFromFilter")?.addEventListener("change", () => renderInvoices());
 document.getElementById("invoiceToFilter")?.addEventListener("change", () => renderInvoices());
 
-// Auth check on load
-(async function authBoot(){
-  try {
-    const res = await fetch("/api/whoami", { credentials: "same-origin" });
-    const data = await res.json();
-    if (!data.ok || data.role !== "admin") {
-      // soft warning only - keep page usable for local dev; API still guarded
-      console.warn("Not signed in as admin");
-    }
-  } catch (e) {}
+// Auth check on load (local session only -- see Db.js)
+(function authBoot(){
+  tsRequireSession(["admin"]);
 })();
 
 

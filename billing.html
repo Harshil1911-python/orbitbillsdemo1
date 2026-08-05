@@ -338,7 +338,10 @@ async function api(path, opts={}){
   const headers={"X-Device-Id":tsDeviceId()}; let body=opts.body;
   if(body && !(body instanceof FormData)){ headers["Content-Type"]="application/json"; body=JSON.stringify(body); }
   const res=await fetch(API+path,{...opts,headers:{...headers,...(opts.headers||{})},body,credentials:"same-origin"});
-  if(res.status===401){ location.href="/signin.html"; return {ok:false}; }
+  // NOTE: login is local-only now (see signin.html/Db.js) so the server no
+  // longer recognizes a session -- /api/admin/* calls are expected to 401
+  // until this page's data is migrated to IndexedDB. Don't redirect on 401
+  // anymore, that was bouncing every page load straight back to sign-in.
   const ct=res.headers.get("content-type")||"";
   if(ct.includes("application/json")) return res.json();
   return {ok:res.ok, blob:await res.blob(), contentType:ct};
