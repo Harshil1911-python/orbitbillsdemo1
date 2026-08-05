@@ -241,23 +241,9 @@
 
 <script src="Db.js"></script>
 <script>
-  // Seed the fixed default admin into IndexedDB so this project always has
-  // a way in on a fresh browser, even before the server has been reached.
+  // Seed the fixed default accounts into IndexedDB so this project always
+  // has a way in on a fresh browser.
   tsSeedDefaultAdmin().catch(() => {});
-</script>
-<script>
-  // A random ID generated once per browser and kept in localStorage. The
-  // server combines this with the browser's User-Agent to bind a sign-in
-  // to "this device" (see session_manager.py) -- sent as X-Device-Id on
-  // every /api/login and /api/signup call below.
-  function tsDeviceId(){
-    let id = localStorage.getItem('ts_device_id');
-    if (!id) {
-      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('dev-' + Date.now() + '-' + Math.random().toString(16).slice(2));
-      localStorage.setItem('ts_device_id', id);
-    }
-    return id;
-  }
 </script>
 <script>
   // ---------- tab switching ----------
@@ -280,21 +266,7 @@
     loginPanel.classList.add('hidden');
   });
 
-  // ---------- small local cache of the last signed-in session (browser only, not the auth source of truth) ----------
-  function cacheSessionLocally(user){
-    if (!('indexedDB' in window)) return;
-    const req = indexedDB.open('techserenia_session', 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore('session', { keyPath: 'id' });
-    };
-    req.onsuccess = () => {
-      const db = req.result;
-      const tx = db.transaction('session', 'readwrite');
-      tx.objectStore('session').put({ id: 'current', ...user, savedAt: Date.now() });
-    };
-  }
-
-  // ---------- sign in ----------
+  // ---------- sign in (fully local -- checks IndexedDB only) ----------
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = document.getElementById('loginMsg');
@@ -307,46 +279,25 @@
     const password = document.getElementById('loginPassword').value;
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Device-Id': tsDeviceId() },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        msg.textContent = data.error || 'Could not sign in with those details.';
+      const user = await tsVerifyUserLocally(email, password);
+      if (!user) {
+        msg.textContent = 'Incorrect email or password.';
         msg.className = 'form-msg error';
         submitBtn.disabled = false;
         return;
       }
-
       msg.textContent = 'Signed in. Redirecting...';
       msg.className = 'form-msg success';
-      cacheSessionLocally({ email, role: data.role });
-      // Mirror into the local IndexedDB cache (with the password, so this
-      // account can also be checked offline next time) for convenience.
-      tsPutUser({ name: data.name || '', email, role: data.role, password }).catch(() => {});
-      window.location.href = data.redirect;
+      tsSetSession(user);
+      window.location.href = TS_ROLE_REDIRECTS[user.role] || '/index.html';
     } catch (err) {
-      // Server unreachable -- fall back to whatever's cached locally in
-      // IndexedDB (e.g. the seeded default admin, or an account this
-      // browser has signed into before) so the app still works offline.
-      const local = await tsVerifyUserLocally(email, password).catch(() => null);
-      if (local) {
-        msg.textContent = 'Signed in offline. Redirecting...';
-        msg.className = 'form-msg success';
-        cacheSessionLocally({ email, role: local.role });
-        window.location.href = TS_ROLE_REDIRECTS[local.role] || '/index.html';
-        return;
-      }
-      msg.textContent = 'Something went wrong reaching the server. Please try again.';
+      msg.textContent = 'Something went wrong signing in. Please try again.';
       msg.className = 'form-msg error';
       submitBtn.disabled = false;
     }
   });
 
-  // ---------- sign up ----------
+  // ---------- sign up (fully local -- writes IndexedDB only) ----------
   document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = document.getElementById('signupMsg');
@@ -361,29 +312,19 @@
     const role = document.getElementById('signupRole').value;
 
     try {
-      const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Device-Id': tsDeviceId() },
-        body: JSON.stringify({ name, email, password, role })
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        msg.textContent = data.error || 'Could not create that account.';
+      const { user, error } = await tsCreateUserLocal({ name, email, password, role });
+      if (error) {
+        msg.textContent = error;
         msg.className = 'form-msg error';
         submitBtn.disabled = false;
         return;
       }
-
       msg.textContent = 'Account created. Redirecting...';
       msg.className = 'form-msg success';
-      cacheSessionLocally({ email, role: data.role });
-      // Mirror into the local IndexedDB cache so this device can also sign
-      // this account in offline afterwards.
-      tsPutUser({ name, email, role: data.role, password }).catch(() => {});
-      window.location.href = data.redirect;
+      tsSetSession(user);
+      window.location.href = TS_ROLE_REDIRECTS[user.role] || '/index.html';
     } catch (err) {
-      msg.textContent = 'Could not reach the server to create the account. Please check your connection and try again.';
+      msg.textContent = 'Something went wrong creating that account. Please try again.';
       msg.className = 'form-msg error';
       submitBtn.disabled = false;
     }

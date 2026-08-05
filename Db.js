@@ -1,46 +1,55 @@
 /*
   db.js
   -----
-  Shared IndexedDB layer for TechSerenia OrbitBills.
+  Shared IndexedDB layer for OrbitBills (TechSerenia).
   Used by admin-dashboard.html, billing.html, accountant-dashboard.html and
-  display.html so every page reads and writes the same product/client/
-  invoice/user data in the browser.
+  client-portal.html so every page reads and writes the same product/
+  client/invoice/user data in the browser.
 
   Object stores:
     products  { id, name, brand, storeType, category, unit, price, stock, lowStockLimit, notes, color }
     clients   { id, name, email, phone, address, notes }
     invoices  { id, invoiceNumber, clientId, clientName, items, subtotal, discount, tax, total, notes, createdAt }
     settings  { key, value }  -- used for invoice design (accent color, footer note, logo toggle)
-    users     { id, name, email, role, passwordHash, salt, createdAt } -- see note below
+    users     { id, name, email, role, passwordHash, salt, createdAt }
 
   ---------------------------------------------------------------------------
-  A note on the "users" store and authentication
+  A note on the "users" store and authentication (fully local now)
   ---------------------------------------------------------------------------
-  Sign in / sign up now checks IndexedDB locally first (fast, works offline,
-  and is seeded with a fixed default admin so this project always has a way
-  in on a fresh browser -- see TS_DEFAULT_USERS below). The real, cross-
-  device account list still lives on the server (see database.py), since
-  IndexedDB is per-browser storage: an account created in one browser will
-  not exist in another browser or on another device until it's used there
-  and synced down. signin.html and admin-dashboard.html call the helpers
-  below (tsSeedDefaultAdmin, tsPutUser, tsGetUserByEmail, tsGetAllUsers,
-  tsDeleteUserByEmail) to keep this local copy in sync with whatever the
-  server confirms, so this store should be treated as a cache, not the
-  single source of truth for who's allowed in.
+  All accounts live ONLY in this browser's IndexedDB -- there is no server
+  copy anymore. This is a deliberate choice: OrbitBills doesn't want to be
+  liable for storing anyone's business/account data on its own servers.
+  Practically this means:
+    - Sign in / sign up (signin.html) check and write IndexedDB directly,
+      never the network.
+    - Because there's no server list of accounts, an account created on one
+      device/browser will NOT exist on another device or browser. All of
+      admin, billing, and accountant are expected to be opened on the same
+      device, sharing this one IndexedDB.
+    - "Who's currently signed in" is tracked with a tiny local session
+      record (see tsSetSession/tsGetSession/tsClearSession below), not a
+      server session cookie. Each dashboard page should call tsGetSession()
+      on load and bounce to signin.html if there isn't one.
 */
 
 const TS_DB_NAME = "techserenia_pos";
 const TS_DB_VERSION = 2;
+const TS_SESSION_KEY = "ts_session";
 
 // Fixed default accounts, seeded into IndexedDB on first load so the
 // client always has a way in for each of these roles, even before any
-// other account exists. Keep this in sync with DEFAULT_USERS in
-// database.py.
+// other account exists.
 const TS_DEFAULT_USERS = [
   { name: "Admin", email: "admin@techserenia.com", password: "TechSerenia@2026", role: "admin" },
   { name: "Billing", email: "billing@techserenia.com", password: "TechSerenia@2026", role: "billing" },
   { name: "Accountant", email: "accountant@techserenia.com", password: "TechSerenia@2026", role: "accountant" },
 ];
+
+// Roles the public sign-up form may create. "admin" is deliberately
+// excluded -- the only admin account is the seeded default one; a second
+// one can still be created from inside the admin panel itself if needed.
+const TS_PUBLIC_SIGNUP_ROLES = ["billing", "accountant", "client"];
+const TS_VALID_ROLES = ["admin", "billing", "accountant", "client"];
 
 // Where each role lands after signing in. Keep in sync with
 // ROLE_REDIRECTS in database.py.
@@ -156,9 +165,7 @@ async function tsDeleteUserByEmail(email) {
 }
 
 // Checks a plaintext password against the locally cached hash. Returns the
-// user record (minus password fields) on success, or null. Used as an
-// offline fallback -- signin.html tries the server first, and only falls
-// back to this if the network request fails.
+// user record (minus password fields) on success, or null.
 async function tsVerifyUserLocally(email, password) {
   const record = await tsGetUserByEmail(email);
   if (!record || !record.passwordHash) return null;
@@ -166,6 +173,67 @@ async function tsVerifyUserLocally(email, password) {
   if (hashHex !== record.passwordHash) return null;
   const { passwordHash, salt, ...safe } = record;
   return safe;
+}
+
+// Creates a new local account, enforcing the same rules the old server did:
+// role must be one of the public sign-up roles, email must be free, and
+// the password needs to be at least 6 characters. Returns {user, error} --
+// on success error is null; on failure user is null.
+async function tsCreateUserLocal({ name, email, password, role }) {
+  name = (name || "").trim();
+  email = (email || "").trim().toLowerCase();
+  role = (role || "").trim().toLowerCase();
+
+  if (!name || !email || !password || !role) {
+    return { user: null, error: "All fields are required." };
+  }
+  if (!TS_PUBLIC_SIGNUP_ROLES.includes(role)) {
+    return { user: null, error: "That role isn't recognized." };
+  }
+  if (password.length < 6) {
+    return { user: null, error: "Password must be at least 6 characters." };
+  }
+  const existing = await tsGetUserByEmail(email);
+  if (existing) {
+    return { user: null, error: "An account with that email already exists." };
+  }
+
+  const record = await tsPutUser({ name, email, role, password, createdAt: Date.now() });
+  const { passwordHash, salt, ...safe } = record;
+  return { user: safe, error: null };
+}
+
+// ---------- local session (replaces the old server session cookie) ----------
+// Tracks who's "signed in" on this browser. Not a security boundary by
+// itself (anyone with access to this device has access to this data
+// either way) -- it's just used to gate which dashboard pages are shown
+// and to know who to greet / attribute actions to.
+function tsSetSession(user) {
+  localStorage.setItem(TS_SESSION_KEY, JSON.stringify({
+    email: user.email, name: user.name, role: user.role, signedInAt: Date.now(),
+  }));
+}
+function tsGetSession() {
+  try {
+    const raw = localStorage.getItem(TS_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+function tsClearSession() {
+  localStorage.removeItem(TS_SESSION_KEY);
+}
+// Call at the top of every protected dashboard page. Redirects to
+// signin.html if there's no session, or if the signed-in role isn't one
+// of `allowedRoles`. Returns the session object if it's fine to proceed.
+function tsRequireSession(allowedRoles) {
+  const session = tsGetSession();
+  if (!session || (allowedRoles && !allowedRoles.includes(session.role))) {
+    window.location.href = "/signin.html";
+    return null;
+  }
+  return session;
 }
 
 // Seeds the fixed default accounts (admin, billing, accountant) into

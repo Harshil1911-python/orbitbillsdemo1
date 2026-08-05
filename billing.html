@@ -924,15 +924,15 @@ document.addEventListener("keydown",e=>{
   else if(k==="-"&&!isTyping(e.target)&&cart.length){ e.preventDefault(); changeQty(cart.length-1,-1); }
 });
 document.getElementById("btnHelp").addEventListener("click",()=>openModal("helpModal"));
-document.getElementById("signOutBtn").addEventListener("click", async()=>{
-  try{ await fetch("/api/logout",{method:"POST",credentials:"same-origin",headers:{"X-Device-Id":tsDeviceId()}}); }catch(e){}
+document.getElementById("signOutBtn").addEventListener("click", ()=>{
+  tsClearSession();
   location.href="/signin.html";
 });
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") runPosSync(true); });
 
 (async function init(){
-  const who=await fetch("/api/whoami",{credentials:"same-origin",headers:{"X-Device-Id":tsDeviceId()}}).then(r=>r.json()).catch(()=>({ok:false}));
-  if(!who.ok||(who.role!=="admin"&&who.role!=="billing")){ location.href="/signin.html"; return; }
+  const session=tsRequireSession(["admin","billing"]);
+  if(!session) return;
   await runPosSync(true);
   setInterval(()=>runPosSync(false), 8000);
 })();
