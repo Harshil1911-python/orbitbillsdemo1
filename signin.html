@@ -3,333 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign in TechSerenia</title>
+<title>Sign in · OrbitBills</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --white:#ffffff;
-    --ink:#101a2b;
-    --slate:#5b6b82;
-    --blue-deep:#0b3d91;
-    --blue:#2f6feb;
-    --blue-tint:#eaf1fc;
-    --blue-tint-2:#f5f8fe;
-    --border:#dfe7f5;
-    --radius:14px;
-    --error:#c0392b;
-  }
-
+  :root{--white:#ffffff;--ink:#101a2b;--slate:#5b6b82;--blue-deep:#0b3d91;--blue:#2f6feb;--blue-tint:#eaf1fc;--blue-tint-2:#f5f8fe;--border:#dfe7f5;--radius:14px;--error:#c0392b;}
   *{box-sizing:border-box;margin:0;padding:0;}
-
-  body{
-    font-family:'Inter', sans-serif;
-    color:var(--ink);
-    background:linear-gradient(180deg, var(--blue-tint-2) 0%, var(--white) 60%);
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:32px 20px;
-  }
-
-  h1,h2,h3,.brand{font-family:'Space Grotesk', sans-serif;}
-  a{color:inherit;text-decoration:none;}
-  img{max-width:100%;display:block;}
-
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:700;
-    font-size:20px;
-    color:var(--ink);
-    margin-bottom:28px;
-  }
-
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--blue-tint-2) 0%,var(--white) 60%);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;}
+  h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif;}
+  a{color:inherit;text-decoration:none;} img{max-width:100%;display:block;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--ink);margin-bottom:28px;}
   .brand-mark{height:34px;display:flex;align-items:center;flex-shrink:0;}
   .brand-mark img{height:100%;width:auto;display:block;}
-
-  .auth-card{
-    width:100%;
-    max-width:420px;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:36px;
-    box-shadow:0 20px 45px -20px rgba(11,61,145,0.2);
-  }
-
-  .auth-tabs{
-    display:flex;
-    background:var(--blue-tint-2);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:4px;
-    margin-bottom:28px;
-  }
-
-  .auth-tab{
-    flex:1;
-    text-align:center;
-    padding:10px 0;
-    font-size:14px;
-    font-weight:600;
-    color:var(--slate);
-    border-radius:8px;
-    cursor:pointer;
-    background:none;
-    border:none;
-    font-family:'Inter', sans-serif;
-  }
-
-  .auth-tab.active{
-    background:var(--blue-deep);
-    color:#fff;
-  }
-
-  .auth-card h2{
-    font-size:22px;
-    font-weight:700;
-    margin-bottom:6px;
-  }
-
-  .auth-card p.sub{
-    font-size:14px;
-    color:var(--slate);
-    margin-bottom:24px;
-  }
-
+  .auth-card{width:100%;max-width:420px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:36px;box-shadow:0 20px 45px -20px rgba(11,61,145,0.2);}
+  .auth-card h2{font-size:22px;font-weight:700;margin-bottom:6px;}
+  .auth-card p.sub{font-size:14px;color:var(--slate);margin-bottom:24px;}
   .form-field{margin-bottom:18px;}
-
-  .form-field label{
-    display:block;
-    font-size:14px;
-    font-weight:600;
-    color:var(--ink);
-    margin-bottom:6px;
-  }
-
-  .form-field input,
-  .form-field select{
-    width:100%;
-    padding:12px 14px;
-    border:1px solid var(--border);
-    border-radius:10px;
-    font-family:'Inter', sans-serif;
-    font-size:15px;
-    color:var(--ink);
-    background:var(--white);
-  }
-
-  .form-field input:focus,
-  .form-field select:focus{
-    outline:2px solid var(--blue);
-    outline-offset:1px;
-  }
-
-  .btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    width:100%;
-    font-family:'Inter', sans-serif;
-    font-weight:600;
-    font-size:15px;
-    padding:12px 22px;
-    border-radius:10px;
-    border:1px solid transparent;
-    cursor:pointer;
-    background:var(--blue-deep);
-    color:#fff;
-    margin-top:6px;
-  }
-
-  .btn:hover{background:#092f70;}
-  .btn:disabled{opacity:0.6;cursor:not-allowed;}
-
-  .form-msg{
-    font-size:13px;
-    margin-top:14px;
-    text-align:center;
-  }
-
-  .form-msg.error{color:var(--error);}
-  .form-msg.success{color:#158a53;}
-
-  .back-link{
-    margin-top:22px;
-    font-size:14px;
-    color:var(--slate);
-    text-align:center;
-  }
-
+  .form-field label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .form-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--white);}
+  .form-field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px;border:1px solid transparent;cursor:pointer;background:var(--blue-deep);color:#fff;margin-top:6px;}
+  .btn:hover{background:#092f70;} .btn:disabled{opacity:0.6;cursor:not-allowed;}
+  .form-msg{font-size:13px;margin-top:14px;text-align:center;}
+  .form-msg.error{color:var(--error);} .form-msg.success{color:#158a53;}
+  .back-link{margin-top:22px;font-size:14px;color:var(--slate);text-align:center;}
   .back-link a{color:var(--blue-deep);font-weight:600;}
-
-  .hidden{display:none !important;}
+  .hint-box{margin-top:20px;padding:12px 14px;background:var(--blue-tint-2);border:1px dashed var(--border);border-radius:10px;font-size:12px;color:var(--slate);line-height:1.55;}
+  .hint-box strong{color:var(--ink);}
 </style>
 </head>
 <body>
-
-  <a href="index.html" class="brand">
-    <span class="brand-mark"><img src="logo.png" alt="Techserenia"></span>
-  </a>
-
+  <a href="index.html" class="brand"><span class="brand-mark"><img src="logo.png" alt="Techserenia" onerror="this.style.display='none'"></span></a>
   <div class="auth-card">
-    <div class="auth-tabs">
-      <button type="button" class="auth-tab active" id="tabLogin">Sign in</button>
-      <button type="button" class="auth-tab" id="tabSignup">Create account</button>
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in with your preset company account. All data stays on this device.</p>
+    <form id="loginForm">
+      <div class="form-field"><label for="loginEmail">Work email</label>
+        <input type="email" id="loginEmail" name="email" placeholder="admin@techserenia.com" required autocomplete="username"></div>
+      <div class="form-field"><label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required autocomplete="current-password"></div>
+      <button type="submit" class="btn" id="loginSubmit">Sign in</button>
+    </form>
+    <div class="form-msg" id="loginMsg"></div>
+    <div class="hint-box">
+      <strong>Preset accounts</strong> (same password for all):<br>
+      Admin → <code>admin@techserenia.com</code><br>
+      Billing → <code>billing@techserenia.com</code><br>
+      Accountant → <code>accountant@techserenia.com</code><br>
+      Password → <code>TechSerenia@2026</code>
     </div>
-
-    <!-- Sign in form: for staff who already have an account -->
-    <div id="loginPanel">
-      <h2>Welcome back</h2>
-      <p class="sub">Sign in with your company account. You'll be sent to the dashboard for your role.</p>
-      <form id="loginForm">
-        <div class="form-field">
-          <label for="loginEmail">Work email</label>
-          <input type="email" id="loginEmail" name="email" placeholder="you@techserenia.com" required>
-        </div>
-        <div class="form-field">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
-        </div>
-        <button type="submit" class="btn" id="loginSubmit">Sign in</button>
-      </form>
-      <div class="form-msg" id="loginMsg"></div>
-    </div>
-
-    <!-- Sign up form: for new staff accounts, role picked here -->
-    <div id="signupPanel" class="hidden">
-      <h2>Create your account</h2>
-      <p class="sub">Set up access for your team. Pick the role that matches your job so you land on the right dashboard.</p>
-      <form id="signupForm">
-        <div class="form-field">
-          <label for="signupName">Full name</label>
-          <input type="text" id="signupName" name="name" placeholder="Your name" required>
-        </div>
-        <div class="form-field">
-          <label for="signupEmail">Work email</label>
-          <input type="email" id="signupEmail" name="email" placeholder="you@techserenia.com" required>
-        </div>
-        <div class="form-field">
-          <label for="signupPassword">Password</label>
-          <input type="password" id="signupPassword" name="password" placeholder="Create a password" required>
-        </div>
-        <div class="form-field">
-          <label for="signupRole">Role</label>
-          <select id="signupRole" name="role" required>
-            <option value="" disabled selected>Select your role</option>
-            <option value="billing">Billing team</option>
-            <option value="accountant">Accountant</option>
-            <option value="client">Client</option>
-          </select>
-        </div>
-        <button type="submit" class="btn" id="signupSubmit">Create account</button>
-      </form>
-      <div class="form-msg" id="signupMsg"></div>
-    </div>
-
     <div class="back-link"><a href="index.html">Back to home</a></div>
   </div>
-
 <script src="Db.js"></script>
 <script>
-  // Seed the fixed default accounts into IndexedDB so this project always
-  // has a way in on a fresh browser.
-  tsSeedDefaultAdmin().catch(() => {});
-</script>
-<script>
-  // ---------- tab switching ----------
-  const tabLogin = document.getElementById('tabLogin');
-  const tabSignup = document.getElementById('tabSignup');
-  const loginPanel = document.getElementById('loginPanel');
-  const signupPanel = document.getElementById('signupPanel');
-
-  tabLogin.addEventListener('click', () => {
-    tabLogin.classList.add('active');
-    tabSignup.classList.remove('active');
-    loginPanel.classList.remove('hidden');
-    signupPanel.classList.add('hidden');
-  });
-
-  tabSignup.addEventListener('click', () => {
-    tabSignup.classList.add('active');
-    tabLogin.classList.remove('active');
-    signupPanel.classList.remove('hidden');
-    loginPanel.classList.add('hidden');
-  });
-
-  // ---------- sign in (fully local -- checks IndexedDB only) ----------
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const msg = document.getElementById('loginMsg');
-    const submitBtn = document.getElementById('loginSubmit');
-    msg.textContent = '';
-    msg.className = 'form-msg';
-    submitBtn.disabled = true;
-
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-
+    const msg = document.getElementById("loginMsg");
+    const submitBtn = document.getElementById("loginSubmit");
+    msg.textContent = ""; msg.className = "form-msg"; submitBtn.disabled = true;
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
     try {
-      const user = await tsVerifyUserLocally(email, password);
-      if (!user) {
-        msg.textContent = 'Incorrect email or password.';
-        msg.className = 'form-msg error';
-        submitBtn.disabled = false;
-        return;
-      }
-      msg.textContent = 'Signed in. Redirecting...';
-      msg.className = 'form-msg success';
-      tsSetSession(user);
-      window.location.href = TS_ROLE_REDIRECTS[user.role] || '/index.html';
+      const data = await tsLogin(email, password);
+      if (!data.ok) { msg.textContent = data.error || "Could not sign in."; msg.className = "form-msg error"; submitBtn.disabled = false; return; }
+      msg.textContent = "Signed in. Redirecting…"; msg.className = "form-msg success";
+      window.location.href = data.redirect;
     } catch (err) {
-      msg.textContent = 'Something went wrong signing in. Please try again.';
-      msg.className = 'form-msg error';
-      submitBtn.disabled = false;
+      msg.textContent = "Something went wrong. Please try again."; msg.className = "form-msg error"; submitBtn.disabled = false;
     }
   });
-
-  // ---------- sign up (fully local -- writes IndexedDB only) ----------
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById('signupMsg');
-    const submitBtn = document.getElementById('signupSubmit');
-    msg.textContent = '';
-    msg.className = 'form-msg';
-    submitBtn.disabled = true;
-
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const role = document.getElementById('signupRole').value;
-
-    try {
-      const { user, error } = await tsCreateUserLocal({ name, email, password, role });
-      if (error) {
-        msg.textContent = error;
-        msg.className = 'form-msg error';
-        submitBtn.disabled = false;
-        return;
-      }
-      msg.textContent = 'Account created. Redirecting...';
-      msg.className = 'form-msg success';
-      tsSetSession(user);
-      window.location.href = TS_ROLE_REDIRECTS[user.role] || '/index.html';
-    } catch (err) {
-      msg.textContent = 'Something went wrong creating that account. Please try again.';
-      msg.className = 'form-msg error';
-      submitBtn.disabled = false;
-    }
-  });
+  (async function () { await tsSeedDefaults().catch(() => {}); })();
 </script>
-
 </body>
 </html>

@@ -11,7 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script src="Db.js"></script>
 <style>
   :root{--brand:#0b3d91;--muted:#64748b;
     --white:#ffffff; --ink:#101a2b; --slate:#5b6b82;
@@ -1491,9 +1490,10 @@
   </div>
 </div>
 
+<script src="Db.js"></script>
 <script>
 // =========================================================================
-// helpers
+// helpers — data lives in IndexedDB via Db.js (tsLocalApi)
 // =========================================================================
 function escapeHtml(str){
   if (str === undefined || str === null) return "";
@@ -1505,23 +1505,32 @@ function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 
 async function api(path, options){
   options = options || {};
-  const opts = { method: options.method || "GET", headers: { "X-Device-Id": tsDeviceId() } };
-  if (options.body instanceof FormData) {
-    opts.body = options.body;
-  } else if (options.body !== undefined) {
-    opts.headers["Content-Type"] = "application/json";
-    opts.body = JSON.stringify(options.body);
+  if (!tsRequireRole("admin", "billing", "accountant")) {
+    window.location.href = "signin.html";
+    return { ok: false, error: "Not signed in." };
   }
-  const res = await fetch("/api/admin" + path, opts);
-  let data;
-  try { data = await res.json(); } catch (e) { data = { ok: false, error: "Unexpected server response." }; }
-  if (!res.ok && data.ok !== false) data.ok = false;
-  // NOTE: this app no longer authenticates against the server (login is
-  // local-only, see signin.html/Db.js), so /api/admin/* calls are expected
-  // to 401 until this page's data calls are migrated to IndexedDB. Do NOT
-  // redirect to signin on 401 anymore -- that was bouncing every page load
-  // back to the login screen.
-  return data;
+  try {
+    if (options.body instanceof FormData) {
+      const obj = {};
+      for (const [k, v] of options.body.entries()) {
+        if (v instanceof File) {
+          if (v.size) {
+            obj[k] = await new Promise((resolve) => {
+              const r = new FileReader();
+              r.onload = () => resolve(r.result);
+              r.readAsDataURL(v);
+            });
+            obj[k + "_name"] = v.name;
+          }
+        } else obj[k] = v;
+      }
+      options = { ...options, body: obj };
+    }
+    return await tsLocalApi(path, options);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: e.message || "Local DB error." };
+  }
 }
 
 // A random ID generated once per browser and kept in localStorage. The
@@ -2626,8 +2635,8 @@ document.getElementById("productsCsvBtn").addEventListener("click", async () => 
 // =========================================================================
 const signOutBtn = document.getElementById("signOutBtn");
 if (signOutBtn) {
-  signOutBtn.addEventListener("click", () => {
-    tsClearSession();
+  signOutBtn.addEventListener("click", async () => {
+    try { tsLogout(); } catch (e) {}
     window.location.href = "signin.html";
   });
 }
@@ -2859,9 +2868,20 @@ document.getElementById("invoiceStatusFilter")?.addEventListener("change", () =>
 document.getElementById("invoiceFromFilter")?.addEventListener("change", () => renderInvoices());
 document.getElementById("invoiceToFilter")?.addEventListener("change", () => renderInvoices());
 
-// Auth check on load (local session only -- see Db.js)
-(function authBoot(){
-  tsRequireSession(["admin"]);
+// Auth check on load
+(async function authBoot(){
+  await tsSeedDefaults().catch(() => {});
+  const who = tsWhoami();
+  if (!who.ok || who.role !== "admin") {
+    window.location.href = "signin.html";
+    return;
+  }
+  try { renderOverview(); } catch (e) { console.warn(e); }
+  try { renderLowStock(); } catch (e) { console.warn(e); }
+  tsOnSync(() => {
+    try { renderOverview(); } catch (e) {}
+    try { renderLowStock(); } catch (e) {}
+  });
 })();
 
 
