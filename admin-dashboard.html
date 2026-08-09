@@ -9,8 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="qrcode.min.js"></script>
 <style>
   :root{--brand:#0b3d91;--muted:#64748b;
     --white:#ffffff; --ink:#101a2b; --slate:#5b6b82;
@@ -34,7 +35,7 @@
     overflow-y:auto;
   }
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;padding:0 8px 24px;}
-  .brand img{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+  .brand img{height:34px;width:auto;border-radius:8px;object-fit:contain;flex-shrink:0;}
   .brand .sub{display:block;font-size:11px;font-weight:500;color:var(--slate);font-family:'Inter',sans-serif;}
   .nav-item{
     display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;
@@ -68,7 +69,7 @@
   .mobile-bar{display:none;position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--border);
     padding:12px 14px;align-items:center;justify-content:space-between;}
   .mobile-bar .brand{padding:0;font-size:15px;}
-  .mobile-bar img{width:28px;height:28px;border-radius:7px;}
+  .mobile-bar img{height:34px;width:auto;border-radius:7px;object-fit:contain;}
   .hamburger{border:1px solid var(--border);background:#fff;border-radius:9px;width:40px;height:40px;
     display:flex;align-items:center;justify-content:center;font-size:18px;}
 
@@ -203,6 +204,20 @@
   .designer-canvas-outer{flex:1;min-width:280px;max-width:420px;}
   .designer-canvas{position:relative;width:100%;aspect-ratio:3/4;background:#fff;border:1px solid var(--border);border-radius:10px;
     box-shadow:0 4px 18px rgba(16,26,43,0.06);overflow:hidden;touch-action:none;}
+  .designer-canvas.size-a4{aspect-ratio:210/297}
+  .designer-canvas.size-a5{aspect-ratio:148/210}
+  .designer-canvas.size-letter{aspect-ratio:8.5/11}
+  .designer-canvas.size-thermal80{aspect-ratio:80/200;max-width:220px;margin:0 auto}
+  .designer-canvas.size-thermal58{aspect-ratio:58/200;max-width:160px;margin:0 auto}
+  .paper-size-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .paper-size-tab{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12.5px;font-weight:600;color:var(--slate);min-height:36px}
+  .paper-size-tab.active{background:var(--blue-deep);color:#fff;border-color:var(--blue-deep)}
+  .invoice-preview{position:relative;width:600px;height:800px;background:#fff;border:1px solid var(--border);
+    box-shadow:0 6px 24px rgba(16,26,43,0.08);font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);flex-shrink:0;margin:0 auto}
+  .invoice-preview.size-a5{width:420px;height:595px}
+  .invoice-preview.size-letter{width:612px;height:792px}
+  .invoice-preview.size-thermal80{width:302px;height:800px}
+  .invoice-preview.size-thermal58{width:220px;height:700px}
   .canvas-block{position:absolute;border:1.5px dashed var(--blue);background:rgba(47,111,235,0.08);
     display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue-deep);
     text-transform:uppercase;letter-spacing:.03em;cursor:grab;user-select:none;border-radius:4px;text-align:center;padding:2px;}
@@ -214,6 +229,14 @@
   .designer-side .field-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
   .designer-side .field-list button{text-align:left;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;font-weight:600;min-height:40px;}
   .designer-side .field-list button.selected{border-color:var(--blue-deep);background:var(--blue-tint);color:var(--blue-deep);}
+  .designer-side .field-row{display:flex;align-items:center;gap:6px;}
+  .designer-side .field-row button.field-pick{flex:1;text-align:left;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;font-weight:600;min-height:40px;}
+  .designer-side .field-row button.field-pick.selected{border-color:var(--blue-deep);background:var(--blue-tint);color:var(--blue-deep);}
+  .designer-side .field-row button.field-del{width:36px;height:36px;border:1px solid #f2d3ce;border-radius:8px;background:#fff;color:var(--red);font-size:16px;font-weight:700;flex-shrink:0;cursor:pointer;line-height:1;}
+  .designer-side .field-row button.field-del:hover{background:#fdf1ef;}
+  .designer-side .field-row button.field-del[disabled]{opacity:.35;cursor:not-allowed;}
+  .permanent-wm-note{font-size:12px;color:var(--slate);background:var(--blue-tint-2);border:1px dashed var(--border);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.45;}
+
 
   /* ---------- Invoice full preview ---------- */
   .invoice-preview-outer{overflow-x:auto;}
@@ -265,7 +288,7 @@
 <body>
 
 <div class="mobile-bar">
-  <div class="brand"><img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'"><div><span>TechSerenia</span><span class="sub" style="display:block;font-size:10px;color:var(--slate);">OrbitBills Admin</span></div></div>
+  <div class="brand"><img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'"></div>
   <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">&#9776;</button>
 </div>
 <div class="overlay-scrim" id="mobileScrim"></div>
@@ -274,14 +297,15 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'">
-      <div><span>TechSerenia</span><span class="sub">OrbitBills Admin</span></div>
     </div>
     <button class="nav-item active" data-panel="overview"><span class="nav-icon">OV</span>Overview</button>
+    <button class="nav-item" data-panel="notifications"><span class="nav-icon">NT</span>Notifications<span class="nav-badge" id="notifNavBadge" style="display:none"></span></button>
 
     <div class="nav-group" data-group="catalog">
       <button class="nav-group-head" type="button"><span class="nav-icon">PR</span>Products<span class="nav-caret">&#9656;</span></button>
       <div class="nav-group-items">
         <button class="nav-item" data-panel="products"><span class="nav-icon">·</span>All products</button>
+        <button class="nav-item" data-panel="variantscreen"><span class="nav-icon">·</span>Variants</button>
         <button class="nav-item" data-panel="inventory"><span class="nav-icon">·</span>Inventory</button>
         <button class="nav-item" data-panel="purchases"><span class="nav-icon">·</span>Purchases</button>
         <button class="nav-item" data-panel="suppliers"><span class="nav-icon">·</span>Suppliers</button>
@@ -300,9 +324,11 @@
       <div class="nav-group-items">
         <button class="nav-item" data-panel="invoices"><span class="nav-icon">·</span>Invoices</button>
         <button class="nav-item" data-panel="quotations"><span class="nav-icon">·</span>Quotations</button>
+        <button class="nav-item" data-panel="dueinvoices"><span class="nav-icon">·</span>Due invoices<span class="nav-badge" id="dueNavBadge" style="display:none"></span></button>
         <button class="nav-item" data-panel="clients"><span class="nav-icon">·</span>Clients</button>
         <button class="nav-item" data-panel="returns"><span class="nav-icon">·</span>Returns</button>
         <button class="nav-item" data-panel="shifts"><span class="nav-icon">·</span>Shifts</button>
+        <button class="nav-item" data-panel="cashdayend"><span class="nav-icon">·</span>Cash &amp; day-end</button>
       </div>
     </div>
 
@@ -311,6 +337,8 @@
       <div class="nav-group-items">
         <button class="nav-item" data-panel="analytics"><span class="nav-icon">·</span>Analytics</button>
         <button class="nav-item" data-panel="profitmargin"><span class="nav-icon">·</span>Profit margin</button>
+        <button class="nav-item" data-panel="deadstock"><span class="nav-icon">·</span>Dead stock</button>
+        <button class="nav-item" data-panel="fastmoving"><span class="nav-icon">·</span>Fast moving</button>
         <button class="nav-item" data-panel="taxslabs"><span class="nav-icon">·</span>Tax slabs</button>
       </div>
     </div>
@@ -330,6 +358,7 @@
       </div>
     </div>
     <div class="sidebar-foot">
+      <div id="adminIndiaClock" title="India Standard Time" style="font-size:12px;font-weight:600;color:var(--slate);padding:8px 12px 4px;font-variant-numeric:tabular-nums;line-height:1.35">—</div>
       <button type="button" id="signOutBtn" style="font-size:13px;font-weight:600;color:var(--blue-deep);display:flex;align-items:center;padding:10px 12px;min-height:44px;background:none;border:none;width:100%;text-align:left;cursor:pointer;">Sign out</button>
     </div>
   </aside>
@@ -351,6 +380,25 @@
         <div class="stat-card warn"><div class="label">Low stock items</div><div class="value" id="statLowStock">0</div></div>
         <div class="stat-card" style="border-color:#c6e8d4;"><div class="label">Paid revenue</div><div class="value" id="statRevenuePaid" style="color:var(--green);">0</div></div>
         <div class="stat-card" style="border-color:#f2d3ce;"><div class="label">Unpaid revenue</div><div class="value" id="statRevenueUnpaid" style="color:var(--red);">0</div></div>
+        <div class="stat-card" style="border-color:#fde8c8;"><div class="label">Returns</div><div class="value" id="statReturnsCount">0</div></div>
+        <div class="stat-card" style="border-color:#fde8c8;"><div class="label">Returns total</div><div class="value" id="statReturnsTotal" style="color:var(--amber);">0</div></div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card" style="border-color:#c6e8d4;">
+          <div class="label">Cash received</div>
+          <div class="value" id="statPayCash" style="color:var(--green);">₹0</div>
+          <div style="font-size:12px;color:var(--slate);margin-top:4px;">From billing · cash payments</div>
+        </div>
+        <div class="stat-card" style="border-color:#cfe0fb;">
+          <div class="label">Bank received</div>
+          <div class="value" id="statPayBank" style="color:var(--blue-deep);">₹0</div>
+          <div style="font-size:12px;color:var(--slate);margin-top:4px;">UPI + card / bank transfers</div>
+        </div>
+        <div class="stat-card" style="border-color:#e8dff0;">
+          <div class="label">Other received</div>
+          <div class="value" id="statPayOther" style="color:var(--purple);">₹0</div>
+          <div style="font-size:12px;color:var(--slate);margin-top:4px;">Other payment methods</div>
+        </div>
       </div>
       <div class="card">
         <h3>Low stock products</h3>
@@ -366,7 +414,185 @@
     </section>
 
     <!-- ================= PRODUCTS ================= -->
-    <section class="panel" id="panel-products">
+    
+    <section class="panel" id="panel-notifications">
+      <div class="page-head">
+        <div>
+          <h1>Notifications</h1>
+          <p>Pay Later and unpaid invoices — collect, write off, edit due dates, or delete.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" type="button" id="btnRefreshNotif">Refresh</button>
+          <button class="btn btn-danger btn-sm" type="button" id="btnClearDismissedNotif" title="Show items you previously dismissed">Show dismissed</button>
+        </div>
+      </div>
+      <div class="card">
+        <p class="hint" style="margin-bottom:12px">Outstanding is unpaid balance on the invoice. <strong>Reset</strong> marks it paid (clears due). <strong>Write off</strong> clears balance without a payment. <strong>Dismiss</strong> hides from this list only.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Invoice</th><th>Client</th><th>Outstanding</th><th>Due</th><th>Status</th><th>Type</th><th>Actions</th></tr></thead>
+            <tbody id="notificationsBody"></tbody>
+          </table>
+        </div>
+        <p class="empty-note" id="notificationsEmpty" style="display:none">No Pay Later or unpaid items right now.</p>
+      </div>
+      <div class="card" id="notifEditCard" style="display:none">
+        <h3 id="notifEditTitle">Edit invoice</h3>
+        <input type="hidden" id="notifEditId">
+        <div class="form-grid">
+          <div class="form-field"><label>Due date</label><input type="date" id="notifEditDue"></div>
+          <div class="form-field"><label>Status</label>
+            <select id="notifEditStatus"><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option></select>
+          </div>
+          <div class="form-field"><label>Record payment</label><input type="number" id="notifPayAmt" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="form-field"><label>Payment method</label>
+            <select id="notifPayMethod"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="other">Other</option></select>
+          </div>
+        </div>
+        <div class="form-field"><label>Notes</label><input id="notifEditNotes"></div>
+        <div class="msg" id="notifEditMsg"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="notifEditClose">Close</button>
+          <button type="button" class="btn btn-primary" id="notifEditSave">Save changes</button>
+          <button type="button" class="btn btn-ok" id="notifRecordPay" style="background:var(--green);color:#fff">Record payment</button>
+        </div>
+      </div>
+    </section>
+
+<section class="panel" id="panel-variantscreen">
+  <div class="page-head">
+    <div>
+      <h1>Product variants</h1>
+      <p>Only products that have variants. Click a product to see every variant’s stock, SKU, barcode and price.</p>
+    </div>
+    <button class="btn btn-ghost" type="button" id="btnRefreshVariantsScreen">Refresh</button>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <input type="text" class="search-input" id="variantProductSearch" placeholder="Search parent products…">
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Product</th><th>Brand</th><th>Variants</th><th>Variant stock</th><th>Parent stock</th><th></th></tr></thead>
+        <tbody id="variantProductsBody"></tbody>
+      </table>
+    </div>
+    <p class="empty-note" id="variantProductsEmpty" style="display:none">No products with variants yet. Open a product and add variants from All products.</p>
+  </div>
+  <div class="card" id="variantDetailCard" style="display:none">
+    <div class="page-head" style="margin-bottom:12px">
+      <div>
+        <h3 id="variantDetailTitle">Variants</h3>
+        <p id="variantDetailMeta" style="color:var(--slate);font-size:13px"></p>
+      </div>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('variantDetailCard').style.display='none'">Close</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Name</th><th>SKU</th><th>Barcode</th><th>Price</th><th>Cost</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="variantDetailBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-cashdayend">
+  <div class="page-head">
+    <div>
+      <h1>Cash box &amp; day-end</h1>
+      <p>Opening cash balance, drawings, UPI accounts, and match counted totals at day end. Everything stays on this device in IndexedDB.</p>
+    </div>
+    <button class="btn btn-ghost" type="button" id="btnRefreshCashbox">Refresh</button>
+  </div>
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="label">Opening cash</div><div class="value" id="cbOpening">₹0</div></div>
+    <div class="stat-card"><div class="label">Cash sales (shift)</div><div class="value" id="cbCashSales">₹0</div></div>
+    <div class="stat-card"><div class="label">Drawings</div><div class="value" id="cbDrawings" style="color:var(--red)">₹0</div></div>
+    <div class="stat-card"><div class="label">Expected cash</div><div class="value" id="cbExpected">₹0</div></div>
+  </div>
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="label">UPI sales</div><div class="value" id="cbUpiSales">₹0</div></div>
+    <div class="stat-card"><div class="label">Card sales</div><div class="value" id="cbCardSales">₹0</div></div>
+    <div class="stat-card"><div class="label">Other sales</div><div class="value" id="cbOtherSales">₹0</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Opening cash balance</h3>
+    <p class="hint">Set the cash in the drawer at the start of business (cash case). Used for day-end matching.</p>
+    <div class="form-grid">
+      <div class="form-field"><label>Opening balance (₹)</label><input type="number" id="cbOpeningInput" min="0" step="0.01" value="0"></div>
+      <div class="form-field"><label>Note</label><input id="cbOpeningNote" placeholder="Optional"></div>
+    </div>
+    <button class="btn btn-primary" type="button" id="btnSaveOpening">Save opening balance</button>
+    <div class="msg" id="cbOpeningMsg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Balance / adjust cash</h3>
+    <p class="hint">Manual top-up or correction that also updates the open shift cash total.</p>
+    <div class="form-grid">
+      <div class="form-field"><label>Amount (+ in / − out)</label><input type="number" id="cbAdjustAmt" step="0.01" value="0"></div>
+      <div class="form-field"><label>Note</label><input id="cbAdjustNote" placeholder="e.g. Float top-up"></div>
+    </div>
+    <button class="btn btn-ghost" type="button" id="btnCashAdjust">Apply adjustment</button>
+    <div class="msg" id="cbAdjustMsg"></div>
+  </div>
+
+  <div class="card">
+    <h3>Drawings (owner take-out)</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Amount</label><input type="number" id="drawingAmt" min="0" step="0.01" value="0"></div>
+      <div class="form-field"><label>From</label>
+        <select id="drawingMethod"><option value="cash">Cash</option><option value="upi">UPI</option><option value="other">Other</option></select>
+      </div>
+      <div class="form-field" style="grid-column:1/-1"><label>Reason</label><input id="drawingReason" placeholder="Owner drawing"></div>
+    </div>
+    <button class="btn btn-danger" type="button" id="btnAddDrawing">Record drawing</button>
+    <div class="msg" id="drawingMsg"></div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>When</th><th>Amount</th><th>Method</th><th>Reason</th><th>By</th><th></th></tr></thead>
+        <tbody id="drawingsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>UPI accounts</h3>
+    <p class="hint">Track business UPI IDs used at the counter. Opening balance is informational for day-end match.</p>
+    <div class="form-grid">
+      <div class="form-field"><label>Name</label><input id="upiName" placeholder="Primary UPI"></div>
+      <div class="form-field"><label>UPI ID</label><input id="upiId" placeholder="shop@upi"></div>
+      <div class="form-field"><label>Bank</label><input id="upiBank" placeholder="Optional"></div>
+      <div class="form-field"><label>Opening balance</label><input type="number" id="upiOpening" min="0" step="0.01" value="0"></div>
+    </div>
+    <button class="btn btn-primary" type="button" id="btnAddUpi">Add UPI account</button>
+    <div class="msg" id="upiMsg"></div>
+    <div class="table-scroll" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Name</th><th>UPI ID</th><th>Bank</th><th>Opening</th><th></th></tr></thead>
+        <tbody id="upiAccountsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Day-end reconciliation</h3>
+    <p class="hint">Count physical cash and check UPI/card totals against what OrbitBills recorded today. Optionally close the open shift.</p>
+    <div class="form-grid cols-3">
+      <div class="form-field"><label>Counted cash</label><input type="number" id="deCountedCash" min="0" step="0.01" value="0"></div>
+      <div class="form-field"><label>Counted UPI</label><input type="number" id="deCountedUpi" min="0" step="0.01" value="0"></div>
+      <div class="form-field"><label>Counted card</label><input type="number" id="deCountedCard" min="0" step="0.01" value="0"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Notes</label><input id="deNotes" placeholder="Optional note"></div>
+    </div>
+    <label class="checkbox-row" style="margin:10px 0"><input type="checkbox" id="deCloseShift"> Also close open cash shift</label>
+    <button class="btn btn-primary" type="button" id="btnDayEnd">Match &amp; save day-end</button>
+    <div class="msg" id="deMsg"></div>
+    <pre id="deResult" style="margin-top:12px;font-family:IBM Plex Mono,monospace;font-size:12px;background:var(--blue-tint-2);padding:12px;border-radius:10px;display:none;white-space:pre-wrap"></pre>
+  </div>
+</section>
+
+<section class="panel" id="panel-products">
       <div class="page-head">
         <div>
           <h1>Products</h1>
@@ -393,7 +619,7 @@
         </div>
         <div class="table-scroll">
         <table>
-          <thead><tr><th><input type="checkbox" id="prodSelectAll"></th><th></th><th>Name</th><th>Brand</th><th>Type</th><th>Tax</th><th>Unit</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+          <thead><tr><th><input type="checkbox" id="prodSelectAll"></th><th></th><th>Name</th><th>Brand</th><th>Type</th><th>Tax</th><th>Unit</th><th>Price</th><th>Stock</th><th>Expiry</th><th></th></tr></thead>
           <tbody id="productsTableBody"></tbody>
         </table>
         </div>
@@ -421,7 +647,42 @@
       </div>
     </section>
 
-    <section class="panel" id="panel-profitmargin">
+    
+    <section class="panel" id="panel-deadstock">
+      <div class="page-head">
+        <div><h1>Dead stock</h1><p>Products with no sales in the last 2 months (60 days). Still sitting in inventory.</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="deadstockDays"><option value="60" selected>60 days</option><option value="90">90 days</option><option value="30">30 days</option></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="btnRefreshDeadstock">Refresh</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-scroll">
+          <table><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Price</th><th>Last sold</th><th>Days idle</th><th>Expiry</th></tr></thead>
+          <tbody id="deadstockBody"></tbody></table>
+        </div>
+        <p class="empty-note" id="deadstockEmpty" style="display:none">No dead stock in this window.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-fastmoving">
+      <div class="page-head">
+        <div><h1>Fast moving</h1><p>Products selling the most in the selected period (by quantity).</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="fastMovingDays"><option value="30" selected>30 days</option><option value="14">14 days</option><option value="7">7 days</option><option value="60">60 days</option></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="btnRefreshFastMoving">Refresh</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-scroll">
+          <table><thead><tr><th>#</th><th>Product</th><th>SKU</th><th>Sold qty</th><th>Revenue</th><th>Daily velocity</th><th>Stock</th></tr></thead>
+          <tbody id="fastMovingBody"></tbody></table>
+        </div>
+        <p class="empty-note" id="fastMovingEmpty" style="display:none">No sales in this window yet.</p>
+      </div>
+    </section>
+
+<section class="panel" id="panel-profitmargin">
       <div class="page-head"><div><h1>Profit margin</h1><p>Revenue, cost, and margin per product over a selectable window.</p></div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="marginDays"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last year</option></select>
@@ -612,6 +873,9 @@
         <h3>Manual stock adjust</h3>
         <form id="stockAdjustForm" class="form-grid" style="align-items:end;">
           <div class="form-field"><label for="adjProduct">Product</label><select id="adjProduct"></select></div>
+          <div class="form-field" id="adjVariantWrap" style="display:none"><label for="adjVariant">Variant</label><select id="adjVariant"><option value="">Parent product stock</option></select>
+            <div class="field-hint" style="font-size:12px;color:var(--slate);margin-top:4px">This product has variants — pick which stock to change.</div>
+          </div>
           <div class="form-field"><label for="adjDelta">Change (+/-)</label><input type="number" id="adjDelta" required></div>
           <div class="form-field"><label for="adjReason">Reason</label><input type="text" id="adjReason" placeholder="Damaged, count correction..."></div>
           <button type="submit" class="btn btn-primary btn-sm">Apply</button>
@@ -700,10 +964,35 @@
       <div class="card"><div class="table-scroll"><table><thead><tr><th>Return #</th><th>Client</th><th>Items</th><th>Total</th><th>Restocked</th><th>Credited</th><th>Date</th></tr></thead><tbody id="returnsBody"></tbody></table></div></div>
     </section>
     <section class="panel" id="panel-pricelists">
-      <div class="page-head"><div><h1>Price lists</h1><p>Customer-specific prices used on billing.</p></div>
-        <button class="btn btn-primary" id="openPriceList">New list</button></div>
-      <div class="card"><div class="table-scroll"><table><thead><tr><th>Name</th><th>Items</th><th></th></tr></thead><tbody id="priceListsBody"></tbody></table></div>
-        <p class="hint">Assign a list to a client via API or edit client JSON price_list_id. Billing loads special prices automatically.</p></div>
+      <div class="page-head"><div><h1>Price lists</h1><p>Create lists, set product prices, and assign them to customers. Billing loads special prices automatically.</p></div>
+        <button class="btn btn-primary" id="openPriceList" type="button">New list</button></div>
+      <div class="card">
+        <div class="table-scroll"><table><thead><tr><th>Name</th><th>Items</th><th>Customers</th><th></th></tr></thead>
+        <tbody id="priceListsBody"></tbody></table></div>
+        <p class="hint">Open a list to add product prices and assign clients. Assigned clients see those prices on the billing counter.</p>
+      </div>
+      <div class="card" id="priceListEditor" style="display:none">
+        <h3 id="plEditorTitle">Edit list</h3>
+        <input type="hidden" id="plEditorId">
+        <div class="form-grid">
+          <div class="form-field"><label>List name</label><input id="plEditorName"></div>
+          <div class="form-field"><label>Notes</label><input id="plEditorNotes"></div>
+        </div>
+        <h3 style="margin-top:12px;font-size:15px">Product prices</h3>
+        <div class="toolbar"><input class="search-input" id="plProductFilter" placeholder="Filter products…"></div>
+        <div class="table-scroll" style="max-height:320px;overflow:auto">
+          <table><thead><tr><th>Product</th><th>Default</th><th>List price</th></tr></thead>
+          <tbody id="plItemsBody"></tbody></table>
+        </div>
+        <h3 style="margin-top:16px;font-size:15px">Assign customers</h3>
+        <div class="form-field"><label>Search clients</label><input id="plClientFilter" placeholder="Name or phone"></div>
+        <div id="plClientsBox" style="max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" id="plEditorClose">Close</button>
+          <button type="button" class="btn btn-primary" id="plEditorSave">Save list &amp; assignments</button>
+        </div>
+        <div class="msg" id="plEditorMsg"></div>
+      </div>
     </section>
     <section class="panel" id="panel-reorder">
       <div class="page-head"><div><h1>Reorder suggestions</h1><p>Based on 30-day sales velocity and low stock.</p></div>
@@ -783,12 +1072,45 @@
             <div class="form-field"><label for="bUpiId">UPI ID (online payments)</label><input type="text" id="bUpiId" placeholder="shop@upi"></div>
             <div class="form-field"><label for="bUpiName">UPI payee name</label><input type="text" id="bUpiName" placeholder="Shop name"></div>
           </div>
-          <div class="form-field"><label for="bFooter">Invoice footer note</label><textarea id="bFooter" placeholder="Thank you for your business!"></textarea></div>
+          <div class="form-field"><label for="bFooter">Invoice footer note</label><textarea id="bFooter" placeholder="Thank you for your business!"></textarea>
+            <div class="field-hint">Shown in the Footer note block on the invoice layout.</div>
+          </div>
+          <div class="form-field"><label for="bRegulations">Invoice regulations / terms</label>
+            <textarea id="bRegulations" rows="4" placeholder="e.g. Goods once sold will not be returned.&#10;Subject to Surat jurisdiction.&#10;E. &amp; O.E."></textarea>
+            <div class="field-hint">Custom terms printed on every invoice. Add a “Regulations” block in the layout designer to place them.</div>
+          </div>
+          <div class="card" style="padding:16px;margin:12px 0;background:var(--blue-tint-2);border:1px solid var(--border)">
+            <h3 style="margin-bottom:8px;font-size:15px">Payment / link QR</h3>
+            <p class="hint" style="margin-bottom:12px">Create a QR for <strong>any</strong> link — UPI, Paytm, PhonePe, Razorpay, website, Google Pay deep link, etc. Optional center logo + TechSerenia watermark. Place it on invoices via the layout designer (“UPI QR” block).</p>
+            <div class="form-grid">
+              <div class="form-field"><label for="bUpiLink">Link or payment URL</label>
+                <input type="text" id="bUpiLink" placeholder="https://… or upi://pay?pa=shop@upi&amp;pn=Shop">
+                <div class="field-hint">Any universal link. If empty, builds a UPI payload from UPI ID above.</div>
+              </div>
+              <div class="form-field"><label for="bQrLogoFile">QR center logo (separate from invoice logo)</label>
+                <input type="file" id="bQrLogoFile" accept="image/*">
+                <div class="field-hint">Shown in the middle of the QR. Leave blank to use invoice logo.</div>
+              </div>
+            </div>
+            <div class="form-field"><label for="bUpiQrFile">Or upload an existing QR / scanner image</label>
+              <input type="file" id="bUpiQrFile" accept="image/*">
+            </div>
+            <div class="photo-upload" style="margin-top:4px">
+              <img class="photo-preview" id="bUpiQrPreview" src="" alt="QR preview" style="display:none;background:#fff;width:120px;height:120px">
+              <img class="photo-preview" id="bQrLogoPreview" src="" alt="QR logo" style="display:none;background:#fff;width:56px;height:56px">
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <button type="button" class="btn btn-primary btn-sm" id="btnGenUpiQr">Generate QR</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnDownloadQr">Download QR</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnClearUpiQr">Clear</button>
+              </div>
+            </div>
+            <div class="field-hint" style="margin-top:8px">Generated codes include a small “TechSerenia” mark on the bottom edge of the QR image.</div>
+          </div>
           <div style="display:flex;flex-direction:column;gap:8px;margin:6px 0 16px;">
             <label class="checkbox-row"><input type="checkbox" id="bShowTsLogo" checked> Show the TechSerenia logo on invoices</label>
-            <label class="checkbox-row"><input type="checkbox" id="bShowOrbit" checked> Show "Powered by OrbitBills" branding on invoices</label>
           </div>
-          <button type="submit" class="btn btn-primary btn-sm">Save branding</button>
+          <div class="permanent-wm-note"><strong>Permanent watermark:</strong> Every invoice shows <em>“Powered By OrbitBills by TechSerenia”</em> at the bottom-left. This cannot be removed.</div>
+          <button type="submit" class="btn btn-primary btn-sm" style="margin-top:12px">Save branding</button>
           <div class="msg" id="brandingMsg"></div>
         </form>
       </div>
@@ -800,14 +1122,40 @@
 
       <div class="card">
         <h3>Layout designer</h3>
+        <p class="hint" style="margin-bottom:10px">Pick a paper size, then place blocks. Each layout is saved for that size so invoices print correctly on A4, A5, Letter, or thermal rolls.</p>
+        <div class="paper-size-tabs" id="paperSizeTabs">
+          <button type="button" class="paper-size-tab active" data-size="a4">A4</button>
+          <button type="button" class="paper-size-tab" data-size="a5">A5</button>
+          <button type="button" class="paper-size-tab" data-size="letter">Letter</button>
+          <button type="button" class="paper-size-tab" data-size="thermal80">Thermal 80mm</button>
+          <button type="button" class="paper-size-tab" data-size="thermal58">Thermal 58mm</button>
+        </div>
         <div class="designer-wrap">
           <div class="designer-canvas-outer">
-            <div class="designer-canvas" id="designerCanvas"></div>
+            <div class="designer-canvas size-a4" id="designerCanvas"></div>
           </div>
           <div class="designer-side">
             <div class="form-field"><label for="designerLayoutName">Layout name</label><input type="text" id="designerLayoutName" placeholder="e.g. My branded layout"></div>
+            <p class="hint" style="font-size:12px;color:var(--slate);margin-bottom:8px">Click × to remove a block from this layout. Drag blocks on the canvas to reposition.</p>
             <div class="field-list" id="designerFieldList"></div>
-            <button class="btn btn-primary btn-block" id="saveLayoutBtn">Save as new layout</button>
+            <div class="form-field" style="margin-top:10px"><label>Add block</label>
+              <select id="designerAddType">
+                <option value="logo">Logo</option>
+                <option value="brand_name">Brand name</option>
+                <option value="brand_address">Brand address</option>
+                <option value="invoice_meta">Invoice #/date</option>
+                <option value="bill_to">Bill to</option>
+                <option value="items_table">Items table</option>
+                <option value="totals">Totals</option>
+                <option value="footer_note">Footer note</option>
+                <option value="billing_notes">Billing notes (from cashier)</option>
+                <option value="regulations">Regulations / terms</option>
+                <option value="upi_qr">UPI QR</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-block" id="btnAddLayoutBlock" type="button">Add selected block</button>
+            <div class="permanent-wm-note">Watermark “Powered By OrbitBills by TechSerenia” is always drawn at bottom-left and cannot be deleted.</div>
+            <button class="btn btn-primary btn-block" id="saveLayoutBtn" style="margin-top:10px">Save as new layout</button>
             <button class="btn btn-ghost btn-block" id="updateLayoutBtn" style="display:none;margin-top:8px;">Update this layout</button>
             <button class="btn btn-danger btn-block" id="deleteLayoutBtn" style="display:none;margin-top:8px;">Delete this layout</button>
             <input type="hidden" id="designerLayoutId" value="">
@@ -891,28 +1239,28 @@
       <div class="page-head">
         <div>
           <h1>Import / export</h1>
-          <p>Bring in clients or products from a CSV file. Rows are sent straight to the server.</p>
+          <p>Bring in clients or products from CSV or Excel (.xlsx). Data is saved into IndexedDB on this device.</p>
         </div>
       </div>
 
       <div class="card">
         <h3>Import clients</h3>
-        <p class="empty-note" style="padding:0 0 4px;">Required CSV format (header row required):</p>
-        <div class="format-box">name,email,phone,address<br>Aditi Sharma,aditi@example.com,9876543210,"12 MG Road, Surat"</div>
+        <p class="empty-note" style="padding:0 0 4px;">Header row required. Accepts <strong>.csv</strong> or <strong>.xlsx / .xls</strong>:</p>
+        <div class="format-box">name,email,phone,address,gstin,notes<br>Aditi Sharma,aditi@example.com,9876543210,"12 MG Road, Surat",24AAAAA0000A1Z5,VIP</div>
         <div class="import-row">
-          <input type="file" id="clientsCsvInput" accept=".csv">
-          <button class="btn btn-primary btn-sm" id="clientsCsvBtn">Import clients CSV</button>
+          <input type="file" id="clientsCsvInput" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+          <button class="btn btn-primary btn-sm" id="clientsCsvBtn">Import clients</button>
         </div>
         <div class="msg" id="clientsCsvMsg"></div>
       </div>
 
       <div class="card">
         <h3>Import products</h3>
-        <p class="empty-note" style="padding:0 0 4px;">Required CSV format (header row required). storeType is one of grocery, restaurant, retail, other:</p>
-        <div class="format-box">name,brand,storeType,category,unit,price,stock,lowStockLimit<br>Basmati Rice 5kg,Fortune,grocery,Staples,pcs,650,40,10<br>Paneer Tikka,House Special,restaurant,Starters,plate,220,0,0</div>
+        <p class="empty-note" style="padding:0 0 4px;">Header row required. storeType is one of grocery, restaurant, retail, other. Tax slab can be percentage (e.g. 12) or slab name (e.g. GST 12%). Accepts <strong>.csv</strong> or <strong>.xlsx / .xls</strong>:</p>
+        <div class="format-box">name,brand,storeType,category,unit,price,cost,stock,lowStockLimit,sku,barcode,hsnCode,taxSlab,taxPercent,notes,expiryDate<br>Basmati Rice 5kg,Fortune,grocery,Staples,pcs,650,500,40,10,SKU-1,890123,1006,GST 12%,,Staple,2027-01-01<br>Paneer Tikka,House Special,restaurant,Starters,plate,220,120,0,0,,,,12,,,</div>
         <div class="import-row">
-          <input type="file" id="productsCsvInput" accept=".csv">
-          <button class="btn btn-primary btn-sm" id="productsCsvBtn">Import products CSV</button>
+          <input type="file" id="productsCsvInput" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+          <button class="btn btn-primary btn-sm" id="productsCsvBtn">Import products</button>
         </div>
         <div class="msg" id="productsCsvMsg"></div>
       </div>
@@ -924,41 +1272,72 @@
       <div class="page-head">
         <div>
           <h1>Email</h1>
-          <p>SMTP settings are stored in this browser (IndexedDB). Credentials are only sent when you send an email.</p>
+          <p>Send invoices and notes to clients. Settings stay in this browser (IndexedDB only).</p>
         </div>
       </div>
       <div class="card">
-        <h3>SMTP settings</h3>
+        <h3>Your mailbox</h3>
+        <p class="hint">For Gmail: use your Google address and an <strong>App password</strong> (Google Account → Security → 2-Step Verification → App passwords). Other providers work the same with their SMTP details — Gmail is filled in automatically.</p>
         <form id="smtpForm">
           <div class="form-grid">
-            <div class="form-field"><label for="smtpHost">SMTP host</label><input type="text" id="smtpHost" placeholder="smtp.gmail.com" required></div>
-            <div class="form-field"><label for="smtpPort">Port</label><input type="number" id="smtpPort" value="587" required></div>
-            <div class="form-field"><label for="smtpUser">Username</label><input type="text" id="smtpUser" placeholder="you@example.com"></div>
-            <div class="form-field"><label for="smtpPass">Password / app key</label><input type="password" id="smtpPass" placeholder="App password"></div>
-            <div class="form-field"><label for="smtpFromEmail">From email</label><input type="email" id="smtpFromEmail"></div>
-            <div class="form-field"><label for="smtpFromName">From name</label><input type="text" id="smtpFromName" value="OrbitBills"></div>
+            <div class="form-field"><label for="smtpUser">Your email</label><input type="email" id="smtpUser" placeholder="you@gmail.com" required autocomplete="username"></div>
+            <div class="form-field"><label for="smtpPass">App password</label><input type="password" id="smtpPass" placeholder="16-character app password" required autocomplete="current-password"></div>
           </div>
-          <label class="checkbox-row" style="margin-bottom:14px;"><input type="checkbox" id="smtpTls" checked> Use STARTTLS</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="submit" class="btn btn-primary btn-sm">Save to this browser</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="testEmailBtn">Send test email</button>
-            <button type="button" class="btn btn-danger btn-sm" id="clearSmtpBtn">Clear stored settings</button>
-          </div>
+          <details style="margin:8px 0 12px">
+            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--blue-deep)">Advanced SMTP (optional)</summary>
+            <div class="form-grid" style="margin-top:10px">
+              <div class="form-field"><label for="smtpHost">SMTP host</label><input type="text" id="smtpHost" placeholder="smtp.gmail.com"></div>
+              <div class="form-field"><label for="smtpPort">Port</label><input type="number" id="smtpPort" value="587"></div>
+              <div class="form-field"><label for="smtpFrom">From name</label><input type="text" id="smtpFrom" placeholder="Your shop name"></div>
+              <div class="form-field"><label for="smtpSecure">Security</label>
+                <select id="smtpSecure"><option value="starttls">STARTTLS (587)</option><option value="tls">TLS (465)</option><option value="none">None</option></select>
+              </div>
+            </div>
+          </details>
+          <button type="submit" class="btn btn-primary btn-sm">Save email settings</button>
           <div class="msg" id="smtpMsg"></div>
         </form>
       </div>
       <div class="card">
-        <h3>Compose email</h3>
-        <form id="composeEmailForm">
-          <div class="form-grid">
-            <div class="form-field"><label for="emailTo">To</label><input type="email" id="emailTo" required></div>
-            <div class="form-field"><label for="emailSubject">Subject</label><input type="text" id="emailSubject" required></div>
-          </div>
-          <div class="form-field"><label for="emailBody">Message</label><textarea id="emailBody" rows="8" required></textarea></div>
-          <label class="checkbox-row" style="margin-bottom:12px;"><input type="checkbox" id="emailHtml"> Send as HTML</label>
-          <button type="submit" class="btn btn-primary btn-sm">Send email</button>
-          <div class="msg" id="composeMsg"></div>
-        </form>
+        <h3>Send an email</h3>
+        <div class="form-field"><label for="emailTo">To (client email)</label>
+          <input type="email" id="emailTo" list="clientEmailList" placeholder="client@example.com" required>
+          <datalist id="clientEmailList"></datalist>
+        </div>
+        <div class="form-field"><label for="emailSubject">Subject</label><input type="text" id="emailSubject" placeholder="Invoice INV-…"></div>
+        <div class="form-field"><label for="emailBody">Message</label><textarea id="emailBody" rows="6" placeholder="Dear customer,&#10;&#10;Please find your invoice details below…"></textarea></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-primary" id="btnSendEmail">Send email</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnFillClientEmails">Load client emails</button>
+        </div>
+        <div class="msg" id="emailSendMsg"></div>
+        <p class="hint" style="margin-top:12px">Because OrbitBills is local-first, actual delivery uses your browser when possible, or opens your mail app with the message pre-filled if the server is offline.</p>
+      </div>
+    </section>
+
+<section class="panel" id="panel-dueinvoices">
+      <div class="page-head">
+        <div>
+          <h1>Due invoices</h1>
+          <p>Unpaid and partial invoices with a due date. Enable local reminders to get a browser notification when the dashboard opens.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" id="btnRefreshDue" type="button">Refresh</button>
+          <button class="btn btn-primary btn-sm" id="btnEnableDueReminders" type="button">Enable reminders</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="toolbar" style="margin-bottom:12px;">
+          <label class="checkbox-row"><input type="checkbox" id="dueRemindersToggle"> Remind me about overdue invoices on this device</label>
+          <span class="msg" id="dueReminderMsg" style="margin:0;"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Invoice</th><th>Client</th><th>Total</th><th>Outstanding</th><th>Due date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="dueInvoicesBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-note" id="dueEmpty" style="display:none;">No due dates set on open invoices.</div>
       </div>
     </section>
 
@@ -967,17 +1346,17 @@
       <div class="page-head">
         <div>
           <h1>Backup &amp; restore</h1>
-          <p>Full data backup including product and brand images. Does not include user accounts.</p>
+          <p>Downloads a ZIP of all IndexedDB business data on this device (products, clients, invoices, settings, layouts, images as data URLs). Password hashes are not included. Works fully offline.</p>
         </div>
       </div>
       <div class="card">
         <h3>Create backup</h3>
-        <button class="btn btn-primary btn-sm" id="createBackupBtn">Download backup</button>
+        <button class="btn btn-primary btn-sm" id="createBackupBtn">Download backup ZIP</button>
         <div class="msg" id="backupMsg"></div>
       </div>
       <div class="card">
         <h3>Restore backup</h3>
-        <input type="file" id="restoreFile" accept=".json,application/json" style="margin-bottom:10px;font-size:13px;">
+        <input type="file" id="restoreFile" accept=".zip,.json,application/json,application/zip" style="margin-bottom:10px;font-size:13px;">
         <button class="btn btn-danger btn-sm" id="restoreBackupBtn">Restore from file</button>
         <div class="msg" id="restoreMsg"></div>
       </div>
@@ -1089,13 +1468,17 @@
           </select>
         </div>
         <div class="form-field"><label for="pTaxSlab">Tax slab</label><select id="pTaxSlab"><option value="">No tax</option></select></div>
-        <div class="form-field"><label for="pPrice">Price</label><input type="number" id="pPrice" min="0" step="0.01" required></div>
+        <div class="form-field"><label for="pPrice">Price</label><input type="number" id="pPrice" min="0" step="0.01" required>
+        <label class="checkbox-row" style="margin-top:6px"><input type="checkbox" id="pPriceIncludesTax"> Price includes tax (MRP / tax-inclusive)</label>
+        <div class="field-hint" style="font-size:12px;color:var(--slate);margin-top:4px">When checked, the amount you type is treated as tax-inclusive; the base (exclusive) price is stored for GST calc.</div>
+      </div>
         <div class="form-field"><label for="pStock">Stock</label><input type="number" id="pStock" min="0" value="0"></div>
         <div class="form-field"><label for="pLowLimit">Low-stock limit</label><input type="number" id="pLowLimit" min="0" placeholder="Uses default if blank"></div>
         <div class="form-field"><label for="pSku">SKU</label><input type="text" id="pSku"></div>
         <div class="form-field"><label for="pHsn">HSN / SAC code</label><input type="text" id="pHsn"></div>
         <div class="form-field"><label for="pCost">Cost price</label><input type="number" id="pCost" min="0" step="0.01" value="0"></div>
         <div class="form-field"><label for="pBarcode">Barcode</label><input type="text" id="pBarcode" placeholder="EAN / custom code"></div>
+        <div class="form-field"><label for="pExpiry">Expiry date</label><input type="date" id="pExpiry"></div>
       </div>
       <div class="form-field"><label for="pNotes">Notes</label><textarea id="pNotes" placeholder="Optional"></textarea></div>
       <div class="msg" id="productFormMsg"></div>
@@ -1468,7 +1851,7 @@
         <button type="submit" class="btn btn-primary btn-sm">Add variant</button>
       </form>
       <div class="table-scroll" style="margin-top:12px;">
-      <table><thead><tr><th>Name</th><th>SKU</th><th>Barcode</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+      <table><thead><tr><th>Name</th><th>SKU</th><th>Barcode</th><th>Price</th><th>Cost</th><th>Stock</th><th></th></tr></thead>
       <tbody id="variantsBody"></tbody></table>
       </div>
     </div>
@@ -1558,15 +1941,16 @@ document.querySelectorAll(".nav-item[data-panel]").forEach(btn => {
     setActiveNavGroup(btn);
     closeMobileNav();
     const loaders = {
-      overview: renderOverview, products: renderProducts, taxslabs: renderTaxSlabs,
+      overview: renderOverview, notifications: renderNotifications, products: renderProducts, taxslabs: renderTaxSlabs,
       coupons: renderCoupons, pospin: loadPosPin,
       clients: renderClients, invoices: renderInvoices, branding: initBranding,
       users: renderUsers, email: loadSmtpForm,
       suppliers: renderSuppliers, purchases: renderPurchases, analytics: renderAnalytics, shifts: renderShifts, pricelists: renderPriceLists, reorder: renderReorderAdmin,
-      quotations: renderQuotations, inventory: renderInventory, codes: renderCodes,
+      quotations: renderQuotations, dueinvoices: renderDueInvoices, inventory: renderInventory, codes: renderCodes,
       database: renderDatabasePanel, sessions: renderSessions,
       lowstock: renderLowStock, expiring: renderExpiringBatches, returns: renderReturnsAdmin,
-      profitmargin: renderProfitMargin, overridelog: renderOverrideLog,
+      profitmargin: renderProfitMargin, deadstock: renderDeadstock, fastmoving: renderFastMoving, overridelog: renderOverrideLog,
+      variantscreen: renderVariantScreen, cashdayend: renderCashbox,
     };
     if (loaders[btn.dataset.panel]) loaders[btn.dataset.panel]();
   });
@@ -1616,6 +2000,16 @@ async function renderOverview(){
   const ru = document.getElementById("statRevenueUnpaid");
   if (rp) rp.textContent = money(data.stats.revenuePaid || 0);
   if (ru) ru.textContent = money(data.stats.revenueUnpaid || 0);
+  const pc = document.getElementById("statPayCash");
+  const pb = document.getElementById("statPayBank");
+  const po = document.getElementById("statPayOther");
+  if (pc) pc.textContent = money(data.stats.paymentsCash || 0);
+  if (pb) pb.textContent = money(data.stats.paymentsBank || 0);
+  if (po) po.textContent = money(data.stats.paymentsOther || 0);
+  const rc = document.getElementById("statReturnsCount");
+  const rt = document.getElementById("statReturnsTotal");
+  if (rc) rc.textContent = data.stats.returnsCount || 0;
+  if (rt) rt.textContent = money(data.stats.returnsTotal || 0);
 
   const tbody = document.getElementById("lowStockTable").querySelector("tbody");
   tbody.innerHTML = data.lowStockProducts.map(p => `
@@ -1690,7 +2084,9 @@ document.getElementById("taxSlabForm").addEventListener("submit", async e => {
                    : await api("/tax-slabs", { method: "POST", body: payload });
   if (!data.ok) { msg.textContent = data.error || "Could not save tax slab."; msg.className = "msg error"; return; }
   closeModal("taxSlabModal");
+  await loadTaxSlabsCache();
   renderTaxSlabs();
+  renderProducts();
 });
 
 // =========================================================================
@@ -1706,10 +2102,11 @@ function initialsColor(name){
 
 async function renderProducts(filter){
   await loadTaxSlabsCache();
-  const q = filter !== undefined ? filter : document.getElementById("productSearch").value;
+  const qRaw = filter !== undefined ? filter : (document.getElementById("productSearch")?.value || "");
+  const q = String(qRaw || "").trim().toLowerCase();
   const data = await api("/products" + (q ? `?q=${encodeURIComponent(q)}` : ""));
   if (!data.ok) return;
-  productsCache = data.products;
+  productsCache = data.products || [];
 
   // Populate category/brand filter dropdowns from whatever's loaded.
   const catSel = document.getElementById("productCategoryFilter");
@@ -1726,18 +2123,27 @@ async function renderProducts(filter){
   const catFilter = catSel ? catSel.value : "";
   const brandFilter = brandSel ? brandSel.value : "";
   const lowOnly = document.getElementById("productLowStockFilter")?.checked;
-  const rows = productsCache.filter(p =>
-    (!catFilter || p.category === catFilter) &&
-    (!brandFilter || p.brand === brandFilter) &&
-    (!lowOnly || Number(p.stock) <= Number(p.low_stock_limit || 5))
-  );
+  // Client-side safety net: also filter by search text (API may return unfiltered on older Db.js)
+  const rows = productsCache.filter(p => {
+    if (catFilter && p.category !== catFilter) return false;
+    if (brandFilter && p.brand !== brandFilter) return false;
+    if (lowOnly && Number(p.stock) > Number(p.low_stock_limit || 5)) return false;
+    if (q) {
+      const hay = [p.name, p.brand, p.sku, p.barcode, p.category, p.hsn_code, p.notes]
+        .map(x => String(x || "").toLowerCase()).join(" ");
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
 
   const tbody = document.getElementById("productsTableBody");
   tbody.innerHTML = rows.map(p => {
     const thumb = p.photo_path
       ? `<img class="row-thumb" src="${escapeHtml(p.photo_path)}" alt="">`
       : `<div class="row-thumb placeholder" style="background:${initialsColor(p.name)}22;color:${initialsColor(p.name)};">${escapeHtml((p.name||"P")[0].toUpperCase())}</div>`;
-    const taxLabel = p.tax_name ? `${escapeHtml(p.tax_name)}` : "&mdash;";
+    const taxLabel = p.tax_name
+      ? `${escapeHtml(p.tax_name)}${p.tax_percentage != null ? ` <span style="color:var(--slate);font-size:12px">(${Number(p.tax_percentage)}%)</span>` : ""}`
+      : (p.tax_percentage ? `${Number(p.tax_percentage)}%` : "&mdash;");
     return `
     <tr>
       <td><input type="checkbox" class="prod-check" value="${p.id}"></td><td>${thumb}</td>
@@ -1747,7 +2153,8 @@ async function renderProducts(filter){
       <td>${taxLabel}</td>
       <td>${escapeHtml(p.unit)}</td>
       <td>${Number(p.price).toFixed(2)}</td>
-      <td>${p.stock}</td>
+      <td>${p.stock}${p.has_variants ? ` <span style="color:var(--slate);font-size:11px" title="Variant stock total">(+${p.variant_stock||0} var)</span>` : ""}</td>
+      <td>${p.expiry_date ? escapeHtml(String(p.expiry_date).slice(0,10)) : "—"}</td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="showBarcode(${p.id})">Barcode</button>
@@ -1793,11 +2200,13 @@ async function editProduct(id){
   document.getElementById("pCategory").value = p.category || "";
   document.getElementById("pUnit").value = p.unit;
   document.getElementById("pPrice").value = p.price;
+  const pit = document.getElementById("pPriceIncludesTax"); if (pit) pit.checked = !!(p.price_includes_tax);
   document.getElementById("pStock").value = p.stock;
   document.getElementById("pLowLimit").value = p.low_stock_limit || "";
   document.getElementById("pSku").value = p.sku || "";
   if (document.getElementById("pCost")) document.getElementById("pCost").value = p.cost_price || 0;
   if (document.getElementById("pBarcode")) document.getElementById("pBarcode").value = p.barcode || "";
+  if (document.getElementById("pExpiry")) document.getElementById("pExpiry").value = (p.expiry_date || "").slice(0, 10);
   document.getElementById("pHsn").value = p.hsn_code || "";
   document.getElementById("pNotes").value = p.notes || "";
   document.getElementById("pRemovePhoto").checked = false;
@@ -1851,11 +2260,13 @@ document.getElementById("productForm").addEventListener("submit", async e => {
   fd.set("unit", document.getElementById("pUnit").value);
   fd.set("taxSlabId", document.getElementById("pTaxSlab").value);
   fd.set("price", document.getElementById("pPrice").value);
+  fd.set("priceIncludesTax", document.getElementById("pPriceIncludesTax")?.checked ? "1" : "0");
   fd.set("stock", document.getElementById("pStock").value);
   fd.set("lowStockLimit", document.getElementById("pLowLimit").value);
   fd.set("sku", document.getElementById("pSku").value.trim());
   fd.set("costPrice", document.getElementById("pCost") ? document.getElementById("pCost").value : "0");
   fd.set("barcode", document.getElementById("pBarcode") ? document.getElementById("pBarcode").value.trim() : "");
+  fd.set("expiryDate", document.getElementById("pExpiry") ? document.getElementById("pExpiry").value : "");
   fd.set("hsnCode", document.getElementById("pHsn").value.trim());
   fd.set("notes", document.getElementById("pNotes").value.trim());
   if (document.getElementById("pPhoto").files[0]) fd.set("photo", document.getElementById("pPhoto").files[0]);
@@ -1964,7 +2375,7 @@ async function openClientDetail(id){
     <tr>
       <td>${escapeHtml(inv.invoice_number)}</td><td>${(inv.items||[]).length ?? ''}</td>
       <td>${money(inv.total)}</td><td><span class="pill ${inv.status}">${escapeHtml(inv.status)}</span></td>
-      <td>${inv.created_at ? new Date(inv.created_at.replace(' ','T')+'Z').toLocaleDateString() : ""}</td>
+      <td>${inv.created_at ? formatIndiaTime(inv.created_at) : ""}</td>
     </tr>
   `).join("");
   document.getElementById("clientHistoryEmpty").style.display = data.invoices.length ? "none" : "block";
@@ -1973,7 +2384,7 @@ async function openClientDetail(id){
   const ctbody = document.getElementById("creditLogTableBody");
   ctbody.innerHTML = data.creditTransactions.map(t => `
     <tr>
-      <td>${t.created_at ? new Date(t.created_at.replace(' ','T')+'Z').toLocaleDateString() : ""}</td>
+      <td>${t.created_at ? formatIndiaTime(t.created_at) : ""}</td>
       <td><span class="credit-amount ${t.amount >= 0 ? 'pos' : 'neg'}">${t.amount >= 0 ? '+' : ''}${money(t.amount)}</span></td>
       <td>${escapeHtml(t.reason)}</td><td>${money(t.balance_after)}</td>
     </tr>
@@ -2104,7 +2515,7 @@ async function renderInvoices(filter){
       <td>${escapeHtml(inv.invoice_number)}</td><td>${escapeHtml(inv.client_name)}</td>
       <td>${(inv.items || []).length} item(s)</td><td>${money(inv.total)}</td>
       <td><span class="pill ${inv.status}">${escapeHtml(inv.status)}</span></td>
-      <td>${inv.created_at ? new Date(inv.created_at.replace(' ','T')+'Z').toLocaleDateString() : ""}</td>
+      <td>${inv.created_at ? formatIndiaTime(inv.created_at) : ""}</td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="viewInvoice(${inv.id})">View</button>
         <button class="btn btn-ghost btn-sm" onclick="shareInvoice(${inv.id})">Share</button>
@@ -2209,17 +2620,58 @@ document.getElementById("invoiceForm").addEventListener("submit", async e => {
 // =========================================================================
 // BRANDING + INVOICE LAYOUT DESIGNER
 // =========================================================================
-const CANVAS_W = 600, CANVAS_H = 800;
+const PAPER_LAYOUT_SPECS = {
+  a4:        { w: 600, h: 848, label: "A4", cssClass: "size-a4" },
+  a5:        { w: 420, h: 595, label: "A5", cssClass: "size-a5" },
+  letter:    { w: 612, h: 792, label: "Letter", cssClass: "size-letter" },
+  thermal80: { w: 302, h: 800, label: "Thermal 80mm", cssClass: "size-thermal80" },
+  thermal58: { w: 220, h: 700, label: "Thermal 58mm", cssClass: "size-thermal58" },
+};
+let CANVAS_W = 600, CANVAS_H = 848;
+let designerPaperSize = "a4";
 let brandingCache = {};
 let layoutsCache = [];
 let designerElements = [];
 let designerSelectedId = null;
 
+function setDesignerPaperSize(size, opts){
+  opts = opts || {};
+  const spec = PAPER_LAYOUT_SPECS[size] || PAPER_LAYOUT_SPECS.a4;
+  designerPaperSize = size;
+  CANVAS_W = spec.w;
+  CANVAS_H = spec.h;
+  const canvas = document.getElementById("designerCanvas");
+  if (canvas) {
+    canvas.className = "designer-canvas " + spec.cssClass;
+  }
+  document.querySelectorAll("#paperSizeTabs .paper-size-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-size") === size);
+  });
+  // Scale existing elements into new bounds if switching size
+  if (opts.rescale && designerElements.length) {
+    const prevW = opts.prevW || 600, prevH = opts.prevH || 848;
+    const sx = CANVAS_W / prevW, sy = CANVAS_H / prevH;
+    designerElements.forEach(el => {
+      el.x = Math.round(el.x * sx);
+      el.y = Math.round(el.y * sy);
+      el.w = Math.max(20, Math.round(el.w * sx));
+      el.h = Math.max(14, Math.round(el.h * sy));
+      el.x = Math.min(el.x, CANVAS_W - el.w);
+      el.y = Math.min(el.y, CANVAS_H - el.h);
+    });
+  }
+  if (typeof renderDesigner === "function") renderDesigner();
+  if (typeof renderInvoicePreview === "function") renderInvoicePreview();
+}
+
 const FIELD_LABELS = {
   logo: "Logo", brand_name: "Brand name", brand_address: "Brand address",
   invoice_meta: "Invoice #/date", bill_to: "Bill to", items_table: "Items table",
-  totals: "Totals", footer_note: "Footer note", orbitbills_badge: "OrbitBills badge",
+  totals: "Totals", footer_note: "Footer note", footer: "Footer note", billing_notes: "Billing notes",
+  regulations: "Regulations / terms", orbitbills_badge: "OrbitBills badge",
+  upi_qr: "UPI QR",
 };
+const LOCKED_TYPES = new Set(["orbitbills_badge"]); // never user-deletable if present; watermark is separate
 
 async function initBranding(){
   const [bData, lData] = await Promise.all([api("/branding"), api("/invoice-layouts")]);
@@ -2236,11 +2688,32 @@ async function initBranding(){
   if (document.getElementById("bCurrency")) document.getElementById("bCurrency").value = brandingCache.currency_symbol || "₹";
   if (document.getElementById("bUpiId")) document.getElementById("bUpiId").value = brandingCache.upi_id || "";
   if (document.getElementById("bUpiName")) document.getElementById("bUpiName").value = brandingCache.upi_name || "";
+  if (document.getElementById("bUpiLink")) document.getElementById("bUpiLink").value = brandingCache.upi_link || "";
   document.getElementById("bFooter").value = brandingCache.footer_note || "";
+  if (document.getElementById("bRegulations")) document.getElementById("bRegulations").value = brandingCache.invoice_regulations || "";
   document.getElementById("bShowTsLogo").checked = (brandingCache.show_techserenia_logo || "yes") === "yes";
-  document.getElementById("bShowOrbit").checked = (brandingCache.show_orbitbills_branding || "yes") === "yes";
   const logoSrc = brandingCache.custom_brand_logo || "logo.png";
   document.getElementById("bLogoPreview").src = logoSrc;
+  const upiPrev = document.getElementById("bUpiQrPreview");
+  if (upiPrev) {
+    if (brandingCache.upi_qr_image) {
+      upiPrev.src = brandingCache.upi_qr_image;
+      upiPrev.style.display = "block";
+    } else {
+      upiPrev.removeAttribute("src");
+      upiPrev.style.display = "none";
+    }
+  }
+  const qrLogoPrev = document.getElementById("bQrLogoPreview");
+  if (qrLogoPrev) {
+    if (brandingCache.qr_center_logo) {
+      qrLogoPrev.src = brandingCache.qr_center_logo;
+      qrLogoPrev.style.display = "block";
+    } else {
+      qrLogoPrev.removeAttribute("src");
+      qrLogoPrev.style.display = "none";
+    }
+  }
   updateBrandingPreviewStrip();
   renderLayoutCards();
   loadLayoutIntoDesigner(activeLayout());
@@ -2262,28 +2735,269 @@ document.getElementById("bLogo").addEventListener("change", e => {
   document.getElementById("brandingPreviewLogo").src = url;
 });
 
+
+document.getElementById("bUpiQrFile")?.addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const prev = document.getElementById("bUpiQrPreview");
+    if (prev) { prev.src = reader.result; prev.style.display = "block"; }
+    brandingCache.upi_qr_image = reader.result;
+    api("/branding", { method: "POST", body: { upi_qr_image: reader.result } }).catch(() => {});
+    renderInvoicePreview();
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById("bQrLogoFile")?.addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const prev = document.getElementById("bQrLogoPreview");
+    if (prev) { prev.src = reader.result; prev.style.display = "block"; }
+    brandingCache.qr_center_logo = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById("btnClearUpiQr")?.addEventListener("click", () => {
+  const prev = document.getElementById("bUpiQrPreview");
+  if (prev) { prev.removeAttribute("src"); prev.style.display = "none"; }
+  brandingCache.upi_qr_image = "";
+  const f = document.getElementById("bUpiQrFile"); if (f) f.value = "";
+  api("/branding", { method: "POST", body: { upi_qr_image: "" } }).catch(() => {});
+  renderInvoicePreview();
+});
+document.getElementById("btnDownloadQr")?.addEventListener("click", () => {
+  const prev = document.getElementById("bUpiQrPreview");
+  if (!prev || !prev.src || prev.style.display === "none") {
+    alert("Generate or upload a QR first.");
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = prev.src;
+  a.download = "orbitbills-qr.png";
+  a.click();
+});
+document.getElementById("btnGenUpiQr")?.addEventListener("click", async () => {
+  const upiId = (document.getElementById("bUpiId")?.value || "").trim();
+  const upiName = (document.getElementById("bUpiName")?.value || "").trim() || (document.getElementById("bName")?.value || "Payee");
+  const link = (document.getElementById("bUpiLink")?.value || "").trim();
+  let payload = link;
+  if (!payload && upiId) {
+    payload = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&cu=INR";
+  }
+  if (!payload) { alert("Enter any payment or website link, or a UPI ID."); return; }
+  try {
+    const qrLogo = brandingCache.qr_center_logo
+      || document.getElementById("bQrLogoPreview")?.src
+      || document.getElementById("bLogoPreview")?.src
+      || brandingCache.custom_brand_logo
+      || "logo.png";
+    const dataUrl = await tsMakeUniversalQrWithLogo(payload, qrLogo);
+    const prev = document.getElementById("bUpiQrPreview");
+    if (prev) { prev.src = dataUrl; prev.style.display = "block"; }
+    brandingCache.upi_qr_image = dataUrl;
+    // Persist immediately so invoices show the QR without a separate Save
+    try { await api("/branding", { method: "POST", body: { upi_qr_image: dataUrl } }); } catch (e) {}
+    renderInvoicePreview();
+  } catch (err) {
+    alert("Could not generate QR: " + (err.message || err));
+  }
+});
+
+
+/** Draw a scannable QR into a canvas using whatever QR library is available. */
+async function tsDrawQrToCanvas(targetCanvas, text, opts){
+  opts = opts || {};
+  const size = opts.size || 512;
+  const margin = opts.margin != null ? opts.margin : 2;
+  targetCanvas.width = size;
+  targetCanvas.height = size;
+  const ctx = targetCanvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size, size);
+
+  // 1) node-style / qrcode npm: QRCode.toCanvas(canvas, text, opts)
+  if (typeof QRCode !== "undefined" && typeof QRCode.toCanvas === "function") {
+    await new Promise((resolve, reject) => {
+      try {
+        const ret = QRCode.toCanvas(targetCanvas, String(text), {
+          width: size,
+          margin: margin,
+          errorCorrectionLevel: "H",
+          color: { dark: "#000000", light: "#ffffff" },
+        }, function(err){
+          if (err) reject(err); else resolve();
+        });
+        // some builds return a Promise and ignore callback
+        if (ret && typeof ret.then === "function") ret.then(resolve).catch(reject);
+        else if (ret === undefined && QRCode.toCanvas.length < 3) resolve();
+      } catch (e) { reject(e); }
+    });
+    return;
+  }
+
+  // 2) davidshimjs-style: new QRCode(dom, {text, width, height})
+  if (typeof QRCode !== "undefined" && typeof QRCode === "function") {
+    const holder = document.createElement("div");
+    holder.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(holder);
+    try {
+      const level = (QRCode.CorrectLevel && QRCode.CorrectLevel.H) != null ? QRCode.CorrectLevel.H : 2;
+      // eslint-disable-next-line no-new
+      new QRCode(holder, { text: String(text), width: size, height: size, correctLevel: level });
+      await new Promise(r => setTimeout(r, 120));
+      const img = holder.querySelector("img") || holder.querySelector("canvas");
+      if (!img) throw new Error("QR DOM empty");
+      if (img.tagName === "CANVAS") {
+        ctx.drawImage(img, 0, 0, size, size);
+      } else {
+        await new Promise((res, rej) => { if (img.complete) res(); else { img.onload = res; img.onerror = rej; } });
+        ctx.drawImage(img, 0, 0, size, size);
+      }
+    } finally {
+      holder.remove();
+    }
+    return;
+  }
+
+  // 3) kazuhiko arase: qrcode(typeNumber, errorCorrectionLevel)
+  if (typeof qrcode === "function") {
+    const qr = qrcode(0, "H");
+    qr.addData(String(text));
+    qr.make();
+    const n = qr.getModuleCount();
+    const cell = size / n;
+    ctx.fillStyle = "#000000";
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (qr.isDark(r, c)) ctx.fillRect(Math.floor(c * cell), Math.floor(r * cell), Math.ceil(cell) + 0.5, Math.ceil(cell) + 0.5);
+      }
+    }
+    return;
+  }
+
+  // 4) Built-in minimal fallback using Google Charts-less pure matrix via a tiny encoder
+  if (typeof tsQrEncodeMatrix === "function") {
+    const matrix = tsQrEncodeMatrix(String(text));
+    const n = matrix.length;
+    const cell = size / n;
+    ctx.fillStyle = "#000000";
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (matrix[r][c]) ctx.fillRect(Math.floor(c * cell), Math.floor(r * cell), Math.ceil(cell), Math.ceil(cell));
+      }
+    }
+    return;
+  }
+
+  throw new Error("No QR library loaded. Ensure qrcode.min.js is next to this page (supports QRCode.toCanvas).");
+}
+
+/** QR for any universal URL / deep link. Center logo + small TechSerenia watermark. */
+async function tsMakeUniversalQrWithLogo(text, logoSrc){
+  const size = 512;
+  const qrCanvas = document.createElement("canvas");
+  await tsDrawQrToCanvas(qrCanvas, text, { size: size, margin: 2 });
+
+  // Center logo
+  if (logoSrc) {
+    try {
+      const qctx = qrCanvas.getContext("2d");
+      const logo = await new Promise((res, rej) => {
+        const im = new Image();
+        im.crossOrigin = "anonymous";
+        im.onload = () => res(im);
+        im.onerror = rej;
+        im.src = logoSrc;
+      });
+      const ls = Math.floor(size * 0.20);
+      const lx = (size - ls) / 2, ly = (size - ls) / 2;
+      const pad = 8;
+      qctx.fillStyle = "#ffffff";
+      if (qctx.roundRect) {
+        qctx.beginPath();
+        qctx.roundRect(lx - pad, ly - pad, ls + pad * 2, ls + pad * 2, 10);
+        qctx.fill();
+      } else {
+        qctx.fillRect(lx - pad, ly - pad, ls + pad * 2, ls + pad * 2);
+      }
+      qctx.drawImage(logo, lx, ly, ls, ls);
+    } catch (e) { /* logo optional */ }
+  }
+
+  // Compose with TechSerenia watermark strip
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size + 28;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(qrCanvas, 0, 0);
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(0, size, size, 28);
+  ctx.fillStyle = "#64748b";
+  ctx.font = "600 11px Inter,system-ui,sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("TechSerenia", size / 2, size + 18);
+  ctx.textAlign = "left";
+  return canvas.toDataURL("image/png");
+}
+
+
+
 document.getElementById("brandingForm").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("brandingMsg");
-  const fd = new FormData();
-  fd.set("brand_name", document.getElementById("bName").value.trim());
-  fd.set("brand_tagline", document.getElementById("bTagline").value.trim());
-  fd.set("brand_email", document.getElementById("bEmail").value.trim());
-  fd.set("brand_phone", document.getElementById("bPhone").value.trim());
-  fd.set("brand_address", document.getElementById("bAddress").value.trim());
-  fd.set("accent_color", document.getElementById("bAccent").value);
-  fd.set("default_low_stock_limit", document.getElementById("bDefaultLimit").value || "5");
-  if (document.getElementById("bCurrency")) fd.set("currency_symbol", document.getElementById("bCurrency").value.trim() || "₹");
-  if (document.getElementById("bUpiId")) fd.set("upi_id", document.getElementById("bUpiId").value.trim());
-  if (document.getElementById("bUpiName")) fd.set("upi_name", document.getElementById("bUpiName").value.trim());
-  fd.set("footer_note", document.getElementById("bFooter").value.trim());
-  fd.set("show_techserenia_logo", document.getElementById("bShowTsLogo").checked ? "yes" : "no");
-  fd.set("show_orbitbills_branding", document.getElementById("bShowOrbit").checked ? "yes" : "no");
-  if (document.getElementById("bLogo").files[0]) fd.set("brandLogo", document.getElementById("bLogo").files[0]);
-  const data = await api("/branding", { method: "POST", body: fd });
+  const body = {
+    brand_name: document.getElementById("bName").value.trim(),
+    brand_tagline: document.getElementById("bTagline").value.trim(),
+    brand_email: document.getElementById("bEmail").value.trim(),
+    brand_phone: document.getElementById("bPhone").value.trim(),
+    brand_address: document.getElementById("bAddress").value.trim(),
+    accent_color: document.getElementById("bAccent").value,
+    default_low_stock_limit: document.getElementById("bDefaultLimit").value || "5",
+    footer_note: document.getElementById("bFooter").value.trim(),
+    invoice_regulations: (document.getElementById("bRegulations") && document.getElementById("bRegulations").value.trim()) || "",
+    show_techserenia_logo: document.getElementById("bShowTsLogo").checked ? "yes" : "no",
+    show_orbitbills_branding: "yes",
+  };
+  if (document.getElementById("bUpiLink")) body.upi_link = document.getElementById("bUpiLink").value.trim();
+  const upiPrev = document.getElementById("bUpiQrPreview");
+  if (brandingCache.upi_qr_image && String(brandingCache.upi_qr_image).startsWith("data:")) {
+    body.upi_qr_image = brandingCache.upi_qr_image;
+  } else if (upiPrev && upiPrev.src && String(upiPrev.src).startsWith("data:")) {
+    body.upi_qr_image = upiPrev.src;
+  }
+  if (brandingCache.qr_center_logo) body.qr_center_logo = brandingCache.qr_center_logo;
+  else if (document.getElementById("bQrLogoPreview")?.src?.startsWith("data:")) {
+    body.qr_center_logo = document.getElementById("bQrLogoPreview").src;
+  }
+  if (document.getElementById("bCurrency")) body.currency_symbol = document.getElementById("bCurrency").value.trim() || "₹";
+  if (document.getElementById("bUpiId")) body.upi_id = document.getElementById("bUpiId").value.trim();
+  if (document.getElementById("bUpiName")) body.upi_name = document.getElementById("bUpiName").value.trim();
+  // Persist custom logo as data URL so invoice previews can show it offline
+  const logoFile = document.getElementById("bLogo").files[0];
+  if (logoFile) {
+    body.custom_brand_logo = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(logoFile);
+    });
+  } else {
+    // Keep existing custom logo if preview already shows a data URL or stored path
+    const current = document.getElementById("bLogoPreview").src || "";
+    if (current.startsWith("data:") || (brandingCache.custom_brand_logo && current.includes("data:"))) {
+      body.custom_brand_logo = brandingCache.custom_brand_logo || current;
+    }
+  }
+  const data = await api("/branding", { method: "POST", body });
   if (!data.ok) { msg.textContent = data.error || "Could not save branding."; msg.className = "msg error"; return; }
   msg.textContent = "Saved."; msg.className = "msg success";
-  initBranding();
+  await initBranding();
+  renderInvoicePreview();
 });
 
 function activeLayout(){
@@ -2300,7 +3014,7 @@ function renderLayoutCards(){
       <div class="layout-card ${isSelected ? 'selected' : ''}" onclick="setActiveLayout(${l.id})">
         <div class="mini-canvas">${blocks}</div>
         <div class="layout-name">${escapeHtml(l.name)}</div>
-        <div class="layout-tag">${l.is_preset ? 'Preset' : 'Custom'}</div>
+        <div class="layout-tag">${l.is_preset ? 'Preset' : 'Custom'} · ${(PAPER_LAYOUT_SPECS[l.paper_size||l.paperSize||'a4']||{}).label||'A4'}</div>
       </div>`;
   }).join("");
 }
@@ -2315,9 +3029,11 @@ async function setActiveLayout(id){
 
 function loadLayoutIntoDesigner(layout){
   if (!layout) return;
-  designerElements = JSON.parse(JSON.stringify(layout.elements));
+  designerElements = JSON.parse(JSON.stringify(layout.elements || []));
   designerSelectedId = null;
   document.getElementById("designerLayoutName").value = layout.name + (layout.is_preset ? " copy" : "");
+  const ps = layout.paper_size || layout.paperSize || "a4";
+  setDesignerPaperSize(ps);
   renderDesigner();
 }
 
@@ -2343,10 +3059,36 @@ function renderDesigner(){
   });
   const fieldList = document.getElementById("designerFieldList");
   fieldList.innerHTML = designerElements.map(el => `
-    <button type="button" class="${el.id === designerSelectedId ? 'selected' : ''}" onclick="selectDesignerBlock('${el.id}')">${FIELD_LABELS[el.type] || el.type}</button>
+    <div class="field-row">
+      <button type="button" class="field-pick ${el.id === designerSelectedId ? 'selected' : ''}" onclick="selectDesignerBlock('${el.id}')">${FIELD_LABELS[el.type] || el.type}</button>
+      <button type="button" class="field-del" title="Remove from layout" onclick="removeDesignerBlock('${el.id}')">×</button>
+    </div>
   `).join("");
 }
 function selectDesignerBlock(id){ designerSelectedId = id; renderDesigner(); }
+function removeDesignerBlock(id){
+  const el = designerElements.find(e => e.id === id);
+  if (!el) return;
+  if (!confirm("Remove “" + (FIELD_LABELS[el.type] || el.type) + "” from this layout?")) return;
+  designerElements = designerElements.filter(e => e.id !== id);
+  if (designerSelectedId === id) designerSelectedId = null;
+  renderDesigner();
+  renderInvoicePreview();
+}
+document.getElementById("btnAddLayoutBlock")?.addEventListener("click", () => {
+  const type = document.getElementById("designerAddType")?.value || "logo";
+  const id = type + "_" + Date.now().toString(36);
+  const defaults = {
+    logo: {x:30,y:30,w:90,h:90}, brand_name: {x:130,y:40,w:280,h:40}, brand_address: {x:130,y:80,w:280,h:50},
+    invoice_meta: {x:440,y:40,w:130,h:80}, bill_to: {x:30,y:150,w:260,h:80}, items_table: {x:30,y:250,w:540,h:280},
+    totals: {x:350,y:550,w:220,h:100}, footer_note: {x:30,y:700,w:540,h:40}, billing_notes: {x:30,y:640,w:540,h:40}, regulations: {x:30,y:740,w:540,h:50}, upi_qr: {x:420,y:620,w:120,h:120},
+  };
+  const d = defaults[type] || {x:40,y:40,w:120,h:60};
+  designerElements.push({ id, type, ...d });
+  designerSelectedId = id;
+  renderDesigner();
+  renderInvoicePreview();
+});
 
 function startDragBlock(ev, el){
   ev.preventDefault();
@@ -2386,10 +3128,20 @@ function startResizeBlock(ev, el){
   document.addEventListener("pointerup", onUp);
 }
 
+
+document.getElementById("paperSizeTabs")?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".paper-size-tab");
+  if (!btn) return;
+  const size = btn.getAttribute("data-size");
+  if (!size || size === designerPaperSize) return;
+  const prevW = CANVAS_W, prevH = CANVAS_H;
+  setDesignerPaperSize(size, { rescale: true, prevW, prevH });
+});
+
 document.getElementById("saveLayoutBtn").addEventListener("click", async () => {
   const msg = document.getElementById("designerMsg");
   const name = document.getElementById("designerLayoutName").value.trim() || "Custom layout";
-  const data = await api("/invoice-layouts", { method: "POST", body: { name, elements: designerElements } });
+  const data = await api("/invoice-layouts", { method: "POST", body: { name, elements: designerElements, paperSize: designerPaperSize } });
   if (!data.ok) { msg.textContent = data.error || "Could not save layout."; msg.className = "msg error"; return; }
   msg.textContent = "Saved as a new layout. Select it above to make it active."; msg.className = "msg success";
   const lData = await api("/invoice-layouts");
@@ -2408,7 +3160,7 @@ function renderInvoicePreview(){
   const footer = document.getElementById("bFooter").value || "Thank you for your business!";
   const logoSrc = document.getElementById("bLogoPreview").src;
   const showTs = document.getElementById("bShowTsLogo").checked;
-  const showOrbit = document.getElementById("bShowOrbit").checked;
+  const showOrbit = true; // permanent OrbitBills watermark always on
 
   const sample = {
     items: [
@@ -2420,12 +3172,18 @@ function renderInvoicePreview(){
   const tax = sample.items.reduce((s,i)=>s+i.qty*i.price*(i.tax/100),0);
 
   const blockHtml = { };
-  layout.elements.forEach(el => {
+  const sourceEls = (designerElements && designerElements.length) ? designerElements : (layout.elements || []);
+  sourceEls.forEach(el => {
     let inner = "";
-    if (el.type === "logo") inner = showTs ? `<img src="${logoSrc}" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none'">` : "";
+    if (el.type === "logo") { const hasCustom = logoSrc && (logoSrc.startsWith("data:") || (logoSrc !== "logo.png" && logoSrc.indexOf("logo.png") < 0) || brandingCache.custom_brand_logo); inner = (showTs || hasCustom) ? `<img src="${logoSrc}" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none'">` : ""; }
     else if (el.type === "brand_name") inner = `<div class="p-brand-name" style="color:${accent};">${escapeHtml(brandName)}</div><div style="font-size:10px;color:var(--slate);">${escapeHtml(tagline)}</div>`;
-    else if (el.type === "brand_address") inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(address)}</div>`;
-    else if (el.type === "invoice_meta") inner = `<div style="font-size:10px;text-align:right;"><strong>INV-1001</strong><br>${new Date().toLocaleDateString()}</div>`;
+    else if (el.type === "brand_address") {
+      const phone = (document.getElementById("bPhone") && document.getElementById("bPhone").value) || "";
+      const email = (document.getElementById("bEmail") && document.getElementById("bEmail").value) || "";
+      const contact = [phone, email].filter(Boolean).join(" · ");
+      inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(address)}${contact ? "\n" + escapeHtml(contact) : ""}</div>`;
+    }
+    else if (el.type === "invoice_meta") inner = `<div style="font-size:10px;text-align:right;"><strong>INV-1001</strong><br>${formatIndiaTime(new Date())}</div>`;
     else if (el.type === "bill_to") inner = `<div style="font-size:10px;"><strong>Bill to</strong><br>Aditi Sharma<br>12 MG Road, Surat</div>`;
     else if (el.type === "items_table") inner = `
         <table style="width:100%;border-collapse:collapse;">
@@ -2438,18 +3196,62 @@ function renderInvoicePreview(){
           <div>Tax: ${tax.toFixed(2)}</div>
           <div style="font-weight:700;font-size:14px;color:${accent};margin-top:4px;">Total: ${(subtotal+tax).toFixed(2)}</div>
         </div>`;
-    else if (el.type === "footer_note") inner = `<div style="font-size:10px;color:var(--slate);">${escapeHtml(footer)}</div>`;
-    else if (el.type === "orbitbills_badge") inner = showOrbit ? `<div class="p-orbit"><img src="logo.png" onerror="this.style.display='none'">Powered by OrbitBills &middot; TechSerenia</div>` : "";
+    else if (el.type === "footer_note" || el.type === "footer") inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(footer)}</div>`;
+      else if (el.type === "billing_notes") inner = inv.notes ? `<div style="font-size:10px;"><strong>Notes</strong><br>${escapeHtml(inv.notes)}</div>` : "";
+    else if (el.type === "billing_notes") inner = `<div style="font-size:10px;"><strong>Notes</strong><br><span style="color:var(--slate)">Cashier notes from billing…</span></div>`;
+    else if (el.type === "regulations") {
+      const regs = (document.getElementById("bRegulations") && document.getElementById("bRegulations").value) || brandingCache.invoice_regulations || "";
+      inner = `<div style="font-size:9px;color:var(--slate);white-space:pre-wrap;line-height:1.35;">${escapeHtml(regs)}</div>`;
+    }
+    else if (el.type === "orbitbills_badge") inner = `<div class="p-orbit"><img src="logo.png" onerror="this.style.display='none'">Powered by OrbitBills &middot; TechSerenia</div>`;
+    else if (el.type === "upi_qr") {
+      let qr = brandingCache.upi_qr_image || "";
+      const prevEl = document.getElementById("bUpiQrPreview");
+      if ((!qr || !String(qr).startsWith("data:")) && prevEl && prevEl.src && String(prevEl.src).startsWith("data:")) qr = prevEl.src;
+      inner = (qr && String(qr).startsWith("data:"))
+        ? `<img src="${qr}" style="width:100%;height:100%;object-fit:contain;background:#fff" alt="Payment QR">`
+        : `<div style="font-size:9px;color:var(--slate);border:1px dashed var(--border);height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px">Payment QR<br>(generate or upload, then Save branding)</div>`;
+    }
     blockHtml[el.id] = inner;
   });
 
-  preview.innerHTML = layout.elements.map(el => `
-    <div class="p-block p-${el.type.replace(/_/g,'-')}" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">
-      ${blockHtml[el.id]}
+  // Always pin permanent watermark bottom-left (not in elements list — cannot be deleted)
+  const wmTop = Math.max(0, CANVAS_H - 28);
+  const wmW = Math.min(280, CANVAS_W - 24);
+  const wm = `<div class="p-block" style="left:12px;top:${wmTop}px;width:${wmW}px;height:28px;pointer-events:none;">
+    <div style="font-size:9px;color:#64748b;font-weight:600;letter-spacing:.02em;">Powered By OrbitBills by TechSerenia</div>
+  </div>`;
+
+  const spec = PAPER_LAYOUT_SPECS[designerPaperSize] || PAPER_LAYOUT_SPECS.a4;
+  preview.className = "invoice-preview " + (spec.cssClass || "");
+  preview.style.width = CANVAS_W + "px";
+  preview.style.height = CANVAS_H + "px";
+
+  const els = (designerElements && designerElements.length) ? designerElements : (layout.elements || []);
+  // Build blockHtml for designer elements that might not be on saved layout yet
+  els.forEach(el => {
+    if (blockHtml[el.id] != null) return;
+    let inner = "";
+    if (el.type === "upi_qr") {
+      let qr = brandingCache.upi_qr_image || "";
+      const prevEl = document.getElementById("bUpiQrPreview");
+      if ((!qr || !String(qr).startsWith("data:")) && prevEl && prevEl.src && String(prevEl.src).startsWith("data:")) qr = prevEl.src;
+      inner = (qr && String(qr).startsWith("data:"))
+        ? `<img src="${qr}" style="width:100%;height:100%;object-fit:contain;background:#fff" alt="Payment QR">`
+        : `<div style="font-size:9px;color:var(--slate);border:1px dashed var(--border);height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px">Payment QR</div>`;
+    } else {
+      inner = `<div style="font-size:10px;color:var(--slate)">${FIELD_LABELS[el.type]||el.type}</div>`;
+    }
+    blockHtml[el.id] = inner;
+  });
+
+  preview.innerHTML = els.map(el => `
+    <div class="p-block p-${(el.type||"").replace(/_/g,'-')}" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">
+      ${blockHtml[el.id] || ""}
     </div>
-  `).join("");
+  `).join("") + wm;
 }
-["bAddress","bFooter","bShowTsLogo","bShowOrbit"].forEach(id => {
+["bAddress","bFooter","bRegulations","bShowTsLogo","bPhone","bEmail","bTagline"].forEach(id => {
   document.getElementById(id).addEventListener("input", renderInvoicePreview);
   document.getElementById(id).addEventListener("change", renderInvoicePreview);
 });
@@ -2496,25 +3298,60 @@ function tsDeviceLabel(ua){
 }
 async function renderSessions(){
   const msg = document.getElementById("sessionsMsg");
-  msg.textContent = "";
-  const data = await api("/sessions");
-  if (!data.ok) { msg.textContent = data.error || "Could not load sessions."; msg.className = "msg error"; return; }
+  if (msg) { msg.textContent = ""; msg.className = "msg"; }
+  const data = await api("/sessions?history=1");
+  if (!data.ok) {
+    if (msg) { msg.textContent = data.error || "Could not load sessions."; msg.className = "msg error"; }
+    return;
+  }
   const tbody = document.getElementById("sessionsTableBody");
-  tbody.innerHTML = data.sessions.map(s => `
-    <tr>
-      <td>${escapeHtml(s.email)}${s.is_current ? ' <span class="pill paid">This device</span>' : ''}</td>
-      <td><span class="pill retail">${escapeHtml(s.role)}</span></td>
-      <td>${escapeHtml(tsDeviceLabel(s.user_agent))}</td>
-      <td>${escapeHtml(s.ip_address || "")}</td>
-      <td>${escapeHtml(s.created_at || "")}</td>
-      <td>${escapeHtml(s.last_active_relative || "")}</td>
-      <td>${s.is_current ? "" : `<button class="btn btn-danger btn-sm" onclick="revokeSession(${s.id})">Sign out</button>`}</td>
-    </tr>
-  `).join("");
-  document.getElementById("sessionsEmpty").style.display = data.sessions.length ? "none" : "block";
+  const sessions = data.sessions || [];
+  const fmt = (typeof formatIndiaTime === "function") ? formatIndiaTime : (x => x || "");
+  if (tbody) {
+    tbody.innerHTML = sessions.map(s => `
+      <tr>
+        <td>${escapeHtml(s.email||"")}${s.is_current ? ' <span class="pill paid">This device</span>' : ''}</td>
+        <td><span class="pill retail">${escapeHtml(s.role||"")}</span></td>
+        <td>${escapeHtml(typeof tsDeviceLabel === "function" ? tsDeviceLabel(s.user_agent) : (s.user_agent||""))}</td>
+        <td>${escapeHtml(s.ip_address || "local")}</td>
+        <td>${escapeHtml(fmt(s.created_at))}</td>
+        <td>${escapeHtml(s.last_active_relative || fmt(s.last_active_at) || "")}</td>
+        <td>${s.is_current ? "—" : `<button class="btn btn-danger btn-sm" type="button" onclick="revokeSession('${String(s.id).replace(/'/g,"")}')">Sign out</button>`}</td>
+      </tr>
+    `).join("") || "";
+  }
+  const empty = document.getElementById("sessionsEmpty");
+  if (empty) empty.style.display = sessions.length ? "none" : "block";
+
+  // Optional history block
+  let histBox = document.getElementById("sessionsHistoryBody");
+  if (!histBox) {
+    const card = document.querySelector("#panel-sessions .card");
+    if (card) {
+      const wrap = document.createElement("div");
+      wrap.style.marginTop = "18px";
+      wrap.innerHTML = `<h3 style="font-size:15px;margin-bottom:8px">Session history</h3>
+        <div class="table-scroll"><table><thead><tr>
+          <th>Account</th><th>Role</th><th>Signed in</th><th>Status</th>
+        </tr></thead><tbody id="sessionsHistoryBody"></tbody></table></div>`;
+      card.appendChild(wrap);
+      histBox = document.getElementById("sessionsHistoryBody");
+    }
+  }
+  if (histBox) {
+    const hist = data.history || [];
+    histBox.innerHTML = hist.length
+      ? hist.map(s => `<tr>
+          <td>${escapeHtml(s.email||"")}</td>
+          <td>${escapeHtml(s.role||"")}</td>
+          <td>${escapeHtml(fmt(s.created_at))}</td>
+          <td><span class="pill unpaid">Ended</span></td>
+        </tr>`).join("")
+      : `<tr><td colspan="4" style="color:var(--slate)">No past sessions yet. Sign out and sign in again to build history.</td></tr>`;
+  }
 }
 async function revokeSession(id){
-  if (!confirm("Sign this device out immediately?")) return;
+  if (!confirm("Sign this session out?")) return;
   const data = await api(`/sessions/${id}/revoke`, { method: "POST" });
   if (!data.ok) { alert(data.error || "Could not revoke session."); return; }
   renderSessions();
@@ -2572,63 +3409,144 @@ document.getElementById("userForm").addEventListener("submit", async e => {
 });
 
 // =========================================================================
-// CSV IMPORT (now sends each row to the server)
+// CSV / Excel IMPORT (IndexedDB via tsLocalApi)
 // =========================================================================
+function normHeaderRow(row){
+  if (!row || typeof row !== "object") return row;
+  const out = {};
+  for (const [k, v] of Object.entries(row)) {
+    const key = String(k || "").trim().replace(/^\uFEFF/, "");
+    out[key] = v;
+    const low = key.toLowerCase().replace(/[\s_]+/g, "");
+    if (low === "costprice" || low === "cost") out.cost = out.cost ?? v;
+    if (low === "taxslab" || low === "taxslabid" || low === "tax") out.taxSlab = out.taxSlab ?? v;
+    if (low === "taxpercent" || low === "taxpercentage" || low === "gst") out.taxPercent = out.taxPercent ?? v;
+    if (low === "lowstocklimit" || low === "lowstock") out.lowStockLimit = out.lowStockLimit ?? v;
+    if (low === "hsn" || low === "hsncode" || low === "sac") out.hsnCode = out.hsnCode ?? v;
+    if (low === "storetype" || low === "type") out.storeType = out.storeType ?? v;
+    if (low === "expiry" || low === "expirydate") out.expiryDate = out.expiryDate ?? v;
+  }
+  return out;
+}
+
 function readCsv(file){
   return new Promise((resolve, reject) => {
-    Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => resolve(r.data), error: reject });
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => resolve((r.data || []).map(normHeaderRow)), error: reject });
   });
+}
+
+async function readSpreadsheet(file){
+  const name = (file.name || "").toLowerCase();
+  if (name.endsWith(".csv") || (file.type || "").includes("csv") || (file.type || "").includes("text/")) {
+    return readCsv(file);
+  }
+  if (typeof XLSX === "undefined") throw new Error("Excel library not loaded. Use CSV or check your network for SheetJS.");
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  return rows.map(normHeaderRow);
+}
+
+async function resolveTaxSlabId(row){
+  await loadTaxSlabsCache();
+  const rawSlab = row.taxSlab != null && row.taxSlab !== "" ? String(row.taxSlab).trim() : "";
+  const rawPct = row.taxPercent != null && row.taxPercent !== "" ? String(row.taxPercent).trim() : "";
+  if (rawSlab) {
+    if (/^\d+$/.test(rawSlab)) {
+      const id = parseInt(rawSlab, 10);
+      if (taxSlabsCache.some(t => Number(t.id) === id)) return id;
+    }
+    const byName = taxSlabsCache.find(t => String(t.name || "").toLowerCase() === rawSlab.toLowerCase());
+    if (byName) return byName.id;
+    const pctMatch = rawSlab.match(/(\d+(?:\.\d+)?)\s*%?/);
+    if (pctMatch) {
+      const pct = parseFloat(pctMatch[1]);
+      const byPct = taxSlabsCache.find(t => Number(t.percentage) === pct);
+      if (byPct) return byPct.id;
+    }
+  }
+  if (rawPct) {
+    const pct = parseFloat(String(rawPct).replace("%", ""));
+    if (!Number.isNaN(pct)) {
+      const byPct = taxSlabsCache.find(t => Number(t.percentage) === pct);
+      if (byPct) return byPct.id;
+    }
+  }
+  return null;
 }
 
 document.getElementById("clientsCsvBtn").addEventListener("click", async () => {
   const input = document.getElementById("clientsCsvInput");
   const msg = document.getElementById("clientsCsvMsg");
-  if (!input.files.length) { msg.textContent = "Choose a CSV file first."; msg.className = "msg error"; return; }
+  if (!input.files.length) { msg.textContent = "Choose a CSV or Excel file first."; msg.className = "msg error"; return; }
   try {
-    const rows = await readCsv(input.files[0]);
+    msg.textContent = "Importing…"; msg.className = "msg";
+    const rows = await readSpreadsheet(input.files[0]);
     let count = 0;
     for (const row of rows) {
-      if (!row.name) continue;
+      const name = String(row.name || "").trim();
+      if (!name) continue;
       const data = await api("/clients", { method: "POST", body: {
-        name: row.name.trim(), email: (row.email||"").trim(), phone: (row.phone||"").trim(), address: (row.address||"").trim(), gstin: (row.gstin||"").trim(), notes: (row.notes||"").trim(),
+        name, email: String(row.email||"").trim(), phone: String(row.phone||"").trim(),
+        address: String(row.address||"").trim(), gstin: String(row.gstin||"").trim(), notes: String(row.notes||"").trim(),
       }});
       if (data.ok) count++;
     }
     msg.textContent = `Imported ${count} client(s).`; msg.className = "msg success";
+    renderClients();
     renderOverview();
-  } catch (err) { msg.textContent = "Could not read that file. Check the format above."; msg.className = "msg error"; }
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "Could not read that file. Use CSV or .xlsx with a header row."; msg.className = "msg error";
+  }
 });
 
 document.getElementById("productsCsvBtn").addEventListener("click", async () => {
   const input = document.getElementById("productsCsvInput");
   const msg = document.getElementById("productsCsvMsg");
-  if (!input.files.length) { msg.textContent = "Choose a CSV file first."; msg.className = "msg error"; return; }
+  if (!input.files.length) { msg.textContent = "Choose a CSV or Excel file first."; msg.className = "msg error"; return; }
   try {
-    const rows = await readCsv(input.files[0]);
+    msg.textContent = "Importing…"; msg.className = "msg";
+    const rows = await readSpreadsheet(input.files[0]);
     let count = 0;
     for (const row of rows) {
-      if (!row.name) continue;
-      const storeType = ["grocery","restaurant","retail","other"].includes((row.storeType||"").toLowerCase()) ? row.storeType.toLowerCase() : "other";
-      const fd = new FormData();
-      fd.set("name", row.name.trim());
-      fd.set("brand", (row.brand||"").trim());
-      fd.set("storeType", storeType);
-      fd.set("category", (row.category||"").trim());
-      fd.set("unit", (row.unit||"pcs").trim());
-      fd.set("price", parseFloat(row.price) || 0);
-      fd.set("stock", parseInt(row.stock) || 0);
-      if (row.lowStockLimit) fd.set("lowStockLimit", parseInt(row.lowStockLimit));
-      if (row.sku) fd.set("sku", String(row.sku).trim());
-      if (row.hsnCode) fd.set("hsnCode", String(row.hsnCode).trim());
-      if (row.notes) fd.set("notes", String(row.notes).trim());
-      const data = await api("/products", { method: "POST", body: fd });
+      const name = String(row.name || "").trim();
+      if (!name) continue;
+      const stRaw = String(row.storeType || row.store_type || "other").toLowerCase();
+      const storeType = ["grocery","restaurant","retail","other"].includes(stRaw) ? stRaw : "other";
+      const taxSlabId = await resolveTaxSlabId(row);
+      const taxInclRaw = String(row.priceIncludesTax || row.price_includes_tax || row.taxInclusive || row.tax_inclusive || row.mrp || "").toLowerCase();
+      const priceIncludesTax = ["1","yes","true","y","mrp","inclusive"].includes(taxInclRaw) || taxInclRaw === "1";
+      const body = {
+        name,
+        brand: String(row.brand || "").trim(),
+        storeType,
+        category: String(row.category || "").trim(),
+        unit: String(row.unit || "pcs").trim() || "pcs",
+        price: parseFloat(row.price != null ? row.price : (row.mrp || 0)) || 0,
+        priceIncludesTax,
+        costPrice: parseFloat(row.cost != null ? row.cost : (row.costPrice || row.cost_price || 0)) || 0,
+        stock: parseFloat(row.stock) || 0,
+        sku: String(row.sku || "").trim(),
+        barcode: String(row.barcode || "").trim(),
+        hsnCode: String(row.hsnCode || row.hsn_code || "").trim(),
+        notes: String(row.notes || "").trim(),
+        expiryDate: String(row.expiryDate || row.expiry_date || "").trim(),
+      };
+      if (row.lowStockLimit != null && row.lowStockLimit !== "") body.lowStockLimit = parseInt(row.lowStockLimit, 10);
+      if (taxSlabId != null) body.taxSlabId = taxSlabId;
+      const data = await api("/products", { method: "POST", body });
       if (data.ok) count++;
     }
     msg.textContent = `Imported ${count} product(s).`; msg.className = "msg success";
+    renderProducts();
     renderOverview();
-  } catch (err) { msg.textContent = "Could not read that file. Check the format above."; msg.className = "msg error"; }
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "Could not read that file. Use CSV or .xlsx with a header row."; msg.className = "msg error";
+  }
 });
-
 
 // =========================================================================
 // Sign out + auth gate
@@ -2681,73 +3599,140 @@ async function idbDel(key){
     tx.onerror = () => reject(tx.error);
   });
 }
+
 async function loadSmtpForm(){
-  const smtp = await idbGet("smtp") || {};
+  // Prefer main OrbitBills IndexedDB settings, fall back to legacy orbitbills_admin
+  let smtp = {};
+  try {
+    const all = await tsGetAllSettings();
+    if (all.smtp_user || all.smtp_json) {
+      if (all.smtp_json) { try { smtp = JSON.parse(all.smtp_json); } catch(e) {} }
+      smtp.user = smtp.user || all.smtp_user || "";
+      smtp.password = smtp.password || all.smtp_pass || "";
+      smtp.host = smtp.host || all.smtp_host || "";
+      smtp.port = smtp.port || all.smtp_port || 587;
+      smtp.fromName = smtp.fromName || all.smtp_from_name || "";
+    }
+  } catch (e) {}
+  if (!smtp.user) {
+    try { smtp = (await idbGet("smtp")) || {}; } catch (e) {}
+  }
   const el = (id) => document.getElementById(id);
-  if (!el("smtpHost")) return;
-  el("smtpHost").value = smtp.host || "";
-  el("smtpPort").value = smtp.port || 587;
-  el("smtpUser").value = smtp.user || "";
+  if (!el("smtpUser")) return;
+  el("smtpUser").value = smtp.user || smtp.fromEmail || "";
   el("smtpPass").value = smtp.password || "";
-  el("smtpFromEmail").value = smtp.fromEmail || "";
-  el("smtpFromName").value = smtp.fromName || "OrbitBills";
-  el("smtpTls").checked = smtp.useTls !== false;
+  el("smtpHost").value = smtp.host || "smtp.gmail.com";
+  el("smtpPort").value = smtp.port || 587;
+  if (el("smtpFrom")) el("smtpFrom").value = smtp.fromName || "";
+  if (el("smtpSecure")) el("smtpSecure").value = smtp.secure || "starttls";
 }
 function readSmtpForm(){
-  return {
-    host: document.getElementById("smtpHost").value.trim(),
-    port: parseInt(document.getElementById("smtpPort").value) || 587,
-    user: document.getElementById("smtpUser").value.trim(),
-    password: document.getElementById("smtpPass").value,
-    fromEmail: document.getElementById("smtpFromEmail").value.trim(),
-    fromName: document.getElementById("smtpFromName").value.trim(),
-    useTls: document.getElementById("smtpTls").checked,
-  };
+  const user = document.getElementById("smtpUser").value.trim();
+  const pass = document.getElementById("smtpPass").value;
+  let host = (document.getElementById("smtpHost") && document.getElementById("smtpHost").value.trim()) || "";
+  let port = parseInt((document.getElementById("smtpPort") && document.getElementById("smtpPort").value) || "587", 10);
+  const fromName = (document.getElementById("smtpFrom") && document.getElementById("smtpFrom").value.trim()) || "";
+  const secure = (document.getElementById("smtpSecure") && document.getElementById("smtpSecure").value) || "starttls";
+  // Auto Gmail / Outlook / Yahoo host if blank
+  if (!host && user) {
+    const domain = user.split("@")[1] || "";
+    if (/gmail\.com$/i.test(domain) || /googlemail\.com$/i.test(domain)) host = "smtp.gmail.com";
+    else if (/outlook\.|hotmail\.|live\./i.test(domain)) host = "smtp.office365.com";
+    else if (/yahoo\./i.test(domain)) host = "smtp.mail.yahoo.com";
+    else host = "smtp." + domain;
+  }
+  if (!host) host = "smtp.gmail.com";
+  return { user, password: pass, host, port, fromEmail: user, fromName: fromName || user, secure, useTls: secure !== "none" };
 }
-(function wireEmail(){
-  const smtpForm = document.getElementById("smtpForm");
-  if (!smtpForm) return;
-  smtpForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    await idbSet("smtp", readSmtpForm());
-    const msg = document.getElementById("smtpMsg");
-    msg.textContent = "Saved to this browser (IndexedDB).";
-    msg.className = "msg success";
-  });
-  document.getElementById("clearSmtpBtn").addEventListener("click", async () => {
-    await idbDel("smtp");
-    smtpForm.reset();
-    document.getElementById("smtpPort").value = 587;
-    document.getElementById("smtpTls").checked = true;
-    document.getElementById("smtpMsg").textContent = "Cleared.";
-    document.getElementById("smtpMsg").className = "msg success";
-  });
-  document.getElementById("testEmailBtn").addEventListener("click", async () => {
-    const msg = document.getElementById("smtpMsg");
-    const smtp = readSmtpForm();
-    if (!smtp.host) { msg.textContent = "Enter SMTP host first."; msg.className = "msg error"; return; }
-    msg.textContent = "Sending test..."; msg.className = "msg";
-    const data = await api("/email/test", { method: "POST", body: { smtp } });
-    if (!data.ok) { msg.textContent = data.error || "Test failed."; msg.className = "msg error"; return; }
-    msg.textContent = "Test email sent."; msg.className = "msg success";
-  });
-  document.getElementById("composeEmailForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const msg = document.getElementById("composeMsg");
-    const smtp = await idbGet("smtp");
-    if (!smtp || !smtp.host) { msg.textContent = "Save SMTP settings first."; msg.className = "msg error"; return; }
-    msg.textContent = "Sending..."; msg.className = "msg";
-    const data = await api("/email/send", { method: "POST", body: {
-      smtp,
-      to: document.getElementById("emailTo").value.trim(),
-      subject: document.getElementById("emailSubject").value.trim(),
-      body: document.getElementById("emailBody").value,
-      html: document.getElementById("emailHtml").checked,
-    }});
-    if (!data.ok) { msg.textContent = data.error || "Send failed."; msg.className = "msg error"; return; }
-    msg.textContent = "Email sent."; msg.className = "msg success";
-  });
-})();
+document.getElementById("smtpForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("smtpMsg");
+  const smtp = readSmtpForm();
+  if (!smtp.user || !smtp.password) {
+    msg.textContent = "Enter your email and app password."; msg.className = "msg error"; return;
+  }
+  msg.textContent = "Saving…"; msg.className = "msg";
+  try {
+    await idbSet("smtp", smtp);
+    // Also store in main IndexedDB settings store (strict local-first)
+    await tsSetSetting("smtp_json", JSON.stringify(smtp));
+    await tsSetSetting("smtp_user", smtp.user);
+    await tsSetSetting("smtp_host", smtp.host);
+    await tsSetSetting("smtp_from_name", smtp.fromName || "");
+    msg.textContent = "Saved on this device."; msg.className = "msg success";
+  } catch (err) {
+    msg.textContent = "Could not save: " + (err.message || err); msg.className = "msg error";
+  }
+});
+document.getElementById("btnSendEmail")?.addEventListener("click", async () => {
+  const msg = document.getElementById("emailSendMsg");
+  const to = (document.getElementById("emailTo") && document.getElementById("emailTo").value.trim()) || "";
+  const subject = (document.getElementById("emailSubject") && document.getElementById("emailSubject").value.trim()) || "";
+  const body = (document.getElementById("emailBody") && document.getElementById("emailBody").value) || "";
+  if (!to) { msg.textContent = "Enter a recipient email."; msg.className = "msg error"; return; }
+  let smtp = readSmtpForm();
+  if (!smtp.user || !smtp.password) {
+    try {
+      const all = await tsGetAllSettings();
+      if (all.smtp_json) smtp = { ...smtp, ...JSON.parse(all.smtp_json) };
+    } catch (e) {}
+  }
+  if (!smtp.user || !smtp.password) {
+    msg.textContent = "Save your email + app password first."; msg.className = "msg error"; return;
+  }
+  msg.textContent = "Sending…"; msg.className = "msg";
+  // Try local API (no-op offline) then fall back to mailto so the user can still send
+  try {
+    const data = await api("/email/send", { method: "POST", body: { smtp, to, subject, body, html: false } });
+    if (data && data.ok) {
+      msg.textContent = "Email sent."; msg.className = "msg success"; return;
+    }
+  } catch (e) {}
+  // Offline-friendly: open mail client with pre-filled message
+  const mailto = "mailto:" + encodeURIComponent(to)
+    + "?subject=" + encodeURIComponent(subject)
+    + "&body=" + encodeURIComponent(body);
+  window.open(mailto, "_blank");
+  msg.textContent = "Opened your mail app with this message. (Local-first: server send is optional.)";
+  msg.className = "msg success";
+});
+document.getElementById("btnFillClientEmails")?.addEventListener("click", async () => {
+  const list = document.getElementById("clientEmailList");
+  if (!list) return;
+  const d = await api("/clients");
+  const emails = (d.clients || []).map(c => c.email).filter(Boolean);
+  list.innerHTML = emails.map(e => `<option value="${escapeHtml(e)}">`).join("");
+  const msg = document.getElementById("emailSendMsg");
+  if (msg) { msg.textContent = emails.length ? (emails.length + " client email(s) loaded.") : "No client emails on file."; msg.className = "msg"; }
+});
+loadSmtpForm();
+
+// India clock in sidebar
+function formatAdminIndiaClock(){
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "short", day: "2-digit", month: "short",
+      hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true,
+    }).format(new Date());
+  } catch (e) { return ""; }
+}
+function tickAdminClock(){
+  const el = document.getElementById("adminIndiaClock");
+  if (el) el.textContent = formatAdminIndiaClock();
+}
+setInterval(tickAdminClock, 1000);
+setTimeout(tickAdminClock, 0);
+
+function formatIndiaTime(d){
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+    }).format(d ? new Date(d) : new Date());
+  } catch (e) { return ""; }
+}
 
 // =========================================================================
 // Backup / restore
@@ -2757,40 +3742,35 @@ function readSmtpForm(){
   if (!createBtn) return;
   createBtn.addEventListener("click", async () => {
     const msg = document.getElementById("backupMsg");
-    msg.textContent = "Preparing backup..."; msg.className = "msg";
+    msg.textContent = "Preparing backup from this device..."; msg.className = "msg";
     try {
-      const res = await fetch("/api/admin/backup", { credentials: "same-origin" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        msg.textContent = err.error || "Backup failed."; msg.className = "msg error"; return;
+      if (!tsRequireRole("admin")) {
+        msg.textContent = "Admin sign-in required."; msg.className = "msg error"; return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "orbitbills-backup-" + new Date().toISOString().slice(0,19).replace(/[:T]/g,"-") + ".json";
-      a.click();
-      URL.revokeObjectURL(url);
-      msg.textContent = "Backup downloaded."; msg.className = "msg success";
+      const result = await tsDownloadBackupZip();
+      msg.textContent = "Backup ZIP downloaded" + (result.filename ? " (" + result.filename + ")" : "") + ".";
+      msg.className = "msg success";
     } catch (e) {
-      msg.textContent = "Backup failed: " + e.message; msg.className = "msg error";
+      console.error(e);
+      msg.textContent = "Backup failed: " + (e.message || e); msg.className = "msg error";
     }
   });
   document.getElementById("restoreBackupBtn").addEventListener("click", async () => {
     const msg = document.getElementById("restoreMsg");
     const input = document.getElementById("restoreFile");
-    if (!input.files.length) { msg.textContent = "Choose a backup JSON file first."; msg.className = "msg error"; return; }
-    if (!confirm("This will REPLACE all products, clients, invoices, tax slabs, branding and layouts. Continue?")) return;
+    if (!input.files.length) { msg.textContent = "Choose a backup ZIP or JSON file first."; msg.className = "msg error"; return; }
+    if (!tsRequireRole("admin")) {
+      msg.textContent = "Admin sign-in required."; msg.className = "msg error"; return;
+    }
+    if (!confirm("This will REPLACE all products, clients, invoices, tax slabs, branding and layouts on this device. Continue?")) return;
     msg.textContent = "Restoring..."; msg.className = "msg";
     try {
-      const text = await input.files[0].text();
-      const payload = JSON.parse(text);
-      const data = await api("/restore", { method: "POST", body: payload });
-      if (!data.ok) { msg.textContent = data.error || "Restore failed."; msg.className = "msg error"; return; }
+      await tsRestoreFromFile(input.files[0]);
       msg.textContent = "Restored successfully. Reloading..."; msg.className = "msg success";
       setTimeout(() => location.reload(), 800);
     } catch (e) {
-      msg.textContent = "Restore failed: " + e.message; msg.className = "msg error";
+      console.error(e);
+      msg.textContent = "Restore failed: " + (e.message || e); msg.className = "msg error";
     }
   });
 })();
@@ -2817,32 +3797,47 @@ async function viewInvoice(id){
     const brandName = branding.brand_name || "TechSerenia";
     const tagline = branding.brand_tagline || "OrbitBills";
     const address = branding.brand_address || "";
+    const phone = branding.brand_phone || "";
+    const email = branding.brand_email || "";
     const footer = branding.footer_note || "";
     const logoSrc = branding.custom_brand_logo || "logo.png";
     const showTs = (branding.show_techserenia_logo || "yes") === "yes";
-    const showOrbit = (branding.show_orbitbills_branding || "yes") === "yes";
-    const dateStr = inv.created_at ? new Date(inv.created_at.replace(' ','T')+'Z').toLocaleDateString() : "";
+    const dateStr = inv.created_at ? formatIndiaTime(inv.created_at) : "";
     const items = inv.items || [];
     const blockHtml = {};
     layout.elements.forEach(el => {
       let inner = "";
-      if (el.type === "logo") inner = showTs ? `<img src="${logoSrc}" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none'">` : "";
+      if (el.type === "logo") { const hasCustom = logoSrc && (logoSrc.startsWith("data:") || (logoSrc !== "logo.png" && logoSrc.indexOf("logo.png") < 0) || brandingCache.custom_brand_logo); inner = (showTs || hasCustom) ? `<img src="${logoSrc}" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none'">` : ""; }
       else if (el.type === "brand_name") inner = `<div class="p-brand-name" style="color:${accent};">${escapeHtml(brandName)}</div><div style="font-size:10px;color:var(--slate);">${escapeHtml(tagline)}</div>`;
-      else if (el.type === "brand_address") inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(address)}</div>`;
+      else if (el.type === "brand_address") {
+        const contact = [phone, email].filter(Boolean).join(" · ");
+        inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(address)}${contact ? "\n" + escapeHtml(contact) : ""}</div>`;
+      }
       else if (el.type === "invoice_meta") inner = `<div style="font-size:10px;text-align:right;"><strong>${escapeHtml(inv.invoice_number)}</strong><br>${dateStr}</div>`;
       else if (el.type === "bill_to") inner = `<div style="font-size:10px;"><strong>Bill to</strong><br>${escapeHtml(inv.client_name||"")}</div>`;
       else if (el.type === "items_table") inner = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid ${accent};"><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Tax</th><th style="text-align:right;">Amount</th></tr></thead><tbody>${items.map(i=>`<tr style="border-bottom:1px solid #eee;"><td>${escapeHtml(i.name)}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">${Number(i.price).toFixed(2)}</td><td style="text-align:center;">${i.tax_percent||0}%</td><td style="text-align:right;">${(i.qty*i.price).toFixed(2)}</td></tr>`).join("")}</tbody></table>`;
       else if (el.type === "totals") inner = `<div style="font-size:11px;text-align:right;"><div>Subtotal: ${Number(inv.subtotal||0).toFixed(2)}</div><div>Tax: ${Number(inv.tax_amount||0).toFixed(2)}</div><div>Discount: ${Number(inv.discount||0).toFixed(2)}</div>${(inv.credit_applied||0)>0?`<div>Credit: ${Number(inv.credit_applied).toFixed(2)}</div>`:""}<div style="font-weight:700;font-size:14px;color:${accent};margin-top:4px;">Total: ${Number(inv.total||0).toFixed(2)}</div></div>`;
-      else if (el.type === "footer_note") inner = `<div style="font-size:10px;color:var(--slate);">${escapeHtml(footer)}</div>`;
-      else if (el.type === "orbitbills_badge") inner = showOrbit ? `<div class="p-orbit"><img src="logo.png" onerror="this.style.display='none'">Powered by OrbitBills</div>` : "";
+      else if (el.type === "footer_note" || el.type === "footer") inner = `<div style="font-size:10px;color:var(--slate);white-space:pre-wrap;">${escapeHtml(footer)}</div>`;
+    else if (el.type === "regulations") {
+      const regs = (document.getElementById("bRegulations") && document.getElementById("bRegulations").value) || brandingCache.invoice_regulations || "";
+      inner = `<div style="font-size:9px;color:var(--slate);white-space:pre-wrap;line-height:1.35;">${escapeHtml(regs)}</div>`;
+    }
+      else if (el.type === "orbitbills_badge") inner = `<div class="p-orbit"><img src="logo.png" onerror="this.style.display='none'">Powered by OrbitBills</div>`;
+      else if (el.type === "upi_qr") {
+        const qr = branding.upi_qr_image || "";
+        inner = (qr && String(qr).startsWith("data:"))
+          ? `<img src="${qr}" style="width:100%;height:100%;object-fit:contain;background:#fff" alt="Payment QR">`
+          : `<div style="font-size:9px;color:var(--slate);border:1px dashed var(--border);height:100%;display:flex;align-items:center;justify-content:center">QR</div>`;
+      }
       blockHtml[el.id] = inner;
     });
-    canvas.innerHTML = layout.elements.map(el => `<div class="p-block" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${blockHtml[el.id]||""}</div>`).join("");
+    const wm = `<div class="p-block" style="left:12px;top:760px;width:280px;height:28px;"><div style="font-size:9px;color:#64748b;font-weight:600;">Powered By OrbitBills by TechSerenia</div></div>`;
+    canvas.innerHTML = layout.elements.map(el => `<div class="p-block" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${blockHtml[el.id]||""}</div>`).join("") + wm;
   }
   window.__viewingInvoice = inv;
   openModal("viewInvoiceModal");
 }
-async function markPaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "paid" } }); renderInvoices(); renderOverview(); }
+async function markPaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "paid", method: "cash" } }); renderInvoices(); renderOverview(); }
 async function markUnpaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "unpaid" } }); renderInvoices(); renderOverview(); }
 
 document.getElementById("printInvoiceBtn")?.addEventListener("click", () => window.print());
@@ -2903,7 +3898,7 @@ function composeToClient(email){
     const id = document.getElementById("designerLayoutId")?.value;
     if (!id) { msg.textContent = "This is a preset — save as a new layout first."; msg.className = "msg error"; return; }
     const name = document.getElementById("designerLayoutName").value.trim() || "Custom layout";
-    const data = await api(`/invoice-layouts/${id}`, { method: "PUT", body: { name, elements: designerElements } });
+    const data = await api(`/invoice-layouts/${id}`, { method: "PUT", body: { name, elements: designerElements, paperSize: designerPaperSize } });
     if (!data.ok) { msg.textContent = data.error || "Could not update."; msg.className = "msg error"; return; }
     msg.textContent = "Layout updated."; msg.className = "msg success";
     const lData = await api("/invoice-layouts");
@@ -3126,55 +4121,61 @@ async function deletePurchase(id){
 let revenueChartObj, productsChartObj, clientsChartObj;
 async function renderAnalytics(){
   const data = await api("/analytics");
-  if (!data.ok) return;
-  const months = (data.monthly||[]).map(m => m.month);
-  const paid = (data.monthly||[]).map(m => m.paid);
-  const unpaid = (data.monthly||[]).map(m => m.unpaid);
+  if (!data.ok) {
+    const msg = document.getElementById("analyticsLowStockBody");
+    if (msg) msg.innerHTML = `<tr><td colspan="5">${escapeHtml(data.error || "Could not load analytics")}</td></tr>`;
+    return;
+  }
+  // Support both new (revenue.labels/data) and legacy (monthly) shapes
+  let revLabels = (data.revenue && data.revenue.labels) || (data.monthly || []).map(m => m.month) || [];
+  let revPaid = (data.revenue && data.revenue.data) || (data.monthly || []).map(m => m.paid || m.total || 0) || [];
   const ctx1 = document.getElementById("revenueChart");
   if (ctx1 && window.Chart) {
     if (revenueChartObj) revenueChartObj.destroy();
     revenueChartObj = new Chart(ctx1, {
       type: "bar",
-      data: { labels: months, datasets: [
-        { label: "Paid", data: paid, backgroundColor: "#158a53" },
-        { label: "Unpaid", data: unpaid, backgroundColor: "#b8860b" },
-      ]},
-      options: { responsive: true, scales: { x: { stacked: false }, y: { beginAtZero: true } } }
+      data: { labels: revLabels.length ? revLabels : ["No sales yet"],
+        datasets: [{ label: "Revenue", data: revPaid.length ? revPaid : [0], backgroundColor: "#0b3d91" }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
   }
+  const topProducts = data.topProducts || [];
   const ctx2 = document.getElementById("productsChart");
   if (ctx2 && window.Chart) {
     if (productsChartObj) productsChartObj.destroy();
     productsChartObj = new Chart(ctx2, {
       type: "doughnut",
       data: {
-        labels: (data.topProducts||[]).map(p => p.name),
-        datasets: [{ data: (data.topProducts||[]).map(p => p.qty), backgroundColor: ["#0b3d91","#2f6feb","#158a53","#b8860b","#8e44ad","#c0392b","#5b6b82","#eaf1fc"] }]
+        labels: topProducts.map(p => p.name).concat(topProducts.length ? [] : ["None"]),
+        datasets: [{ data: topProducts.map(p => p.revenue != null ? p.revenue : p.qty).concat(topProducts.length ? [] : [1]),
+          backgroundColor: ["#0b3d91","#2f6feb","#158a53","#b8860b","#8e44ad","#c0392b","#5b6b82","#94a3b8"] }]
       },
       options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
   }
+  const topClients = data.topClients || [];
   const ctx3 = document.getElementById("clientsChart");
   if (ctx3 && window.Chart) {
     if (clientsChartObj) clientsChartObj.destroy();
     clientsChartObj = new Chart(ctx3, {
       type: "bar",
       data: {
-        labels: (data.topClients||[]).map(c => c.name),
-        datasets: [{ label: "Revenue", data: (data.topClients||[]).map(c => c.revenue), backgroundColor: "#2f6feb" }]
+        labels: topClients.map(c => c.name).concat(topClients.length ? [] : ["None"]),
+        datasets: [{ label: "Revenue", data: topClients.map(c => c.total != null ? c.total : c.revenue || 0).concat(topClients.length ? [] : [0]), backgroundColor: "#2f6feb" }]
       },
-      options: { indexAxis: "y", responsive: true }
+      options: { indexAxis: "y", responsive: true, scales: { x: { beginAtZero: true } } }
     });
   }
   const mt = document.getElementById("marginsTableBody");
-  if (mt) mt.innerHTML = (data.margins||[]).map(m => `
-    <tr><td>${escapeHtml(m.name)}</td><td>${money(m.revenue)}</td><td>${money(m.cost)}</td>
-    <td>${money(m.profit)}</td><td>${m.marginPct}%</td></tr>`).join("");
+  if (mt) mt.innerHTML = (data.margins || topProducts).map(m => `
+    <tr><td>${escapeHtml(m.name)}</td><td>${money(m.revenue)}</td><td>${money(m.cost || 0)}</td>
+    <td>${money(m.profit != null ? m.profit : m.margin || 0)}</td><td>${m.marginPct != null ? m.marginPct + "%" : "—"}</td></tr>`).join("") || '<tr><td colspan="5">No margin data yet</td></tr>';
   const lt = document.getElementById("analyticsLowStockBody");
   if (lt) lt.innerHTML = (data.lowStock||[]).map(p => `
     <tr><td>${escapeHtml(p.name)}</td><td>${p.stock}</td><td>${p.low_stock_limit ?? "default"}</td>
-    <td>${money(p.price)}</td><td>${money(p.cost_price)}</td></tr>`).join("");
+    <td>${money(p.price)}</td><td>${money(p.cost_price)}</td></tr>`).join("") || '<tr><td colspan="5">Nothing low on stock</td></tr>';
 }
+
 document.getElementById("sendLowStockAlertBtn")?.addEventListener("click", async () => {
   const msg = document.getElementById("lowStockAlertMsg");
   const smtp = await idbGet("smtp");
@@ -3504,8 +4505,12 @@ async function deleteQuote(id){
 async function renderInventory(){
   await renderProducts();
   const sel = document.getElementById("adjProduct");
-  if (sel) sel.innerHTML = (productsCache||[]).map(p =>
-    `<option value="${p.id}">${escapeHtml(p.name)} (stock ${p.stock})</option>`).join("");
+  if (sel) {
+    sel.innerHTML = (productsCache||[]).map(p =>
+      `<option value="${p.id}" data-has-variants="${p.has_variants?1:0}">${escapeHtml(p.name)} (stock ${p.stock})${p.has_variants?" · variants":""}</option>`).join("");
+    sel.onchange = () => loadAdjVariants();
+    loadAdjVariants();
+  }
   const mov = await api("/inventory/movements?limit=50");
   const tbody = document.getElementById("movementsTableBody");
   if (tbody && mov.ok) {
@@ -3526,16 +4531,37 @@ async function renderInventory(){
       <td>${b.qty}</td><td>${escapeHtml(b.expiry_date)}</td></tr>`).join("") || '<tr><td colspan="4">None expiring soon</td></tr>';
   }
 }
+async function loadAdjVariants(){
+  const pid = parseInt(document.getElementById("adjProduct")?.value, 10);
+  const wrap = document.getElementById("adjVariantWrap");
+  const vsel = document.getElementById("adjVariant");
+  if (!wrap || !vsel || !pid) return;
+  const p = (productsCache||[]).find(x => x.id === pid);
+  if (!p || !p.has_variants) {
+    wrap.style.display = "none";
+    vsel.innerHTML = '<option value="">Parent product stock</option>';
+    return;
+  }
+  const d = await api(`/products/${pid}/variants`);
+  const vars = (d && d.ok && d.variants) ? d.variants : [];
+  if (!vars.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+  vsel.innerHTML = '<option value="">Parent product stock</option>' + vars.map(v =>
+    `<option value="${v.id}">${escapeHtml(v.name||"Variant")} · stock ${v.stock??0}${v.sku?" · "+escapeHtml(v.sku):""}</option>`
+  ).join("");
+}
 document.getElementById("stockAdjustForm")?.addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("adjMsg");
+  const variantId = parseInt(document.getElementById("adjVariant")?.value || "", 10) || null;
   const data = await api("/inventory/adjust", { method: "POST", body: {
     productId: parseInt(document.getElementById("adjProduct").value),
-    delta: parseInt(document.getElementById("adjDelta").value),
+    variantId: variantId || undefined,
+    delta: parseFloat(document.getElementById("adjDelta").value),
     reason: document.getElementById("adjReason").value.trim() || "Manual adjust",
   }});
   if (!data.ok) { msg.textContent = data.error || "Failed"; msg.className = "msg error"; return; }
-  msg.textContent = "Stock is now " + data.stock; msg.className = "msg success";
+  msg.textContent = (variantId ? "Variant stock is now " : "Stock is now ") + data.stock; msg.className = "msg success";
   renderInventory(); renderProducts();
 });
 
@@ -3558,7 +4584,9 @@ async function refreshVariants(){
   if (!tbody || !data.ok) return;
   tbody.innerHTML = (data.variants||[]).map(v => `
     <tr><td>${escapeHtml(v.name)}</td><td>${escapeHtml(v.sku)}</td><td>${escapeHtml(v.barcode)}</td>
-    <td>${v.price != null ? money(v.price) : "—"}</td><td>${v.stock}</td>
+    <td>${v.price != null ? money(v.price) : "—"}</td>
+    <td>${v.cost_price != null ? money(v.cost_price) : "—"}</td>
+    <td>${v.stock}</td>
     <td><button class="btn btn-danger btn-sm" onclick="deleteVariant(${v.id})">Delete</button></td></tr>`).join("");
 }
 async function refreshBatches(){
@@ -3590,7 +4618,7 @@ document.getElementById("variantForm")?.addEventListener("submit", async e => {
     stock: parseInt(document.getElementById("vStock").value) || 0,
   }});
   document.getElementById("variantForm").reset();
-  refreshVariants();
+  refreshVariants(); renderProducts();
 });
 document.getElementById("batchForm")?.addEventListener("submit", async e => {
   e.preventDefault();
@@ -3604,7 +4632,7 @@ document.getElementById("batchForm")?.addEventListener("submit", async e => {
   document.getElementById("batchForm").reset();
   refreshBatches(); renderProducts();
 });
-async function deleteVariant(id){ if(confirm("Delete variant?")){ await api(`/variants/${id}`,{method:"DELETE"}); refreshVariants(); } }
+async function deleteVariant(id){ if(confirm("Delete variant?")){ await api(`/variants/${id}`,{method:"DELETE"}); refreshVariants(); renderProducts(); } }
 async function deleteBatch(id){ if(confirm("Delete batch and reverse stock?")){ await api(`/batches/${id}`,{method:"DELETE"}); refreshBatches(); renderProducts(); } }
 
 // =========================================================================
@@ -3840,26 +4868,305 @@ async function renderShifts(){
     <td><span class="pill ${s.status==='open'?'paid':'unpaid'}">${escapeHtml(s.status)}</span></td>
   </tr>`).join("");
 }
+let _plProductsCache = [];
+let _plClientsCache = [];
+let _plItemPrices = {}; // productId -> price string
+
 async function renderPriceLists(){
   const d = await api("/price-lists");
   const tbody = document.getElementById("priceListsBody");
   if (!tbody || !d.ok) return;
   tbody.innerHTML = (d.priceLists||[]).map(p => `<tr>
-    <td>${escapeHtml(p.name)}</td><td>${(p.items||[]).length}</td>
-    <td><button class="btn btn-danger btn-sm" onclick="deletePriceList(${p.id})">Delete</button></td>
-  </tr>`).join("") || '<tr><td colspan="3">No lists yet</td></tr>';
+    <td>${escapeHtml(p.name)}</td>
+    <td>${(p.items||[]).length}</td>
+    <td>${p.clientCount != null ? p.clientCount : (p.clients||[]).length}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="openPriceListEditor(${p.id})">Edit</button>
+      <button class="btn btn-danger btn-sm" type="button" onclick="deletePriceList(${p.id})">Delete</button>
+    </td>
+  </tr>`).join("") || '<tr><td colspan="4">No lists yet — create one to assign special prices to customers.</td></tr>';
 }
 async function deletePriceList(id){
-  if (!confirm("Delete price list?")) return;
+  if (!confirm("Delete this price list? Clients will fall back to default product prices.")) return;
   await api(`/price-lists/${id}`, { method: "DELETE" });
+  document.getElementById("priceListEditor").style.display = "none";
   renderPriceLists();
 }
 document.getElementById("openPriceList")?.addEventListener("click", async () => {
   const name = prompt("Price list name");
   if (!name) return;
-  await api("/price-lists", { method: "POST", body: { name, items: [] } });
-  renderPriceLists();
+  const d = await api("/price-lists", { method: "POST", body: { name, items: [] } });
+  await renderPriceLists();
+  if (d.ok && d.id) openPriceListEditor(d.id);
 });
+async function openPriceListEditor(id){
+  const [listRes, prodRes, cliRes] = await Promise.all([
+    api(`/price-lists/${id}`),
+    api("/products"),
+    api("/clients"),
+  ]);
+  if (!listRes.ok || !listRes.priceList) { alert(listRes.error || "Could not open list"); return; }
+  const L = listRes.priceList;
+  _plProductsCache = prodRes.products || [];
+  _plClientsCache = cliRes.clients || [];
+  _plItemPrices = {};
+  for (const it of (L.items || [])) {
+    _plItemPrices[String(it.product_id)] = String(it.price);
+  }
+  document.getElementById("plEditorId").value = L.id;
+  document.getElementById("plEditorName").value = L.name || "";
+  document.getElementById("plEditorNotes").value = L.notes || "";
+  document.getElementById("plEditorTitle").textContent = "Edit · " + (L.name || "List");
+  document.getElementById("plProductFilter").value = "";
+  document.getElementById("plClientFilter").value = "";
+  document.getElementById("plEditorMsg").textContent = "";
+  document.getElementById("priceListEditor").style.display = "block";
+  renderPlItemsTable();
+  renderPlClientsBox(L.clients || []);
+  document.getElementById("priceListEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function renderPlItemsTable(){
+  const term = (document.getElementById("plProductFilter")?.value || "").toLowerCase().trim();
+  const rows = _plProductsCache.filter(p => {
+    if (!term) return true;
+    return [p.name, p.sku, p.brand, p.category].join(" ").toLowerCase().includes(term);
+  }).slice(0, 200);
+  const tbody = document.getElementById("plItemsBody");
+  tbody.innerHTML = rows.map(p => {
+    const val = _plItemPrices[String(p.id)] != null ? _plItemPrices[String(p.id)] : "";
+    return `<tr>
+      <td>${escapeHtml(p.name)}<div style="font-size:11px;color:var(--slate)">${escapeHtml(p.sku||"")}</div></td>
+      <td>${money(p.price)}</td>
+      <td><input type="number" step="0.01" min="0" data-pl-pid="${p.id}" value="${escapeHtml(val)}" placeholder="—" style="width:110px;padding:6px 8px;border:1px solid var(--border);border-radius:8px"></td>
+    </tr>`;
+  }).join("") || '<tr><td colspan="3">No products</td></tr>';
+  tbody.querySelectorAll("input[data-pl-pid]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const pid = inp.getAttribute("data-pl-pid");
+      if (inp.value === "") delete _plItemPrices[pid];
+      else _plItemPrices[pid] = inp.value;
+    });
+  });
+}
+function renderPlClientsBox(assigned){
+  const assignedIds = new Set((assigned || []).map(c => Number(c.id)));
+  // also from cache price_list_id
+  const lid = parseInt(document.getElementById("plEditorId").value, 10);
+  for (const c of _plClientsCache) {
+    if (Number(c.price_list_id) === lid) assignedIds.add(Number(c.id));
+  }
+  const term = (document.getElementById("plClientFilter")?.value || "").toLowerCase().trim();
+  const box = document.getElementById("plClientsBox");
+  const rows = _plClientsCache.filter(c => {
+    if (!term) return true;
+    return [c.name, c.phone, c.email].join(" ").toLowerCase().includes(term);
+  });
+  box.innerHTML = rows.map(c => `
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13px;cursor:pointer">
+      <input type="checkbox" class="pl-client-cb" value="${c.id}" ${assignedIds.has(Number(c.id)) ? "checked" : ""}>
+      <span>${escapeHtml(c.name)}</span>
+      <span style="color:var(--slate);font-size:12px">${escapeHtml(c.phone||"")}</span>
+    </label>`).join("") || '<p style="color:var(--slate);font-size:13px">No clients yet</p>';
+}
+document.getElementById("plProductFilter")?.addEventListener("input", renderPlItemsTable);
+document.getElementById("plClientFilter")?.addEventListener("input", () => renderPlClientsBox());
+document.getElementById("plEditorClose")?.addEventListener("click", () => {
+  document.getElementById("priceListEditor").style.display = "none";
+});
+document.getElementById("plEditorSave")?.addEventListener("click", async () => {
+  const msg = document.getElementById("plEditorMsg");
+  const id = parseInt(document.getElementById("plEditorId").value, 10);
+  const name = document.getElementById("plEditorName").value.trim();
+  const notes = document.getElementById("plEditorNotes").value.trim();
+  // collect prices from inputs too
+  document.querySelectorAll("input[data-pl-pid]").forEach(inp => {
+    const pid = inp.getAttribute("data-pl-pid");
+    if (inp.value === "") delete _plItemPrices[pid];
+    else _plItemPrices[pid] = inp.value;
+  });
+  const items = Object.entries(_plItemPrices).map(([productId, price]) => ({
+    productId: parseInt(productId, 10), price: parseFloat(price) || 0
+  })).filter(x => x.productId && x.price >= 0);
+  msg.textContent = "Saving…"; msg.className = "msg";
+  const d = await api(`/price-lists/${id}`, { method: "PUT", body: { name, notes, items } });
+  if (!d.ok) { msg.textContent = d.error || "Save failed"; msg.className = "msg error"; return; }
+  // Assignments: checked = assign, unchecked previously on this list = unassign
+  const checked = Array.from(document.querySelectorAll(".pl-client-cb:checked")).map(c => parseInt(c.value, 10));
+  const unchecked = Array.from(document.querySelectorAll(".pl-client-cb:not(:checked)")).map(c => parseInt(c.value, 10));
+  // unassign only those that currently have this list
+  const toUnassign = unchecked.filter(cid => {
+    const c = _plClientsCache.find(x => Number(x.id) === cid);
+    return c && Number(c.price_list_id) === id;
+  });
+  if (checked.length) await api(`/price-lists/${id}/assign`, { method: "POST", body: { clientIds: checked } });
+  if (toUnassign.length) await api(`/price-lists/${id}/unassign`, { method: "POST", body: { clientIds: toUnassign } });
+  msg.textContent = "Saved. Billing will use these prices for assigned customers."; msg.className = "msg success";
+  renderPriceLists();
+  // refresh caches for price_list_id
+  const cliRes = await api("/clients");
+  _plClientsCache = cliRes.clients || [];
+});
+
+async function renderNotifications(){
+  const d = await api("/notifications");
+  const tbody = document.getElementById("notificationsBody");
+  const empty = document.getElementById("notificationsEmpty");
+  const badge = document.getElementById("notifNavBadge");
+  if (!tbody) return;
+  if (!d.ok) { tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(d.error||"Failed")}</td></tr>`; return; }
+  let dismissed = [];
+  try { dismissed = JSON.parse(localStorage.getItem("ts_dismissed_notifs") || "[]"); } catch (e) {}
+  const dismissedSet = new Set(dismissed.map(Number));
+  let rows = d.notifications || [];
+  rows = rows.filter(n => !dismissedSet.has(Number(n.id)));
+  if (badge) {
+    badge.textContent = rows.length;
+    badge.style.display = rows.length ? "inline-block" : "none";
+  }
+  tbody.innerHTML = rows.map(n => `<tr>
+    <td>${escapeHtml(n.invoice_number||"")}</td>
+    <td>${escapeHtml(n.client_name||"")}</td>
+    <td><strong style="color:${n.overdue?'var(--red)':'inherit'}">${money(n.outstanding)}</strong></td>
+    <td>${escapeHtml(n.due_date||"—")}${n.overdue?' <span class="pill unpaid">Overdue</span>':''}</td>
+    <td><span class="pill ${escapeHtml(n.status||"")}">${escapeHtml(n.status||"")}</span></td>
+    <td>${n.type === "pay_later" ? '<span class="pill partial">Pay Later</span>' : '<span class="pill unpaid">Unpaid</span>'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="notifEdit(${n.id})">Edit</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="notifResetOutstanding(${n.id})" title="Mark paid / clear outstanding">Reset</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="notifWriteOff(${n.id})">Write off</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="notifDismiss(${n.id})">Dismiss</button>
+      <button class="btn btn-danger btn-sm" type="button" onclick="notifDeleteInvoice(${n.id})">Delete</button>
+    </td>
+  </tr>`).join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+function notifDismiss(id){
+  let dismissed = [];
+  try { dismissed = JSON.parse(localStorage.getItem("ts_dismissed_notifs") || "[]"); } catch (e) {}
+  if (!dismissed.includes(id)) dismissed.push(id);
+  localStorage.setItem("ts_dismissed_notifs", JSON.stringify(dismissed));
+  renderNotifications();
+}
+document.getElementById("btnClearDismissedNotif")?.addEventListener("click", () => {
+  localStorage.removeItem("ts_dismissed_notifs");
+  renderNotifications();
+});
+async function notifResetOutstanding(id){
+  if (!confirm("Reset outstanding — mark this invoice as fully paid (records remaining as cash payment into the open shift)?")) return;
+  const d = await api(`/invoices/${id}/status`, { method: "POST", body: { status: "paid", method: "cash" } });
+  if (!d.ok) { alert(d.error || "Failed"); return; }
+  renderNotifications();
+  renderDueInvoices?.();
+}
+async function notifWriteOff(id){
+  if (!confirm("Write off remaining balance? Invoice will be marked paid without recording a payment.")) return;
+  const d = await api(`/invoices/${id}/write-off`, { method: "POST", body: {} });
+  if (!d.ok) { alert(d.error || "Failed"); return; }
+  renderNotifications();
+}
+async function notifDeleteInvoice(id){
+  if (!confirm("Permanently delete this invoice? Stock is not auto-restored.")) return;
+  const d = await api(`/invoices/${id}`, { method: "DELETE" });
+  if (!d.ok) { alert(d.error || "Failed"); return; }
+  renderNotifications();
+}
+async function notifEdit(id){
+  const d = await api(`/invoices/${id}`);
+  if (!d.ok || !d.invoice) { alert(d.error || "Not found"); return; }
+  const inv = d.invoice;
+  document.getElementById("notifEditId").value = inv.id;
+  document.getElementById("notifEditTitle").textContent = "Edit · " + (inv.invoice_number || inv.id);
+  document.getElementById("notifEditDue").value = (inv.due_date || "").slice(0, 10);
+  document.getElementById("notifEditStatus").value = inv.status || "unpaid";
+  document.getElementById("notifEditNotes").value = inv.notes || "";
+  document.getElementById("notifPayAmt").value = "";
+  document.getElementById("notifEditMsg").textContent = "";
+  document.getElementById("notifEditCard").style.display = "block";
+  document.getElementById("notifEditCard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+document.getElementById("notifEditClose")?.addEventListener("click", () => {
+  document.getElementById("notifEditCard").style.display = "none";
+});
+document.getElementById("notifEditSave")?.addEventListener("click", async () => {
+  const id = document.getElementById("notifEditId").value;
+  const msg = document.getElementById("notifEditMsg");
+  msg.textContent = "Saving…"; msg.className = "msg";
+  const status = document.getElementById("notifEditStatus").value;
+  const method = document.getElementById("notifPayMethod")?.value || "cash";
+  const d = await api(`/invoices/${id}/status`, { method: "POST", body: {
+    status,
+    dueDate: document.getElementById("notifEditDue").value,
+    notes: document.getElementById("notifEditNotes").value,
+    // When switching to paid, method drives cash-box / UPI shift sync
+    method: status === "paid" ? method : undefined,
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = status === "paid"
+    ? "Saved as paid — payment synced to open cash shift"
+    : "Saved";
+  msg.className = "msg success";
+  renderNotifications();
+});
+document.getElementById("notifRecordPay")?.addEventListener("click", async () => {
+  const id = document.getElementById("notifEditId").value;
+  const amt = parseFloat(document.getElementById("notifPayAmt").value) || 0;
+  const msg = document.getElementById("notifEditMsg");
+  if (amt <= 0) { msg.textContent = "Enter a payment amount"; msg.className = "msg error"; return; }
+  msg.textContent = "Recording…"; msg.className = "msg";
+  const d = await api(`/invoices/${id}/pay`, { method: "POST", body: {
+    amount: amt, method: document.getElementById("notifPayMethod").value,
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "Payment recorded"; msg.className = "msg success";
+  document.getElementById("notifPayAmt").value = "";
+  renderNotifications();
+  if (d.invoice) {
+    document.getElementById("notifEditStatus").value = d.invoice.status || "partial";
+  }
+});
+document.getElementById("btnRefreshNotif")?.addEventListener("click", renderNotifications);
+setTimeout(() => renderNotifications(), 800);
+
+async function renderDeadstock(){
+  const days = document.getElementById("deadstockDays")?.value || "60";
+  const d = await api(`/reports/deadstock?days=${days}`);
+  const tbody = document.getElementById("deadstockBody");
+  const empty = document.getElementById("deadstockEmpty");
+  if (!tbody) return;
+  if (!d.ok) { tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(d.error||"Failed")}</td></tr>`; return; }
+  const rows = d.products || [];
+  tbody.innerHTML = rows.map(p => `<tr>
+    <td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku||"")}</td>
+    <td><strong>${p.stock}</strong></td><td>${money(p.price)}</td>
+    <td>${p.neverSold ? "Never" : escapeHtml((p.lastSoldAt||"").slice(0,10))}</td>
+    <td>${p.daysSinceSale != null ? p.daysSinceSale : "—"}</td>
+    <td>${escapeHtml((p.expiry_date||"").slice(0,10))}</td>
+  </tr>`).join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+document.getElementById("btnRefreshDeadstock")?.addEventListener("click", renderDeadstock);
+document.getElementById("deadstockDays")?.addEventListener("change", renderDeadstock);
+
+async function renderFastMoving(){
+  const days = document.getElementById("fastMovingDays")?.value || "30";
+  const d = await api(`/reports/fast-moving?days=${days}`);
+  const tbody = document.getElementById("fastMovingBody");
+  const empty = document.getElementById("fastMovingEmpty");
+  if (!tbody) return;
+  if (!d.ok) { tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(d.error||"Failed")}</td></tr>`; return; }
+  const rows = d.products || [];
+  tbody.innerHTML = rows.map((p, i) => `<tr>
+    <td>${i + 1}</td>
+    <td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku||"")}</td>
+    <td><strong>${p.soldQty}</strong></td><td>${money(p.revenue)}</td>
+    <td>${p.dailyVelocity}</td><td>${p.stock}</td>
+  </tr>`).join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+document.getElementById("btnRefreshFastMoving")?.addEventListener("click", renderFastMoving);
+document.getElementById("fastMovingDays")?.addEventListener("change", renderFastMoving);
+
+
 async function renderReorderAdmin(){
   const d = await api("/reorder-suggestions?days=30");
   const tbody = document.getElementById("reorderBody");
@@ -3921,11 +5228,24 @@ async function renderProfitMargin(){
   document.getElementById("marginTotalCost").textContent = money(d.totalCost);
   document.getElementById("marginTotalMargin").textContent = money(d.totalMargin);
   const tbody = document.getElementById("marginBody");
-  tbody.innerHTML = (d.products||[]).filter(p => p.soldQty > 0).map(p => `<tr>
-    <td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku||"")}</td><td>${p.soldQty}</td>
-    <td>${money(p.revenue)}</td><td>${money(p.cost)}</td><td>${money(p.margin)}</td>
-    <td>${p.marginPct !== null ? p.marginPct + "%" : "—"}</td>
-  </tr>`).join("") || '<tr><td colspan="7">No sales in this window yet.</td></tr>';
+  const rows = [];
+  for (const p of (d.products||[]).filter(p => p.soldQty > 0)) {
+    rows.push(`<tr>
+      <td><strong>${escapeHtml(p.name)}</strong>${p.variantCount ? ` <span style="color:var(--slate);font-size:11px">(${p.variantCount} variants)</span>` : ""}</td>
+      <td>${escapeHtml(p.sku||"")}</td><td>${p.soldQty}</td>
+      <td>${money(p.revenue)}</td><td>${money(p.cost)}</td><td>${money(p.margin)}</td>
+      <td>${p.marginPct !== null && p.marginPct !== undefined ? p.marginPct + "%" : "—"}</td>
+    </tr>`);
+    for (const v of (p.variants || []).filter(x => x.soldQty > 0)) {
+      rows.push(`<tr style="background:var(--blue-tint-2)">
+        <td style="padding-left:24px;color:var(--slate)">↳ ${escapeHtml(v.name)}</td>
+        <td>${escapeHtml(v.sku||"")}</td><td>${v.soldQty}</td>
+        <td>${money(v.revenue)}</td><td>${money(v.cost)}</td><td>${money(v.margin)}</td>
+        <td>${v.marginPct != null ? v.marginPct + "%" : "—"}</td>
+      </tr>`);
+    }
+  }
+  tbody.innerHTML = rows.join("") || '<tr><td colspan="7">No sales in this window yet.</td></tr>';
 }
 document.getElementById("refreshMargin")?.addEventListener("click", renderProfitMargin);
 document.getElementById("marginDays")?.addEventListener("change", renderProfitMargin);
@@ -4075,6 +5395,246 @@ document.getElementById("btnSavePosPin")?.addEventListener("click", async () => 
   msg.textContent = "Saved"; msg.className = "msg success";
 });
 
+
+
+// =========================================================================
+// Due invoices + local reminders
+// =========================================================================
+async function renderDueInvoices(){
+  const d = await api("/due-invoices");
+  const tbody = document.getElementById("dueInvoicesBody");
+  const empty = document.getElementById("dueEmpty");
+  if (!tbody || !d.ok) return;
+  const rows = d.invoices || [];
+  tbody.innerHTML = rows.map(i => `
+    <tr>
+      <td>${escapeHtml(i.invoice_number)}</td>
+      <td>${escapeHtml(i.client_name||"Walk-in")}</td>
+      <td>${money(i.total)}</td>
+      <td><strong style="color:${i.overdue?'var(--red)':'inherit'}">${money(i.outstanding)}</strong></td>
+      <td>${escapeHtml(i.due_date||"")}${i.overdue?' <span class="pill unpaid">Overdue</span>':(i.daysUntil===0?' <span class="pill partial">Today</span>':'')}</td>
+      <td><span class="pill ${escapeHtml(i.status)}">${escapeHtml(i.status)}</span></td>
+      <td><button class="btn btn-ghost btn-sm" type="button" onclick="viewInvoice(${i.id})">Open</button></td>
+    </tr>`).join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+  const badge = document.getElementById("dueNavBadge");
+  if (badge) {
+    const n = rows.filter(r => r.overdue || r.daysUntil === 0).length;
+    badge.textContent = n; badge.style.display = n ? "inline-block" : "none";
+  }
+}
+document.getElementById("btnRefreshDue")?.addEventListener("click", renderDueInvoices);
+
+function tsDueRemindersEnabled(){
+  return localStorage.getItem("ts_due_reminders") === "1";
+}
+function tsSetDueReminders(on){
+  localStorage.setItem("ts_due_reminders", on ? "1" : "0");
+}
+async function tsCheckDueReminders(){
+  if (!tsDueRemindersEnabled()) return;
+  try {
+    const d = await api("/due-invoices");
+    if (!d.ok) return;
+    const hot = (d.invoices||[]).filter(i => i.overdue || i.daysUntil === 0);
+    const badge = document.getElementById("dueNavBadge");
+    if (badge) {
+      badge.textContent = hot.length; badge.style.display = hot.length ? "inline-block" : "none";
+    }
+    if (!hot.length) return;
+    const body = hot.slice(0, 5).map(i => `${i.invoice_number}: ${i.client_name||"Walk-in"} · due ${i.due_date}`).join("\n");
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      new Notification("OrbitBills — due invoices", { body: hot.length + " invoice(s) due or overdue\n" + body, tag: "orbitbills-due" });
+    }
+  } catch (e) {}
+}
+document.getElementById("btnEnableDueReminders")?.addEventListener("click", async () => {
+  const msg = document.getElementById("dueReminderMsg");
+  if (typeof Notification === "undefined") {
+    if (msg) { msg.textContent = "Notifications not supported in this browser."; msg.className = "msg error"; }
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") {
+    if (msg) { msg.textContent = "Permission denied — enable notifications in browser settings."; msg.className = "msg error"; }
+    return;
+  }
+  tsSetDueReminders(true);
+  const toggle = document.getElementById("dueRemindersToggle");
+  if (toggle) toggle.checked = true;
+  if (msg) { msg.textContent = "Reminders enabled on this device."; msg.className = "msg success"; }
+  tsCheckDueReminders();
+});
+document.getElementById("dueRemindersToggle")?.addEventListener("change", (e) => {
+  tsSetDueReminders(e.target.checked);
+  const msg = document.getElementById("dueReminderMsg");
+  if (msg) { msg.textContent = e.target.checked ? "Reminders on." : "Reminders off."; msg.className = "msg"; }
+  if (e.target.checked) tsCheckDueReminders();
+});
+(function initDueToggle(){
+  const toggle = document.getElementById("dueRemindersToggle");
+  if (toggle) toggle.checked = tsDueRemindersEnabled();
+  setTimeout(() => tsCheckDueReminders(), 1200);
+})();
+
+
+// =========================================================================
+// Variants screen (products that have variants)
+// =========================================================================
+async function renderVariantScreen(){
+  const q = (document.getElementById("variantProductSearch")?.value || "").trim();
+  const d = await api("/products?has_variants=1" + (q ? "&q=" + encodeURIComponent(q) : ""));
+  const tbody = document.getElementById("variantProductsBody");
+  const empty = document.getElementById("variantProductsEmpty");
+  if (!tbody) return;
+  if (!d.ok) { tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(d.error||"Failed")}</td></tr>`; return; }
+  const rows = (d.products || []).filter(p => p.has_variants);
+  tbody.innerHTML = rows.map(p => `<tr>
+    <td><strong>${escapeHtml(p.name)}</strong></td>
+    <td>${escapeHtml(p.brand||"")}</td>
+    <td>${p.variant_count || 0}</td>
+    <td>${p.variant_stock || 0}</td>
+    <td>${p.stock || 0}</td>
+    <td><button class="btn btn-ghost btn-sm" type="button" onclick="openVariantDetail(${p.id}, '${escapeHtml(p.name).replace(/'/g,"&#39;")}')">View variants</button></td>
+  </tr>`).join("");
+  if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+async function openVariantDetail(productId, name){
+  const d = await api(`/products/${productId}/variants`);
+  const card = document.getElementById("variantDetailCard");
+  const tbody = document.getElementById("variantDetailBody");
+  if (!card || !tbody) return;
+  document.getElementById("variantDetailTitle").textContent = name || ("Product #" + productId);
+  document.getElementById("variantDetailMeta").textContent = (d.variants||[]).length + " variant(s)";
+  tbody.innerHTML = (d.variants || []).map(v => `<tr>
+    <td>${escapeHtml(v.name||"")}</td>
+    <td>${escapeHtml(v.sku||"")}</td>
+    <td>${escapeHtml(v.barcode||"")}</td>
+    <td>${money(v.price)}</td>
+    <td>${money(v.cost_price)}</td>
+    <td><strong>${v.stock ?? 0}</strong></td>
+    <td><button class="btn btn-ghost btn-sm" type="button" onclick="openVariants(${productId})">Manage</button></td>
+  </tr>`).join("") || '<tr><td colspan="7">No variants</td></tr>';
+  card.style.display = "block";
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+document.getElementById("btnRefreshVariantsScreen")?.addEventListener("click", renderVariantScreen);
+document.getElementById("variantProductSearch")?.addEventListener("input", () => renderVariantScreen());
+
+// =========================================================================
+// Cash box / drawings / UPI / day-end
+// =========================================================================
+async function renderCashbox(){
+  const d = await api("/cashbox");
+  if (!d.ok) return;
+  document.getElementById("cbOpening").textContent = money(d.openingBalance);
+  document.getElementById("cbCashSales").textContent = money(d.cashSales);
+  document.getElementById("cbDrawings").textContent = money(d.drawingsTotal);
+  document.getElementById("cbExpected").textContent = money(d.expectedCash);
+  document.getElementById("cbUpiSales").textContent = money(d.upiSales);
+  document.getElementById("cbCardSales").textContent = money(d.cardSales);
+  document.getElementById("cbOtherSales").textContent = money(d.otherSales);
+  document.getElementById("cbOpeningInput").value = d.openingBalance || 0;
+
+  const drawBody = document.getElementById("drawingsBody");
+  if (drawBody) {
+    drawBody.innerHTML = (d.recentDrawings || []).map(r => `<tr>
+      <td>${escapeHtml(String(r.created_at||"").slice(0,19).replace("T"," "))}</td>
+      <td>${money(r.amount)}</td>
+      <td>${escapeHtml(r.method||"cash")}</td>
+      <td>${escapeHtml(r.reason||"")}</td>
+      <td>${escapeHtml(r.user_name||r.user_email||"")}</td>
+      <td><button class="btn btn-danger btn-sm" type="button" onclick="deleteDrawing(${r.id})">Delete</button></td>
+    </tr>`).join("") || '<tr><td colspan="6">No drawings yet</td></tr>';
+  }
+  const upiBody = document.getElementById("upiAccountsBody");
+  if (upiBody) {
+    upiBody.innerHTML = (d.upiAccounts || []).map(a => `<tr>
+      <td>${escapeHtml(a.name||"")}</td>
+      <td style="font-family:IBM Plex Mono,monospace;font-size:12px">${escapeHtml(a.upi_id||"")}</td>
+      <td>${escapeHtml(a.bank||"")}</td>
+      <td>${money(a.opening_balance)}</td>
+      <td><button class="btn btn-danger btn-sm" type="button" onclick="deleteUpiAccount(${a.id})">Delete</button></td>
+    </tr>`).join("") || '<tr><td colspan="5">No UPI accounts yet</td></tr>';
+  }
+}
+document.getElementById("btnRefreshCashbox")?.addEventListener("click", renderCashbox);
+document.getElementById("btnSaveOpening")?.addEventListener("click", async () => {
+  const msg = document.getElementById("cbOpeningMsg");
+  const d = await api("/cashbox", { method: "POST", body: {
+    openingBalance: parseFloat(document.getElementById("cbOpeningInput").value) || 0,
+    notes: document.getElementById("cbOpeningNote").value.trim(),
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "Opening balance saved"; msg.className = "msg success";
+  renderCashbox();
+});
+document.getElementById("btnCashAdjust")?.addEventListener("click", async () => {
+  const msg = document.getElementById("cbAdjustMsg");
+  const d = await api("/cashbox", { method: "POST", body: {
+    adjust: parseFloat(document.getElementById("cbAdjustAmt").value) || 0,
+    notes: document.getElementById("cbAdjustNote").value.trim(),
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "Adjustment applied"; msg.className = "msg success";
+  document.getElementById("cbAdjustAmt").value = 0;
+  renderCashbox();
+});
+document.getElementById("btnAddDrawing")?.addEventListener("click", async () => {
+  const msg = document.getElementById("drawingMsg");
+  const d = await api("/drawings", { method: "POST", body: {
+    amount: parseFloat(document.getElementById("drawingAmt").value) || 0,
+    method: document.getElementById("drawingMethod").value,
+    reason: document.getElementById("drawingReason").value.trim() || "Drawing",
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "Drawing recorded"; msg.className = "msg success";
+  document.getElementById("drawingAmt").value = 0;
+  renderCashbox();
+});
+async function deleteDrawing(id){
+  if (!confirm("Delete this drawing and reverse its cash effect?")) return;
+  await api(`/drawings/${id}`, { method: "DELETE" });
+  renderCashbox();
+}
+document.getElementById("btnAddUpi")?.addEventListener("click", async () => {
+  const msg = document.getElementById("upiMsg");
+  const d = await api("/upi-accounts", { method: "POST", body: {
+    name: document.getElementById("upiName").value.trim() || "UPI",
+    upiId: document.getElementById("upiId").value.trim(),
+    bank: document.getElementById("upiBank").value.trim(),
+    openingBalance: parseFloat(document.getElementById("upiOpening").value) || 0,
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "UPI account added"; msg.className = "msg success";
+  document.getElementById("upiName").value = "";
+  document.getElementById("upiId").value = "";
+  renderCashbox();
+});
+async function deleteUpiAccount(id){
+  if (!confirm("Delete this UPI account?")) return;
+  await api(`/upi-accounts/${id}`, { method: "DELETE" });
+  renderCashbox();
+}
+document.getElementById("btnDayEnd")?.addEventListener("click", async () => {
+  const msg = document.getElementById("deMsg");
+  const pre = document.getElementById("deResult");
+  msg.textContent = "Matching…"; msg.className = "msg";
+  const d = await api("/day-end", { method: "POST", body: {
+    countedCash: parseFloat(document.getElementById("deCountedCash").value) || 0,
+    countedUpi: parseFloat(document.getElementById("deCountedUpi").value) || 0,
+    countedCard: parseFloat(document.getElementById("deCountedCard").value) || 0,
+    notes: document.getElementById("deNotes").value.trim(),
+    closeShift: !!document.getElementById("deCloseShift").checked,
+  }});
+  if (!d.ok) { msg.textContent = d.error || "Failed"; msg.className = "msg error"; return; }
+  msg.textContent = "Day-end saved"; msg.className = "msg success";
+  if (pre) {
+    pre.style.display = "block";
+    pre.textContent = JSON.stringify(d.reconciliation, null, 2);
+  }
+  renderCashbox();
+});
 
 renderOverview();
 </script>

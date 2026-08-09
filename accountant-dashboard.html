@@ -3,128 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accountant · OrbitBills</title>
-<link rel="icon" href="favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>GST filing · TechSerenia</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--card:#fff;--brand:#0b3d91;--ok:#15803d;--bad:#b91c1c;--radius:12px}
+:root{--ink:#101a2b;--slate:#5b6b82;--blue-deep:#0b3d91;--blue:#2f6feb;--blue-tint:#eaf1fc;--blue-tint-2:#f5f8fe;--border:#dfe7f5;--radius:14px;--green:#158a53;--red:#c0392b;--amber:#b8860b;}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-h1,h2,h3{font-family:"Space Grotesk",sans-serif}
-header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.brand{font-weight:700}.brand span{color:var(--muted);font-weight:500;font-size:12px;margin-left:6px}
-.wrap{max-width:1100px;margin:0 auto;padding:20px 16px}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
-.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-size:22px;font-weight:700;font-family:"Space Grotesk",sans-serif;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
-.card h3{font-size:15px;margin-bottom:10px}
+body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--blue-tint-2);line-height:1.45}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{padding:0 8px 20px;display:flex;align-items:center}
+.brand img{height:36px;width:auto;display:block}
+.nav-item{display:block;width:100%;text-align:left;padding:10px 12px;border:0;background:none;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--slate);cursor:pointer;margin-bottom:2px}
+.nav-item:hover{background:var(--blue-tint);color:var(--blue-deep)}
+.nav-item.active{background:var(--blue-deep);color:#fff}
+.sidebar-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
+.main{flex:1;padding:28px 32px;max-width:1100px;min-width:0}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.page-head h1{font-size:24px}
+.page-head p{color:var(--slate);font-size:14px;margin-top:4px}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-card .label{font-size:12px;color:var(--slate);margin-bottom:4px}
+.stat-card .value{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.stat-card.pay .value{color:var(--red)}
+.btn{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;padding:9px 14px;border-radius:9px;border:1px solid transparent;cursor:pointer;background:var(--blue-deep);color:#fff}
+.btn-ghost{background:#fff;color:var(--blue-deep);border-color:var(--border)}
+.btn-sm{padding:7px 11px;font-size:12.5px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-th{font-size:11px;color:var(--muted);text-transform:uppercase}
-.btn{display:inline-flex;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13px;cursor:pointer;color:var(--brand)}
-.btn-primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+th{text-align:left;padding:9px 10px;color:var(--slate);font-size:11px;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+.table-scroll{overflow-x:auto}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
-.pill.paid{background:#dcfce7;color:var(--ok)}.pill.unpaid{background:#fee2e2;color:var(--bad)}.pill.partial{background:#fef3c7;color:#a16207}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
-input,select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.pill.paid{background:#e8f6ee;color:var(--green)}.pill.unpaid{background:#fdecea;color:var(--red)}.pill.partial{background:#fdf1e3;color:var(--amber)}
+.hint{font-size:12.5px;color:var(--slate);background:var(--blue-tint-2);border:1px dashed var(--border);border-radius:10px;padding:12px;line-height:1.55;margin-bottom:14px}
+.msg{font-size:13px;margin-top:8px}.msg.ok{color:var(--green)}.msg.err{color:var(--red)}
+.check-list{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.check-list label{display:flex;gap:8px;align-items:flex-start}
+@media(max-width:900px){.layout{flex-direction:column}.sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;gap:4px}.brand{width:100%}.stat-grid{grid-template-columns:1fr 1fr}.main{padding:16px}}
+@media print{.sidebar,.toolbar .btn,.no-print{display:none!important}.main{padding:0;max-width:none}.panel.active{display:block!important}body{background:#fff}}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">OrbitBills <span>Accountant</span></div>
-  <div>
-    <button class="btn" id="btnRefresh" type="button">Refresh</button>
-    <button class="btn" id="signOutBtn" type="button">Sign out</button>
-  </div>
-</header>
-<div class="wrap">
-  <div class="stat-grid">
-    <div class="stat"><div class="label">Invoices</div><div class="value" id="sInvoices">0</div></div>
-    <div class="stat"><div class="label">Revenue</div><div class="value" id="sRevenue">₹0</div></div>
-    <div class="stat"><div class="label">Unpaid</div><div class="value" id="sUnpaid">₹0</div></div>
-    <div class="stat"><div class="label">Margin (30d)</div><div class="value" id="sMargin">₹0</div></div>
-  </div>
-  <div class="card">
-    <div class="toolbar">
-      <h3 style="flex:1;margin:0">Day close</h3>
-      <input type="date" id="dayDate">
-      <button class="btn btn-primary" id="btnDay" type="button">Load</button>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="logo.png" alt="TechSerenia" onerror="this.style.display='none'">
     </div>
-    <div id="dayBody" style="font-size:13px;color:var(--muted)">Pick a date.</div>
-  </div>
-  <div class="card">
-    <h3>Recent invoices</h3>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>Number</th><th>Client</th><th>Total</th><th>Paid</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="invBody"></tbody>
-      </table>
+    <button class="nav-item active" data-panel="summary">Summary</button>
+    <button class="nav-item" data-panel="rates">Tax by rate</button>
+    <button class="nav-item" data-panel="hsn">HSN / SAC</button>
+    <button class="nav-item" data-panel="b2b">B2B</button>
+    <button class="nav-item" data-panel="b2c">B2C</button>
+    <button class="nav-item" data-panel="gstr1">GSTR-1 export</button>
+    <button class="nav-item" data-panel="checklist">Filing checklist</button>
+    <div class="sidebar-foot">
+      <div id="whoLabel" style="font-size:12px;color:var(--slate);padding:0 8px 8px"></div>
+      <button class="nav-item" type="button" id="signOutBtn" style="color:var(--blue-deep)">Sign out</button>
     </div>
-  </div>
-  <div class="card">
-    <div class="toolbar">
-      <h3 style="flex:1;margin:0">Profit margin</h3>
-      <select id="marginDays"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
-      <button class="btn" id="btnMargin" type="button">Refresh</button>
+  </aside>
+  <main class="main">
+    <div class="toolbar no-print">
+      <label style="font-size:12px;font-weight:600;color:var(--slate)">From</label>
+      <input type="date" id="fromDate">
+      <label style="font-size:12px;font-weight:600;color:var(--slate)">To</label>
+      <input type="date" id="toDate">
+      <button class="btn btn-sm" type="button" id="btnApply">Apply</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="btnThisMonth">This month</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="btnPrevMonth">Previous month</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()">Print</button>
     </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>Product</th><th>Sold</th><th>Revenue</th><th>Cost</th><th>Margin</th><th>%</th></tr></thead>
-        <tbody id="marginBody"></tbody>
-      </table>
-    </div>
-  </div>
+
+    <section class="panel active" id="panel-summary">
+      <div class="page-head"><div><h1>GST summary</h1><p>Outward supplies on this device · CGST + SGST (intra-state)</p></div></div>
+      <div class="hint">All figures come from IndexedDB invoices only. Clients with a 15-character GSTIN count as B2B. “Tax to pay” is total CGST+SGST for the selected period (working figure for portal liability).</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Invoices</div><div class="value" id="sCount">0</div></div>
+        <div class="stat-card"><div class="label">Taxable value</div><div class="value" id="sTaxable">₹0</div></div>
+        <div class="stat-card pay"><div class="label">Tax to pay (CGST+SGST)</div><div class="value" id="sTaxPay">₹0</div></div>
+        <div class="stat-card"><div class="label">Invoice value</div><div class="value" id="sTotal">₹0</div></div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="label">CGST</div><div class="value" id="sCgst" style="color:var(--blue-deep)">₹0</div></div>
+        <div class="stat-card"><div class="label">SGST</div><div class="value" id="sSgst" style="color:var(--blue-deep)">₹0</div></div>
+        <div class="stat-card"><div class="label">IGST</div><div class="value" id="sIgst">₹0</div></div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+        <div class="stat-card"><div class="label">B2B</div><div class="value" id="sB2bCount" style="font-size:18px">0</div><div style="margin-top:6px;font-size:13px;color:var(--slate)">Taxable <strong id="sB2bTaxable">₹0</strong> · Tax <strong id="sB2bTax">₹0</strong></div></div>
+        <div class="stat-card"><div class="label">B2C</div><div class="value" id="sB2cCount" style="font-size:18px">0</div><div style="margin-top:6px;font-size:13px;color:var(--slate)">Taxable <strong id="sB2cTaxable">₹0</strong> · Tax <strong id="sB2cTax">₹0</strong></div></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-rates">
+      <div class="page-head"><div><h1>Tax by rate</h1><p>Liability worksheet by GST rate.</p></div></div>
+      <div class="card table-scroll"><table><thead><tr><th>Rate %</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total tax</th><th>Lines</th></tr></thead><tbody id="ratesBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="panel-hsn">
+      <div class="page-head"><div><h1>HSN / SAC</h1><p>From product HSN on invoice lines.</p></div></div>
+      <div class="card table-scroll"><table><thead><tr><th>HSN</th><th>Description</th><th>Qty</th><th>Rate %</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>Tax</th></tr></thead><tbody id="hsnBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="panel-b2b">
+      <div class="page-head"><div><h1>B2B invoices</h1><p>Registered clients (GSTIN ≥ 15 chars).</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" id="btnExportB2bCsv">Export CSV</button></div>
+      <div class="card table-scroll"><table><thead><tr><th>Invoice</th><th>Date</th><th>Client</th><th>GSTIN</th><th>Taxable</th><th>Tax</th><th>Total</th><th>Status</th></tr></thead><tbody id="b2bBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="panel-b2c">
+      <div class="page-head"><div><h1>B2C invoices</h1><p>Walk-in / no GSTIN.</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" id="btnExportB2cCsv">Export CSV</button></div>
+      <div class="card table-scroll"><table><thead><tr><th>Invoice</th><th>Date</th><th>Client</th><th>Taxable</th><th>Tax</th><th>Total</th><th>Status</th></tr></thead><tbody id="b2cBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="panel-gstr1">
+      <div class="page-head"><div><h1>GSTR-1 export</h1><p>JSON + CSV for the selected period (IndexedDB only).</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" type="button" id="btnExportGstr1">Download JSON</button>
+          <button class="btn btn-ghost" type="button" id="btnExportGstr1Csv">CSV pack</button>
+        </div>
+      </div>
+      <div class="hint">Working files for portal review — not an official upload format.</div>
+      <div class="card"><pre id="gstr1Preview" style="font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:pre-wrap;max-height:420px;overflow:auto">Select a period to preview.</pre></div>
+    </section>
+
+    <section class="panel" id="panel-checklist">
+      <div class="page-head"><div><h1>Filing checklist</h1><p>Self-service month-end steps.</p></div></div>
+      <div class="card">
+        <div class="check-list">
+          <label><input type="checkbox" class="file-check"> Period matches return month</label>
+          <label><input type="checkbox" class="file-check"> B2B invoices have 15-char GSTIN</label>
+          <label><input type="checkbox" class="file-check"> HSN codes on sold products</label>
+          <label><input type="checkbox" class="file-check"> Tax rates match slabs</label>
+          <label><input type="checkbox" class="file-check"> Returns / credit notes reviewed</label>
+          <label><input type="checkbox" class="file-check"> GSTR-1 JSON/CSV archived</label>
+          <label><input type="checkbox" class="file-check"> Tax-to-pay cross-checked with cash day-end</label>
+          <label><input type="checkbox" class="file-check"> Filed on GST portal · ARN saved</label>
+        </div>
+        <div class="msg" id="checkMsg"></div>
+      </div>
+    </section>
+  </main>
 </div>
 <script src="Db.js"></script>
 <script>
-function money(n){ return "₹" + Number(n||0).toFixed(2); }
-function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-function pill(st){ return `<span class="pill ${esc(st)}">${esc(st)}</span>`; }
-async function load(){
-  const who = tsWhoami();
-  if (!who.ok || (who.role !== "accountant" && who.role !== "admin")) { location.href = "/signin.html"; return; }
-  const inv = await tsLocalApi("/invoices");
-  const invoices = inv.invoices || [];
-  const revenue = invoices.reduce((s,i)=>s+(Number(i.total)||0),0);
-  const unpaid = invoices.filter(i=>i.status==="unpaid"||i.status==="partial")
-    .reduce((s,i)=>s+Math.max(0,(Number(i.total)||0)-(Number(i.amount_paid)||0)),0);
-  document.getElementById("sInvoices").textContent = invoices.length;
-  document.getElementById("sRevenue").textContent = money(revenue);
-  document.getElementById("sUnpaid").textContent = money(unpaid);
-  document.getElementById("invBody").innerHTML = invoices.slice(0,50).map(i=>`
-    <tr><td>${esc(i.invoice_number)}</td><td>${esc(i.client_name||"Walk-in")}</td>
-    <td>${money(i.total)}</td><td>${money(i.amount_paid||0)}</td>
-    <td>${pill(i.status)}</td><td>${esc((i.created_at||"").slice(0,10))}</td></tr>`).join("") || `<tr><td colspan="6">No invoices yet</td></tr>`;
-  const m = await tsLocalApi("/reports/profit-margin?days="+document.getElementById("marginDays").value);
-  document.getElementById("sMargin").textContent = money(m.totalMargin||0);
-  document.getElementById("marginBody").innerHTML = (m.products||[]).filter(p=>p.soldQty>0).map(p=>`
-    <tr><td>${esc(p.name)}</td><td>${p.soldQty}</td><td>${money(p.revenue)}</td>
-    <td>${money(p.cost)}</td><td>${money(p.margin)}</td><td>${p.marginPct!=null?p.marginPct+"%":"—"}</td></tr>`).join("")
-    || `<tr><td colspan="6">No sales in window</td></tr>`;
+function money(n){ return "₹" + Number(n || 0).toFixed(2); }
+function esc(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function qsPeriod(){
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+  const p = [];
+  if (from) p.push("from=" + encodeURIComponent(from));
+  if (to) p.push("to=" + encodeURIComponent(to));
+  return p.length ? ("?" + p.join("&")) : "";
 }
-async function loadDay(){
-  const day = document.getElementById("dayDate").value || new Date().toISOString().slice(0,10);
-  const d = await tsLocalApi("/reports/day-close?date="+encodeURIComponent(day));
-  if (!d.ok) { document.getElementById("dayBody").textContent = d.error||"Failed"; return; }
-  const methods = Object.entries(d.byPaymentMethod||{}).map(([k,v])=>`${k}: ${money(v)}`).join(" · ") || "—";
-  document.getElementById("dayBody").innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:8px">
-      <div><div style="color:var(--muted);font-size:11px">Invoices</div><strong>${d.invoiceCount}</strong></div>
-      <div><div style="color:var(--muted);font-size:11px">Sales</div><strong>${money(d.totalSales)}</strong></div>
-      <div><div style="color:var(--muted);font-size:11px">Paid</div><strong>${money(d.paid)}</strong></div>
-      <div><div style="color:var(--muted);font-size:11px">Unpaid</div><strong>${money(d.unpaid)}</strong></div>
-      <div><div style="color:var(--muted);font-size:11px">Net</div><strong>${money(d.netSales)}</strong></div>
-    </div>
-    <div style="color:var(--muted)">Payments: ${esc(methods)}</div>`;
+async function api(path, options){
+  options = options || {};
+  if (typeof tsRequireRole === "function" && !tsRequireRole("admin", "accountant", "billing")) {
+    location.href = "signin.html";
+    return { ok: false };
+  }
+  try { return await tsLocalApi(path, options); }
+  catch (e) { return { ok: false, error: e.message || "Error" }; }
 }
-document.getElementById("btnRefresh").onclick = load;
-document.getElementById("btnMargin").onclick = load;
-document.getElementById("btnDay").onclick = loadDay;
-document.getElementById("signOutBtn").onclick = () => { tsLogout(); location.href="/signin.html"; };
-document.getElementById("dayDate").value = new Date().toISOString().slice(0,10);
-tsOnSync(() => load());
-(async () => { await tsSeedDefaults(); await load(); await loadDay(); })();
+function setMonth(offset){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + offset;
+  const start = new Date(y, m, 1);
+  const end = new Date(y, m + 1, 0);
+  const fmt = d => {
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return yy + "-" + mm + "-" + dd;
+  };
+  document.getElementById("fromDate").value = fmt(start);
+  document.getElementById("toDate").value = fmt(end);
+}
+function downloadText(filename, text, mime){
+  const blob = new Blob([text], { type: mime || "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function toCsv(rows, headers){
+  const escCell = v => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const lines = [headers.join(",")];
+  for (const r of rows) lines.push(headers.map(h => escCell(r[h])).join(","));
+  return lines.join("\n");
+}
+function setText(id, val){ const el = document.getElementById(id); if (el) el.textContent = val; }
+
+async function loadSummary(){
+  const d = await api("/gst/summary" + qsPeriod());
+  if (!d || !d.ok) return;
+  setText("sCount", d.invoiceCount || 0);
+  setText("sTaxable", money(d.totalTaxable));
+  setText("sTaxPay", money(d.totalTax));
+  setText("sTotal", money(d.totalInvoiceValue));
+  setText("sCgst", money(d.totalCgst));
+  setText("sSgst", money(d.totalSgst));
+  setText("sIgst", money(d.totalIgst || 0));
+  setText("sB2bCount", (d.b2b && d.b2b.count) || 0);
+  setText("sB2bTaxable", money(d.b2b && d.b2b.taxable));
+  setText("sB2bTax", money(d.b2b && d.b2b.tax));
+  setText("sB2cCount", (d.b2c && d.b2c.count) || 0);
+  setText("sB2cTaxable", money(d.b2c && d.b2c.taxable));
+  setText("sB2cTax", money(d.b2c && d.b2c.tax));
+  const tbody = document.getElementById("ratesBody");
+  if (tbody) {
+    tbody.innerHTML = (d.byRate || []).map(r => `<tr>
+      <td><strong>${r.rate}%</strong></td><td>${money(r.taxable)}</td><td>${money(r.cgst)}</td>
+      <td>${money(r.sgst)}</td><td>${money(r.igst)}</td><td><strong>${money(r.tax)}</strong></td><td>${r.lines}</td>
+    </tr>`).join("") || '<tr><td colspan="7">No taxable lines in this period.</td></tr>';
+  }
+}
+async function loadHsn(){
+  const d = await api("/gst/hsn" + qsPeriod());
+  const tbody = document.getElementById("hsnBody");
+  if (!tbody) return;
+  if (!d || !d.ok) { tbody.innerHTML = `<tr><td colspan="8">${esc((d&&d.error)||"Failed")}</td></tr>`; return; }
+  tbody.innerHTML = (d.hsn || []).map(h => `<tr>
+    <td>${esc(h.hsn)}</td><td>${esc(h.description)}</td><td>${h.qty}</td><td>${h.rate}%</td>
+    <td>${money(h.taxable)}</td><td>${money(h.cgst)}</td><td>${money(h.sgst)}</td><td>${money(h.tax)}</td>
+  </tr>`).join("") || '<tr><td colspan="8">No HSN data — add HSN on products.</td></tr>';
+}
+let lastB2b = [], lastB2c = [];
+async function loadB2b(){
+  const d = await api("/gst/b2b" + qsPeriod());
+  const tbody = document.getElementById("b2bBody");
+  if (!tbody || !d || !d.ok) return;
+  lastB2b = d.invoices || [];
+  tbody.innerHTML = lastB2b.map(i => `<tr>
+    <td>${esc(i.invoice_number)}</td><td>${esc(i.date)}</td><td>${esc(i.client_name)}</td>
+    <td style="font-family:IBM Plex Mono,monospace;font-size:12px">${esc(i.gstin)}</td>
+    <td>${money(i.taxable)}</td><td>${money(i.tax)}</td><td>${money(i.total)}</td>
+    <td><span class="pill ${esc(i.status||"")}">${esc(i.status||"")}</span></td>
+  </tr>`).join("") || '<tr><td colspan="8">No B2B invoices.</td></tr>';
+}
+async function loadB2c(){
+  const d = await api("/gst/b2c" + qsPeriod());
+  const tbody = document.getElementById("b2cBody");
+  if (!tbody || !d || !d.ok) return;
+  lastB2c = d.invoices || [];
+  tbody.innerHTML = lastB2c.map(i => `<tr>
+    <td>${esc(i.invoice_number)}</td><td>${esc(i.date)}</td><td>${esc(i.client_name)}</td>
+    <td>${money(i.taxable)}</td><td>${money(i.tax)}</td><td>${money(i.total)}</td>
+    <td><span class="pill ${esc(i.status||"")}">${esc(i.status||"")}</span></td>
+  </tr>`).join("") || '<tr><td colspan="7">No B2C invoices.</td></tr>';
+}
+async function loadGstr1(){
+  const d = await api("/gst/gstr1" + qsPeriod());
+  const pre = document.getElementById("gstr1Preview");
+  if (!pre) return;
+  if (!d || !d.ok) { pre.textContent = (d && d.error) || "Failed"; return; }
+  pre.textContent = JSON.stringify(d, null, 2);
+  window.__gstr1 = d;
+}
+async function refreshAll(){
+  await loadSummary();
+  await loadHsn();
+  await loadB2b();
+  await loadB2c();
+  await loadGstr1();
+}
+document.querySelectorAll(".nav-item[data-panel]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item[data-panel]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    const panel = document.getElementById("panel-" + btn.dataset.panel);
+    if (panel) panel.classList.add("active");
+  });
+});
+document.getElementById("btnApply").addEventListener("click", refreshAll);
+document.getElementById("btnThisMonth").addEventListener("click", () => { setMonth(0); refreshAll(); });
+document.getElementById("btnPrevMonth").addEventListener("click", () => { setMonth(-1); refreshAll(); });
+document.getElementById("signOutBtn").addEventListener("click", () => { try { tsLogout(); } catch(e) {} location.href = "signin.html"; });
+document.getElementById("btnExportGstr1").addEventListener("click", async () => {
+  if (!window.__gstr1) await loadGstr1();
+  downloadText("gstr1-" + new Date().toISOString().slice(0,10) + ".json", JSON.stringify(window.__gstr1 || {}, null, 2), "application/json");
+});
+document.getElementById("btnExportGstr1Csv").addEventListener("click", async () => {
+  if (!window.__gstr1) await loadGstr1();
+  const d = window.__gstr1 || {};
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadText("gstr1-b2b-" + stamp + ".csv", toCsv((d.b2b||[]).map(i => ({
+    invoice_number:i.invoice_number, date:i.date, client_name:i.client_name, gstin:i.gstin,
+    taxable:i.taxable, tax:i.tax, total:i.total, status:i.status
+  })), ["invoice_number","date","client_name","gstin","taxable","tax","total","status"]), "text/csv");
+  downloadText("gstr1-b2c-" + stamp + ".csv", toCsv((d.b2c||[]).map(i => ({
+    invoice_number:i.invoice_number, date:i.date, client_name:i.client_name,
+    taxable:i.taxable, tax:i.tax, total:i.total, status:i.status
+  })), ["invoice_number","date","client_name","taxable","tax","total","status"]), "text/csv");
+  downloadText("gstr1-hsn-" + stamp + ".csv", toCsv((d.hsn||[]).map(h => ({
+    hsn:h.hsn, description:h.description, qty:h.qty, rate:h.rate,
+    taxable:h.taxable, cgst:h.cgst, sgst:h.sgst, tax:h.tax
+  })), ["hsn","description","qty","rate","taxable","cgst","sgst","tax"]), "text/csv");
+});
+document.getElementById("btnExportB2bCsv").addEventListener("click", () => {
+  downloadText("b2b-" + new Date().toISOString().slice(0,10) + ".csv", toCsv(lastB2b, ["invoice_number","date","client_name","gstin","taxable","tax","total","status"]), "text/csv");
+});
+document.getElementById("btnExportB2cCsv").addEventListener("click", () => {
+  downloadText("b2c-" + new Date().toISOString().slice(0,10) + ".csv", toCsv(lastB2c, ["invoice_number","date","client_name","taxable","tax","total","status"]), "text/csv");
+});
+(function initChecklist(){
+  const key = "ts_gst_checklist";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+  document.querySelectorAll(".file-check").forEach((el, i) => {
+    el.checked = !!saved[i];
+    el.addEventListener("change", () => {
+      const out = {};
+      document.querySelectorAll(".file-check").forEach((c, j) => { out[j] = c.checked; });
+      localStorage.setItem(key, JSON.stringify(out));
+      const msg = document.getElementById("checkMsg");
+      if (msg) { msg.textContent = "Saved on this device"; msg.className = "msg ok"; }
+    });
+  });
+})();
+(async function init(){
+  try { await tsSeedDefaults(); } catch (e) {}
+  const who = typeof tsWhoami === "function" ? tsWhoami() : { ok: false };
+  if (!who.ok || (who.role !== "accountant" && who.role !== "admin")) {
+    location.href = "signin.html";
+    return;
+  }
+  setText("whoLabel", (who.name || who.email || "") + " · " + who.role);
+  setMonth(0);
+  await refreshAll();
+})();
 </script>
 </body>
 </html>

@@ -21,3 +21,30 @@
 
 ## Deploy
 Host static files (Render etc.) or wrap with Capacitor for .apk / .aab / .exe.
+
+## Backup
+Admin → Backup & restore → Download backup ZIP (IndexedDB export).
+Restore accepts .zip or .json. Fully offline; no server session required.
+
+## Quotations
+Admin → Quotations, or Billing → Quote (saves current cart as quotation).
+Convert quote → invoice from admin. Quotes keep variant_id and weight qty.
+
+## Variants & weight at the counter
+- Products with variants open a picker before adding to cart.
+- Units kg, g, litre, ml open a weight/amount popup (price × amount).
+- Variant barcodes can be scanned directly.
+- Stock adjusts on parent product and on the chosen variant.
+
+## Inventory
+Admin → Inventory: manual adjust, movement log, expiring batches.
+All stock changes write inventory_movements in IndexedDB and sync via BroadcastChannel.
+
+## Due invoices
+Admin → Due invoices. Optional browser notifications on this device.
+Billing shows a banner for due/overdue invoices.
+
+
+## Accountant (GST)
+Open `accountant-dashboard.html` with the accountant preset account.
+GST summary, tax by rate, HSN, B2B/B2C and a simplified GSTR-1 JSON export — all from IndexedDB invoices on this device.
