@@ -1,7 +1,13 @@
 # OrbitBills — local-first (IndexedDB)
 
+## Why data survives Render restarts
+All products, clients, invoices, stock, payments, quotations, cash shifts, settings, and auth sessions live in the **browser’s IndexedDB** (`techserenia_pos`), not on the server.
+
+When Render (or any host) restarts, rebuilds, or redeploys, only static files are refreshed. **IndexedDB is never touched by the server**, so your data stays on the device — same behaviour as OrbitBills v1.
+
 ## Summary
-- No SQLite for app data. Everything is in browser/device IndexedDB (`techserenia_pos`).
+- No SQLite for app data in normal use. Everything is in browser/device IndexedDB.
+- Flask `app.py` is a static host only; `/api/*` returns 410 (gone) — use `tsLocalApi()` in `Db.js`.
 - No public sign-up. Three preset accounts only.
 - Admin, Billing, Accountant on the same device share one DB and sync via BroadcastChannel.
 - Client A data never reaches Client B (IndexedDB is per device/profile).
@@ -17,10 +23,18 @@
 - `Db.js` — IndexedDB + `tsLocalApi()` (replaces server `/api/admin/*`)
 - `signin.html` — sign-in only
 - `admin-dashboard.html`, `billing.html`, `accountant-dashboard.html`
-- `app.py` — static host only
+- `app.py` — static host + 404 → `404error.html`
+- `404error.html` — friendly not-found page
 
 ## Deploy
-Host static files (Render etc.) or wrap with Capacitor for .apk / .aab / .exe.
+Host static files (Render static site, Netlify, nginx) **or** run Flask:
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+Or wrap with Capacitor for .apk / .aab / .exe.
 
 ## Backup
 Admin → Backup & restore → Download backup ZIP (IndexedDB export).
@@ -38,12 +52,11 @@ Convert quote → invoice from admin. Quotes keep variant_id and weight qty.
 
 ## Inventory
 Admin → Inventory: manual adjust, movement log, expiring batches.
-All stock changes write inventory_movements in IndexedDB and sync via BroadcastChannel.
+All stock changes write `inventory_movements` in IndexedDB and sync via BroadcastChannel.
 
 ## Due invoices
 Admin → Due invoices. Optional browser notifications on this device.
 Billing shows a banner for due/overdue invoices.
-
 
 ## Accountant (GST)
 Open `accountant-dashboard.html` with the accountant preset account.
