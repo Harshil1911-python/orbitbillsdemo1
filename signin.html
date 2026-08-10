@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign in · OrbitBills</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +22,7 @@
   .auth-card p.sub{font-size:14px;color:var(--slate);margin-bottom:24px;}
   .form-field{margin-bottom:18px;}
   .form-field label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;}
-  .form-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:16px;color:var(--ink);background:var(--white);-webkit-appearance:none;appearance:none;}
+  .form-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--white);}
   .form-field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px;border:1px solid transparent;cursor:pointer;background:var(--blue-deep);color:#fff;margin-top:6px;}
   .btn:hover{background:#092f70;} .btn:disabled{opacity:0.6;cursor:not-allowed;}
@@ -52,70 +51,23 @@
   </div>
 <script src="Db.js"></script>
 <script>
-    function resolveRedirect(path){
-    if(!path) path = "billing.html";
-    // Prefer relative paths so mobile browsers work on any host/path
-    if(path.startsWith("/")) path = path.slice(1);
-    try{
-      return new URL(path, window.location.href).href;
-    }catch(e){
-      return path;
-    }
-  }
-  function storageOk(){
-    try{
-      var k = "__orbit_test__";
-      localStorage.setItem(k, "1");
-      localStorage.removeItem(k);
-      return true;
-    }catch(e){ return false; }
-  }
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    e.stopPropagation();
     const msg = document.getElementById("loginMsg");
     const submitBtn = document.getElementById("loginSubmit");
     msg.textContent = ""; msg.className = "form-msg"; submitBtn.disabled = true;
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
-    if(!email || !password){
-      msg.textContent = "Enter email and password."; msg.className = "form-msg error"; submitBtn.disabled = false; return;
-    }
-    if(!storageOk()){
-      msg.textContent = "This browser is blocking storage (Private mode?). Allow site data or use the OrbitBills app.";
-      msg.className = "form-msg error"; submitBtn.disabled = false; return;
-    }
-    if(typeof tsLogin !== "function"){
-      msg.textContent = "App database not loaded. Check your connection and refresh.";
-      msg.className = "form-msg error"; submitBtn.disabled = false; return;
-    }
     try {
-      if(typeof tsSeedDefaults === "function") await tsSeedDefaults().catch(function(){});
       const data = await tsLogin(email, password);
-      if (!data || !data.ok) {
-        msg.textContent = (data && data.error) || "Could not sign in.";
-        msg.className = "form-msg error"; submitBtn.disabled = false; return;
-      }
-      msg.textContent = "Signed in — opening…"; msg.className = "form-msg";
-      var dest = resolveRedirect(data.redirect || "billing.html");
-      // Small delay helps some mobile browsers flush localStorage before navigation
-      setTimeout(function(){ window.location.assign(dest); }, 80);
+      if (!data.ok) { msg.textContent = data.error || "Could not sign in."; msg.className = "form-msg error"; submitBtn.disabled = false; return; }
+      msg.textContent = "Signed in. Redirecting…"; msg.className = "form-msg success";
+      window.location.href = data.redirect;
     } catch (err) {
-      console.error(err);
-      var m = (err && err.message) ? String(err.message) : "Something went wrong";
-      if(/crypto|subtle|secure/i.test(m)) m = "Secure context required. Open the site with HTTPS.";
-      if(/indexeddb|idb|database/i.test(m)) m = "Browser blocked the local database. Disable private mode or allow site data.";
-      msg.textContent = m; msg.className = "form-msg error"; submitBtn.disabled = false;
+      msg.textContent = "Something went wrong. Please try again."; msg.className = "form-msg error"; submitBtn.disabled = false;
     }
   });
-  (async function () {
-    try{
-      if(typeof tsSeedDefaults === "function") await tsSeedDefaults();
-    }catch(e){
-      var msg = document.getElementById("loginMsg");
-      if(msg){ msg.textContent = "Could not prepare local data. Try HTTPS or exit private browsing."; msg.className = "form-msg error"; }
-    }
-  })();
+  (async function () { await tsSeedDefaults().catch(() => {}); })();
 </script>
 </body>
 </html>
