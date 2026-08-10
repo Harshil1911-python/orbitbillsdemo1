@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Billing · OrbitBills</title>
 <link rel="icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -210,61 +210,108 @@ body.text-pos-search #textEmpty.search-prompt{
 .custom-item-bar{display:none;gap:8px;margin:8px 0 4px}
 .custom-item-bar .btn{flex:1}
 
-/* Phone: single scroll column, MyBillBook-like Text POS */
+/* Mobile POS — safe areas for status bar / home indicator */
 @media(max-width:900px){
-  header.app-bar{padding:8px 12px;gap:8px;min-height:48px}
+  html,body{height:100%;overflow-x:hidden}
+  body{
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:0;
+    background:var(--bg);
+  }
+
+  /* Top app bar: clear of notch / status bar */
+  header.app-bar{
+    position:sticky;top:0;z-index:50;
+    padding:8px 12px;
+    padding-top:max(8px, env(safe-area-inset-top, 0px));
+    min-height:calc(48px + env(safe-area-inset-top, 0px));
+    gap:8px;
+  }
   header.app-bar .brand span:not(.brand-mark){display:none}
   .header-actions{gap:8px;flex-wrap:nowrap;width:auto;overflow:visible}
   .header-actions > *:not(#indiaClock):not(.header-menu-btn){display:none!important}
   #indiaClock{display:inline-flex!important;min-width:auto;font-size:12px;padding:6px 8px}
   .header-menu-btn{display:inline-flex}
 
+  /* Hide hub on phone — go straight into POS */
+  .pos-hub{display:none!important}
+  body.hub-open .pos-hub{display:none!important}
+  body.hub-open .layout,
   body.mode-open .layout{
-    display:flex!important;flex-direction:column;min-height:auto;padding-bottom:84px
+    display:flex!important;flex-direction:column;visibility:visible!important;
+    height:auto!important;overflow:visible!important;pointer-events:auto!important;
+    min-height:auto;
+    /* room for sticky pay bar + home indicator */
+    padding-bottom:calc(92px + env(safe-area-inset-bottom, 0px)) !important;
   }
-  body.hub-open .layout{display:none!important}
+  body.hub-open .pos-mode-bar,
+  body.mode-open .pos-mode-bar{display:none!important} /* cleaner: no mode bar chrome */
+
   .sales-side{border-right:0;border-bottom:none;padding:10px 12px 8px;overflow:visible}
   .cart-side{
     position:static!important;max-height:none!important;overflow:visible!important;
     box-shadow:none!important;border-radius:0!important;border-top:1px solid var(--line);
-    padding:12px 12px 16px;margin-top:0
+    padding:12px 12px 8px;margin-top:0
   }
   .cart-side.collapsed{max-height:none!important;overflow:visible!important}
   .cart-side.collapsed > *:not(.cart-toggle){display:revert}
   .cart-toggle{display:none!important}
   .text-list,.photo-grid{max-height:none!important}
   .hint{display:none}
-  .panel-tabs{display:none!important} /* mode chosen from hub / mode bar */
+  .panel-tabs{display:none!important}
   .btn{min-height:44px}
   .form-field input,.form-field select,.form-field textarea{font-size:16px;min-height:44px}
   #stockSummary{display:none!important}
-  .pos-mode-bar{top:48px}
-  body.mode-open .phone-paybar{display:flex}
-  body.mode-open .custom-item-bar{display:flex}
-  body.hub-open .phone-paybar,body.hub-open .custom-item-bar{display:none!important}
-  body.hub-open #calcFab{display:flex!important}
-  /* Search sticks under mode bar */
-  body.mode-open .search-bar{
-    position:sticky;top:96px;z-index:40;background:var(--bg);
-    padding:8px 0;margin:0 0 6px
+
+  /* Sticky search under header */
+  .search-bar{
+    position:sticky;
+    top:calc(48px + env(safe-area-inset-top, 0px));
+    z-index:40;
+    background:var(--bg);
+    padding:8px 0 6px;
+    margin:0 0 6px;
+    gap:6px;
   }
-  body.mode-open .search-bar input#productSearch{flex:1;min-width:0}
-  body.mode-open .text-list{
-    border:0;box-shadow:none;background:transparent;border-radius:0
-  }
-  body.mode-open .text-row{
+  .search-bar input#productSearch{flex:1;min-width:0;min-height:46px;font-size:16px}
+  .custom-item-bar{display:flex;margin:0 0 8px}
+  .text-list{border:0;box-shadow:none;background:transparent;border-radius:0}
+  .text-row{
     background:#fff;border:1px solid var(--line);border-radius:12px;
     margin-bottom:8px;padding:12px
   }
-  body.mode-open .cart-side h3{font-size:14px}
-  body.mode-open .cart-items{max-height:none}
-  /* Calc above pay bar */
-  body.mode-open #calcFab{bottom:88px!important;z-index:10050!important}
-  body.hub-open #calcFab{bottom:18px!important;z-index:10050!important}
-  #calcPopup{z-index:10060!important}
+  .cart-side h3{font-size:14px}
+
+  /* Bottom pay bar — clear of home indicator */
+  .phone-paybar{
+    display:flex!important;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Calculator above pay bar + home indicator */
+  #calcFab{
+    right:14px!important;
+    bottom:calc(100px + env(safe-area-inset-bottom, 0px))!important;
+    z-index:10050!important;
+    touch-action:manipulation!important;
+  }
+  #calcPopup{
+    z-index:10060!important;
+    left:50%!important;right:auto!important;
+    top:50%!important;bottom:auto!important;
+    transform:translate(-50%,-50%)!important;
+    width:min(320px,92vw)!important;
+    max-height:min(70vh, calc(100vh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    overflow:auto!important;
+  }
+  #calcPopup.open{display:block!important}
 }
 
-#calcFab{z-index:10050!important}
+#calcFab{
+  z-index:10050!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent;
+}
 #calcPopup{z-index:10060!important}
 #calcPopup.open{display:block!important}
 
@@ -285,7 +332,7 @@ body.text-pos-search #textEmpty.search-prompt{
 }
 </style>
 </head>
-<body class="hub-open">
+<body class="mode-open text-pos-search">
 <header class="app-bar">
   <div class="brand">
     <span class="brand-mark" style="height:34px;display:flex;align-items:center;flex-shrink:0">
@@ -2632,11 +2679,13 @@ window.__calcOpen = false;
     if (isCalcOpen()) closeCalc();
     else openCalc();
   }
-  // Event delegation so it works even if nodes are after this script
+  // Event delegation — FAB open is handled by mobile-safe script to avoid double-toggle
   document.addEventListener("click", function(e){
     const fab = e.target.closest && e.target.closest("#calcFab");
     if (fab) {
-      /* Mobile: never block open on skipClick — short taps must always work */
+      // Desktop only here; mobile uses dedicated touch handler
+      const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      if (coarse || ("ontouchstart" in window)) return;
       e.preventDefault();
       e.stopPropagation();
       toggleCalc();
@@ -2646,6 +2695,8 @@ window.__calcOpen = false;
     if (closeBtn) {
       e.preventDefault();
       closeCalc();
+      const b = document.getElementById("calcBackdrop");
+      if (b) { b.classList.remove("open"); }
       return;
     }
     const keyBtn = e.target.closest && e.target.closest(".calc-key");
@@ -2656,6 +2707,23 @@ window.__calcOpen = false;
       return;
     }
   }, true);
+
+  // Sync openCalc/closeCalc with backdrop for desktop path
+  const _openCalc = openCalc, _closeCalc = closeCalc;
+  openCalc = function(){
+    _openCalc();
+    const b = document.getElementById("calcBackdrop");
+    if (b) { b.classList.add("open"); b.setAttribute("aria-hidden","false"); }
+  };
+  closeCalc = function(){
+    _closeCalc();
+    const b = document.getElementById("calcBackdrop");
+    if (b) { b.classList.remove("open"); b.setAttribute("aria-hidden","true"); }
+  };
+  // expose for mobile script
+  window.__orbitOpenCalc = openCalc;
+  window.__orbitCloseCalc = closeCalc;
+  window.__orbitToggleCalc = toggleCalc;
 
   document.addEventListener("keydown", function(e){
     const open = isCalcOpen();
@@ -2691,12 +2759,13 @@ window.__calcOpen = false;
   await checkDueBanner();
   setInterval(()=>runPosSync(false), 8000);
   tsOnSync(()=>runPosSync(true));
-  if(typeof isPhoneLayout==="function" && isPhoneLayout()){
-    openPosHub();
-  } else {
-    document.body.classList.remove("hub-open");
-    document.body.classList.add("mode-open");
-    openPosMode("text");
+  // Mobile: skip hub — open Text POS immediately (clean POS)
+  document.body.classList.remove("hub-open");
+  document.body.classList.add("mode-open");
+  if(typeof openPosMode==="function") openPosMode("text");
+  else {
+    textPosSearchOnly = true;
+    document.body.classList.add("text-pos-search");
   }
   try{updateHubMeta();}catch(e){}
   window.addEventListener("resize", ()=>{
@@ -2718,6 +2787,8 @@ window.__calcOpen = false;
 </div>
 
 <!-- Calculator FAB -->
+<div id="calcBackdrop" aria-hidden="true"></div>
+
 <button type="button" id="calcFab" title="Calculator (press 0)" aria-label="Open calculator">
   <img src="calc.png" alt="Calculator" onerror="this.style.display='none';this.parentElement.textContent='∑';">
 </button>
@@ -2756,23 +2827,25 @@ window.__calcOpen = false;
   background:#0b3d91;color:#fff;font-size:22px;font-weight:700;
   box-shadow:0 8px 28px rgba(11,61,145,.45);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  line-height:1;padding:0;overflow:hidden;touch-action:manipulation;user-select:none;
+  line-height:1;padding:0;overflow:hidden;
+  touch-action:manipulation;user-select:none;
   -webkit-tap-highlight-color:transparent;
 }
-#calcFab.dragging{cursor:grabbing;opacity:.92}
 #calcFab img{width:28px;height:28px;object-fit:contain;pointer-events:none;display:block}
 #calcFab:hover{background:#1e5bb8}
 #calcPopup{
-  display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
   z-index:10060;width:min(320px,92vw);background:#0f172a;color:#fff;border-radius:16px;
   padding:14px;box-shadow:0 16px 48px rgba(15,23,42,.45);
   border:1px solid #334155;touch-action:manipulation;
 }
 #calcPopup.open{display:block!important}
-@media(max-width:900px){
-  body.mode-open #calcFab{bottom:92px}
-  #calcPopup{bottom:auto;top:50%;transform:translate(-50%,-50%);max-height:80vh;overflow:auto}
+/* backdrop when calc open */
+#calcBackdrop{
+  display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:10055;
 }
+#calcBackdrop.open{display:block}
+
 .calc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;cursor:grab;user-select:none}
 .calc-head.dragging{cursor:grabbing}
 #calcClose{background:transparent;border:0;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1}
@@ -2796,156 +2869,109 @@ window.__calcOpen = false;
 
 
 <script>
-/* Calculator drag — runs after FAB is in the DOM */
+/* Calculator drag disabled on touch devices — was blocking open */
 (function () {
+  function isTouch(){
+    return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches)
+      || ("ontouchstart" in window)
+      || (navigator.maxTouchPoints > 0);
+  }
+  if (isTouch()) return; // no drag on phones
   function initCalcDrag() {
     const fab = document.getElementById("calcFab");
     const popup = document.getElementById("calcPopup");
-    if (!fab) return;
-    if (fab.dataset.dragReady === "1") return;
+    if (!fab || fab.dataset.dragReady === "1") return;
     fab.dataset.dragReady = "1";
-
     let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
-
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
     function place(x, y) {
-      const fw = fab.offsetWidth || 56;
-      const fh = fab.offsetHeight || 56;
+      const fw = fab.offsetWidth || 56, fh = fab.offsetHeight || 56;
       x = clamp(x, 4, window.innerWidth - fw - 4);
       y = clamp(y, 4, window.innerHeight - fh - 4);
-      fab.style.left = x + "px";
-      fab.style.top = y + "px";
-      fab.style.right = "auto";
-      fab.style.bottom = "auto";
-      fab.style.position = "fixed";
-      if (popup && (popup.classList.contains("open") || popup.style.display === "block")) {
-        const pw = popup.offsetWidth || 300;
-        const ph = popup.offsetHeight || 320;
-        let px = x + fw - pw;
-        let py = y - ph - 12;
-        if (py < 4) py = y + fh + 12;
-        px = clamp(px, 4, window.innerWidth - pw - 4);
-        py = clamp(py, 4, window.innerHeight - ph - 4);
-        popup.style.left = px + "px";
-        popup.style.top = py + "px";
-        popup.style.right = "auto";
-        popup.style.bottom = "auto";
-        popup.style.position = "fixed";
-      }
-      try { localStorage.setItem("ts_calc_pos", JSON.stringify({ x: x, y: y })); } catch (e) {}
+      fab.style.left = x + "px"; fab.style.top = y + "px";
+      fab.style.right = "auto"; fab.style.bottom = "auto"; fab.style.position = "fixed";
     }
-
-    try {
-      const saved = JSON.parse(localStorage.getItem("ts_calc_pos") || "null");
-      if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
-        place(saved.x, saved.y);
-      }
-    } catch (e) {}
-
     function onDown(e) {
       if (e.button != null && e.button !== 0) return;
-      dragging = true;
-      moved = false;
-      fab.classList.add("dragging");
+      dragging = true; moved = false; fab.classList.add("dragging");
       const pt = e.touches ? e.touches[0] : e;
-      sx = pt.clientX;
-      sy = pt.clientY;
-      const r = fab.getBoundingClientRect();
-      ox = r.left;
-      oy = r.top;
-      e.preventDefault();
-      e.stopPropagation();
+      sx = pt.clientX; sy = pt.clientY;
+      const r = fab.getBoundingClientRect(); ox = r.left; oy = r.top;
     }
     function onMove(e) {
       if (!dragging) return;
       const pt = e.touches ? e.touches[0] : e;
-      const dx = pt.clientX - sx;
-      const dy = pt.clientY - sy;
-      if (Math.abs(dx) + Math.abs(dy) > 18) moved = true;
-      place(ox + dx, oy + dy);
-      e.preventDefault();
+      if (Math.abs(pt.clientX - sx) + Math.abs(pt.clientY - sy) > 18) moved = true;
+      place(ox + (pt.clientX - sx), oy + (pt.clientY - sy));
     }
     function onUp() {
       if (!dragging) return;
-      dragging = false;
-      fab.classList.remove("dragging");
-      if (moved) {
-        fab.dataset.skipClick = "1";
-        setTimeout(function () { try { delete fab.dataset.skipClick; } catch (err) {} }, 120);
-      }
+      dragging = false; fab.classList.remove("dragging");
     }
-
-    fab.addEventListener("pointerdown", onDown, { passive: false });
-    window.addEventListener("pointermove", onMove, { passive: false });
+    fab.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    fab.addEventListener("mousedown", onDown);
-    fab.addEventListener("touchstart", onDown, { passive: false });
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("mouseup", onUp);
-    window.addEventListener("touchend", onUp);
-
-    document.addEventListener("click", function (e) {
-      const t = e.target && e.target.closest && e.target.closest("#calcFab");
-      if (t && t.dataset.skipClick) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }, true);
-
-    if (popup) {
-      const obs = new MutationObserver(function () {
-        if (popup.classList.contains("open") || popup.style.display === "block") {
-          const r = fab.getBoundingClientRect();
-          place(r.left, r.top);
-        }
-      });
-      obs.observe(popup, { attributes: true, attributeFilter: ["class", "style"] });
-    }
   }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initCalcDrag);
-  } else {
-    initCalcDrag();
-  }
-  window.addEventListener("load", initCalcDrag);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCalcDrag);
+  else initCalcDrag();
 })();
 </script>
 
 
 <script>
-/* Reliable calculator open on mobile */
+/* Mobile-safe calculator — no drag, direct touch handlers */
 (function(){
-  function openCalcUi(){
-    var p = document.getElementById("calcPopup");
+  function $(id){ return document.getElementById(id); }
+  function openCalc(){
+    var p = $("calcPopup"), b = $("calcBackdrop");
     if (!p) return;
     p.classList.add("open");
     p.style.display = "block";
+    if (b) { b.classList.add("open"); b.setAttribute("aria-hidden","false"); }
     window.__calcOpen = true;
   }
-  function closeCalcUi(){
-    var p = document.getElementById("calcPopup");
-    if (!p) return;
-    p.classList.remove("open");
-    p.style.display = "none";
+  function closeCalc(){
+    var p = $("calcPopup"), b = $("calcBackdrop");
+    if (p) { p.classList.remove("open"); p.style.display = "none"; }
+    if (b) { b.classList.remove("open"); b.setAttribute("aria-hidden","true"); }
     window.__calcOpen = false;
   }
-  var fab = document.getElementById("calcFab");
-  if (fab) {
-    fab.addEventListener("click", function(){
-      setTimeout(function(){
-        var p = document.getElementById("calcPopup");
-        if (!p) return;
-        var open = p.classList.contains("open") || p.style.display === "block";
-        if (!open) openCalcUi();
-      }, 40);
-    }, false);
+  function toggleCalc(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (typeof window.__orbitToggleCalc === "function") {
+      // Use main calculator state/engine
+      var p = $("calcPopup");
+      var isOpen = p && (p.classList.contains("open") || p.style.display === "block");
+      if (isOpen) {
+        if (window.__orbitCloseCalc) window.__orbitCloseCalc();
+        else closeCalc();
+      } else {
+        if (window.__orbitOpenCalc) window.__orbitOpenCalc();
+        else openCalc();
+      }
+      return;
+    }
+    if (window.__calcOpen) closeCalc(); else openCalc();
   }
-  var cls = document.getElementById("calcClose");
-  if (cls) cls.addEventListener("click", function(e){ e.preventDefault(); closeCalcUi(); });
+  function bind(){
+    var fab = $("calcFab");
+    if (!fab || fab.dataset.calcBound === "1") return;
+    fab.dataset.calcBound = "1";
+    // Prefer click; also handle touchend for stubborn mobile browsers
+    fab.addEventListener("click", toggleCalc, true);
+    fab.addEventListener("touchend", function(e){
+      // Only treat as tap if not a scroll
+      e.preventDefault();
+      toggleCalc(e);
+    }, { passive: false });
+    var cls = $("calcClose");
+    if (cls) cls.addEventListener("click", function(e){ e.preventDefault(); closeCalc(); });
+    var bd = $("calcBackdrop");
+    if (bd) bd.addEventListener("click", closeCalc);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
+  window.addEventListener("load", bind);
 })();
 </script>
 
