@@ -291,7 +291,10 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   .text-row .name{font-size:14.5px}
   .text-row .meta{font-size:12px}
   .text-row .price{font-size:16px;font-weight:700}
-  .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px;pointer-events:none}
+  .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px}
+  /* Whole-row add only on product list — keep Open/Resume/Delete clickable */
+  #textList .text-row .btn{pointer-events:none}
+  #recentList .text-row .btn,#heldList .text-row .btn{pointer-events:auto!important}
   .text-row.oos{opacity:.55;background:#f8fafc;filter:grayscale(.35)}
   .text-row.oos .price{color:var(--muted)}
   .text-row.oos .btn{background:#94a3b8;border-color:#94a3b8}
@@ -769,7 +772,7 @@ input,select,textarea{
     <button class="panel-tab" data-panel="recentPanel" type="button">Recent</button>
   </div>
   <div class="search-bar">
-    <input id="productSearch" placeholder="Search products" autocomplete="off">
+    <input id="productSearch" placeholder="Search" autocomplete="off">
     <select id="categoryFilter" title="Filter by category" style="max-width:140px;min-width:110px">
       <option value="">All categories</option>
     </select>
@@ -2746,12 +2749,87 @@ document.getElementById("btnHtml").addEventListener("click",()=>downloadExport("
 document.getElementById("btnPdf").addEventListener("click",()=>downloadExport("pdf"));
 document.getElementById("btnPng").addEventListener("click",()=>downloadExport("png"));
 document.getElementById("btnShare").addEventListener("click", async()=>{
-  if(!lastInvoiceId)return; const d=await api(`/invoices/${lastInvoiceId}/share`,{method:"POST",body:{}});
   const msg=document.getElementById("exportMsg");
-  if(!d.ok){ msg.textContent=d.error||"Failed"; msg.className="msg err"; return; }
-  const url=location.origin+(d.path||`/share/invoice/${d.token}`);
-  try{ await navigator.clipboard.writeText(url); msg.textContent="Copied "+url; }catch(e){ msg.textContent=url; }
-  msg.className="msg ok";
+  if(!lastInvoicePayload){
+    if(msg){ msg.textContent="Open an invoice first."; msg.className="msg err"; }
+    toast("Open an invoice first");
+    return;
+  }
+  if(msg){ msg.textContent="Preparing share…"; msg.className="msg"; }
+  try{
+    const invNo = (lastInvoicePayload.invoiceNumber || lastInvoiceId || "invoice").toString().replace(/[^a-zA-Z0-9_-]/g, "_");
+    const title = "Invoice " + (lastInvoicePayload.invoiceNumber || invNo);
+    const text = title + " · " + money(lastInvoicePayload.total) + " · " + (lastInvoicePayload.clientName || "Walk-in");
+    // Build PNG and share via system sheet (Capacitor / Web Share)
+    let blob = null;
+    try{
+      if(typeof invoiceHtmlToCanvas === "function"){
+        const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
+        blob = await new Promise(function(resolve){
+          try{ canvas.toBlob(function(b){ resolve(b); }, "image/png"); }
+          catch(e){ resolve(null); }
+        });
+        if(!blob){
+          const pngUrl = canvas.toDataURL("image/png");
+          const res = await fetch(pngUrl);
+          blob = await res.blob();
+        }
+      }
+    }catch(e){ console.warn("share png", e); }
+    if(blob){
+      const file = new File([blob], "invoice-"+invNo+".png", { type: "image/png" });
+      // Capacitor / orbit helper
+      if(window.__orbitNativeShare){
+        const ok = await window.__orbitNativeShare({ blob: blob, filename: "invoice-"+invNo+".png", title: title, text: text });
+        if(ok){ if(msg){ msg.textContent="Share sheet opened"; msg.className="msg ok"; } return; }
+      }
+      if(navigator.share){
+        try{
+          if(!navigator.canShare || navigator.canShare({ files: [file] })){
+            await navigator.share({ files: [file], title: title, text: text });
+            if(msg){ msg.textContent="Shared"; msg.className="msg ok"; }
+            return;
+          }
+        }catch(e){
+          if(e && e.name === "AbortError"){ if(msg){ msg.textContent=""; } return; }
+        }
+        try{
+          await navigator.share({ title: title, text: text });
+          if(msg){ msg.textContent="Shared"; msg.className="msg ok"; }
+          return;
+        }catch(e2){
+          if(e2 && e2.name === "AbortError"){ if(msg){ msg.textContent=""; } return; }
+        }
+      }
+      // Fallback: save then open downloads share sheet
+      try{
+        if(typeof downloadBlob === "function"){
+          await Promise.resolve(downloadBlob(blob, "invoice-"+invNo+".png", { kind:"png", mime:"image/png", invoiceNumber: lastInvoicePayload.invoiceNumber, total: lastInvoicePayload.total }));
+        }
+        const items = window.__orbitDownloads || [];
+        if(items.length && typeof window.__orbitOpenDownloads === "function"){
+          if(msg){ msg.textContent="Saved — pick Share in Downloads"; msg.className="msg ok"; }
+          window.__orbitOpenDownloads();
+          return;
+        }
+      }catch(e){}
+    }
+    // Last resort: text / clipboard
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+        if(msg){ msg.textContent="Invoice summary copied"; msg.className="msg ok"; }
+        toast("Copied invoice summary");
+        return;
+      }
+    }catch(e){}
+    if(msg){ msg.textContent=text; msg.className="msg ok"; }
+    toast("Share unavailable — summary shown below");
+  }catch(err){
+    console.error(err);
+    if(msg){ msg.textContent="Share failed"; msg.className="msg err"; }
+    toast("Share failed");
+  }
 });
 document.getElementById("btnMarkPaid").addEventListener("click", async()=>{
   if(!lastInvoiceId)return;
@@ -2842,29 +2920,81 @@ document.getElementById("btnShift").addEventListener("click",()=>{
 
 function renderRecentList(){
   const el=document.getElementById("recentList");
+  if(!el) return;
   if(!recentInvoices.length){ el.innerHTML='<div class="empty">No invoices</div>'; return; }
   el.innerHTML=recentInvoices.map(inv=>{
     const due=outstandingOf(inv);
-    return `<div class="text-row"><div><div class="name">${esc(inv.invoice_number||inv.id)} ${statusPill(inv.status)}</div>
+    const iid = inv.id;
+    return `<div class="text-row" data-invoice-id="${iid}"><div><div class="name">${esc(inv.invoice_number||inv.id)} ${statusPill(inv.status)}</div>
       <div class="meta">${esc(inv.client_name||"")} · ${money(inv.total)}${due?` · Due ${money(due)}`:""}</div></div>
-      <button class="btn btn-primary btn-sm" type="button" onclick="openRecentInvoice(${inv.id})">Open</button></div>`;
+      <button class="btn btn-primary btn-sm" type="button" data-open-invoice="${iid}">Open</button></div>`;
   }).join("");
 }
 async function openRecentInvoice(id){
-  const d=await api(`/invoices/${id}`); if(!d.ok||!d.invoice){ toast("Not found"); return; }
-  const inv=d.invoice; const items=inv.items||[];
-  lastInvoiceId=inv.id;
-  lastInvoicePayload={invoiceNumber:inv.invoice_number,clientName:inv.client_name,status:inv.status,subtotal:inv.subtotal,discount:inv.discount,taxAmount:inv.tax_amount,creditApplied:inv.credit_applied,total:inv.total,amountPaid:inv.amount_paid||0,notes:inv.notes||"",items:items.map(it=>({name:it.name,qty:it.qty,price:it.price,taxPercent:it.tax_percent||0}))};
-  // Use invoice's own layout for preview/export only — never overwrite the active POS layout
-  invoicePreviewLayout = (d.layout && d.layout.elements) ? d.layout : layout;
-  document.getElementById("exportLabel").textContent=`${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`;
-  const note = document.getElementById("exportLayoutNote");
-  if (note) {
-    const ln = invoicePreviewLayout && (invoicePreviewLayout.name || invoicePreviewLayout.id);
-    note.textContent = ln ? ("Layout: " + ln) : "Layout: active / classic";
+  id = parseInt(id, 10);
+  if(!id){ toast("Invalid invoice"); return; }
+  let inv = null, layoutFromApi = null;
+  try{
+    const d = await api(`/invoices/${id}`);
+    if(d && d.ok && d.invoice){
+      inv = d.invoice;
+      if(d.layout && d.layout.elements) layoutFromApi = d.layout;
+    }
+  }catch(e){ console.warn("openRecentInvoice api", e); }
+  // Fallback: use list payload from pos-sync if full fetch fails
+  if(!inv){
+    inv = (recentInvoices||[]).find(x => Number(x.id) === id) || null;
   }
-  showLayoutPreview("exportPreview"); document.getElementById("exportPreviewShell").style.display="block"; openModal("exportModal"); try{window.__orbitScaleInvoicePreview&&window.__orbitScaleInvoicePreview();}catch(e){}
+  if(!inv){ toast("Not found"); return; }
+  const items = inv.items || [];
+  lastInvoiceId = inv.id;
+  lastInvoicePayload = {
+    invoiceNumber: inv.invoice_number || inv.invoiceNumber,
+    clientName: inv.client_name || inv.clientName || "",
+    status: inv.status,
+    subtotal: inv.subtotal,
+    discount: inv.discount,
+    taxAmount: inv.tax_amount != null ? inv.tax_amount : inv.taxAmount,
+    creditApplied: inv.credit_applied != null ? inv.credit_applied : inv.creditApplied,
+    total: inv.total,
+    amountPaid: inv.amount_paid != null ? inv.amount_paid : (inv.amountPaid || 0),
+    notes: inv.notes || "",
+    items: (items||[]).map(it => ({
+      name: it.name,
+      qty: it.qty,
+      price: it.price,
+      taxPercent: it.tax_percent != null ? it.tax_percent : (it.taxPercent || 0)
+    }))
+  };
+  invoicePreviewLayout = layoutFromApi || layout;
+  try{
+    const lab = document.getElementById("exportLabel");
+    if(lab) lab.textContent = `${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`;
+    const note = document.getElementById("exportLayoutNote");
+    if(note){
+      const ln = invoicePreviewLayout && (invoicePreviewLayout.name || invoicePreviewLayout.id);
+      note.textContent = ln ? ("Layout: " + ln) : "Layout: active / classic";
+    }
+    showLayoutPreview("exportPreview");
+    const shell = document.getElementById("exportPreviewShell");
+    if(shell) shell.style.display = "block";
+  }catch(e){ console.warn(e); }
+  openModal("exportModal");
+  try{ window.__orbitScaleInvoicePreview && window.__orbitScaleInvoicePreview(); }catch(e){}
 }
+// Event delegation so Open works even if inline onclick is blocked
+document.getElementById("recentList")?.addEventListener("click", function(e){
+  const btn = e.target.closest("[data-open-invoice]");
+  if(btn){
+    e.preventDefault(); e.stopPropagation();
+    openRecentInvoice(btn.getAttribute("data-open-invoice"));
+    return;
+  }
+  const row = e.target.closest(".text-row[data-invoice-id]");
+  if(row){
+    openRecentInvoice(row.getAttribute("data-invoice-id"));
+  }
+});
 document.getElementById("btnRecent").addEventListener("click",()=>document.querySelector('.panel-tab[data-panel="recentPanel"]').click());
 
 document.getElementById("btnDayClose").addEventListener("click",()=>{
