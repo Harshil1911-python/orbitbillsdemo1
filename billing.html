@@ -160,16 +160,18 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   }
   .mobile-menu-btn{
     display:inline-flex!important;align-items:center;justify-content:center;
-    width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
-    background:#fff;cursor:pointer;flex-shrink:0;padding:0
+    width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
+    background:#fff;cursor:pointer;flex-shrink:0;padding:0;
+    position:relative;z-index:61;-webkit-tap-highlight-color:transparent
   }
-  .mobile-menu-btn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round}
+  .mobile-menu-btn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
+  .mobile-menu-btn svg path{stroke:var(--ink);fill:none}
 
-  /* Mobile slide-over menu */
+  /* Mobile slide-over menu — high z-index above everything except calc */
   .mobile-menu{
-    display:none;position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.4)
+    display:none!important;position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.45)
   }
-  .mobile-menu.open{display:block}
+  .mobile-menu.open{display:block!important}
   .mobile-menu-panel{
     position:absolute;top:0;right:0;width:min(300px,88vw);height:100%;
     background:#fff;border-left:1px solid var(--line);
@@ -208,9 +210,10 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     position:fixed!important;
     left:0;right:0;
     bottom:0;
-    z-index:70;
-    max-height:min(88vh, 720px)!important;
+    z-index:120!important;
+    max-height:min(90vh, 760px)!important;
     overflow:auto!important;
+    -webkit-overflow-scrolling:touch;
     border-radius:18px 18px 0 0!important;
     box-shadow:0 -8px 32px rgba(15,23,42,.18)!important;
     border-top:1px solid var(--line);
@@ -219,11 +222,15 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     transition:transform .22s ease;
     background:var(--card)!important;
     width:100%;
+    pointer-events:none;
+    visibility:hidden;
   }
   body.m-cart-open .cart-side{
-    transform:translateY(0);
+    transform:translateY(0)!important;
+    pointer-events:auto!important;
+    visibility:visible!important;
   }
-  body.m-cart-open .m-cart-backdrop{display:block}
+  body.m-cart-open .m-cart-backdrop{display:block!important;z-index:110!important}
   .cart-toggle{display:none!important}
   .cart-side > h3{
     position:sticky;top:0;background:var(--card);padding:4px 0 10px;
@@ -283,11 +290,12 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
   /* Sticky cart bar */
   .m-cart-bar{
-    display:flex!important;position:fixed;left:0;right:0;bottom:0;z-index:55;
+    display:flex!important;position:fixed;left:0;right:0;bottom:0;z-index:100;
     align-items:center;gap:10px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
     background:#0b3d91;color:#fff;
     box-shadow:0 -6px 24px rgba(11,61,145,.25);
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
   .m-cart-bar .mcb-info{flex:1;min-width:0}
   .m-cart-bar .mcb-label{font-size:12px;opacity:.9;font-weight:500}
@@ -333,9 +341,43 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   #calcPopup.open{display:block!important}
 
   /* Modals full-width friendly */
-  .modal{width:min(520px,96vw);max-height:92vh}
-  .modal-bg{padding:env(safe-area-inset-top,8px) 8px env(safe-area-inset-bottom,8px)}
+  .modal-bg{
+    padding:env(safe-area-inset-top,8px) 0 env(safe-area-inset-bottom,0)!important;
+    align-items:flex-end!important;z-index:150!important
+  }
+  .modal,.modal.wide{
+    width:100%!important;max-width:100%!important;
+    max-height:min(92vh, calc(100vh - env(safe-area-inset-top,0px)))!important;
+    border-radius:16px 16px 0 0!important;
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0px))!important;
+    overflow:auto!important;-webkit-overflow-scrolling:touch
+  }
+  .modal h3{font-size:16px}
+  .modal-actions{flex-direction:column;align-items:stretch}
+  .modal-actions .btn{width:100%;min-height:44px}
+  /* Invoice preview scales to phone width */
+  #exportPreviewShell,#exportPreview{
+    max-width:100%!important;overflow:auto!important;-webkit-overflow-scrolling:touch
+  }
+  #exportPreview .invoice-sheet,
+  #exportPreview [style*="width:600"],
+  #exportPreview [style*="width: 600"]{
+    max-width:100%!important
+  }
+  #exportPreview{
+    transform-origin:top left
+  }
+  .invoice-preview-shell{
+    max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch
+  }
+  /* Recent/held rows as cards */
+  #recentList .text-row,#heldList .text-row{
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    margin-bottom:8px;padding:12px;flex-wrap:wrap;gap:8px
+  }
+  #recentList .text-row .btn,#heldList .text-row .btn{min-height:40px}
 }
+
 
 @media (max-width:480px){
   .photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
@@ -374,7 +416,8 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <button class="btn btn-ghost btn-sm" id="btnRefreshSync" type="button" title="Sync">↻</button>
     <button class="btn btn-ghost btn-sm" id="btnHelp" type="button">Keys</button>
     <button class="btn btn-ghost btn-sm" id="signOutBtn" type="button">Sign out</button>
-    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" title="Menu">
+    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" title="Menu"
+      onclick="window.__orbitToggleMobileMenu&&window.__orbitToggleMobileMenu();return false;">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </div>
@@ -437,7 +480,8 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 </section>
 <aside class="cart-side" id="cartSide">
   <div class="cart-toggle" id="cartToggle"><span>Sale <span id="cartToggleSummary" style="color:var(--muted);font-weight:600"></span></span><span class="chev">▲</span></div>
-  <h3>Sale <button type="button" class="m-cart-close" id="mCartClose" aria-label="Close cart" style="display:none">×</button></h3>
+  <h3>Sale <button type="button" class="m-cart-close" id="mCartClose" aria-label="Close cart"
+      onclick="window.__orbitCloseMobileCart&&window.__orbitCloseMobileCart();return false;">×</button></h3>
   <div class="form-field"><label>Client</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="clientSelect" style="flex:1"><option value="">Walk-in</option></select>
@@ -1124,7 +1168,8 @@ function printLast(){
 }
 function esc(s){ if(s==null)return""; return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 function money(n){ return currency+Number(n||0).toFixed(2); }
-function openModal(id){ document.getElementById(id).classList.add("open"); }
+function openModal(id){
+  if(id==="exportModal"){ setTimeout(function(){ try{window.__orbitScaleInvoicePreview&&window.__orbitScaleInvoicePreview();}catch(e){} }, 80); } document.getElementById(id).classList.add("open"); }
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2200); }
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
@@ -2033,7 +2078,7 @@ async function openRecentInvoice(id){
     const ln = invoicePreviewLayout && (invoicePreviewLayout.name || invoicePreviewLayout.id);
     note.textContent = ln ? ("Layout: " + ln) : "Layout: active / classic";
   }
-  showLayoutPreview("exportPreview"); document.getElementById("exportPreviewShell").style.display="block"; openModal("exportModal");
+  showLayoutPreview("exportPreview"); document.getElementById("exportPreviewShell").style.display="block"; openModal("exportModal"); try{window.__orbitScaleInvoicePreview&&window.__orbitScaleInvoicePreview();}catch(e){}
 }
 document.getElementById("btnRecent").addEventListener("click",()=>document.querySelector('.panel-tab[data-panel="recentPanel"]').click());
 
@@ -2500,12 +2545,14 @@ window.__calcOpen = false;
 </script>
 
 <!-- Mobile sticky cart bar -->
-<div class="m-cart-bar" id="mCartBar" role="button" tabindex="0" aria-label="Open cart">
+<div class="m-cart-bar" id="mCartBar" role="button" tabindex="0" aria-label="Open cart"
+  onclick="window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">
   <div class="mcb-info">
     <div class="mcb-label"><span id="mCartCount">0</span> items</div>
     <div class="mcb-amt" id="mCartTotal">₹0.00</div>
   </div>
-  <button type="button" class="btn" id="mCartOpenBtn">View cart</button>
+  <button type="button" class="btn" id="mCartOpenBtn"
+    onclick="event.stopPropagation();window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">View cart</button>
 </div>
 
 <!-- Calculator FAB -->
@@ -2708,14 +2755,16 @@ window.__calcOpen = false;
 
 
 <script>
-/* Mobile POS chrome only — uses existing cart/calc/API state. No business logic changes. */
+/* Mobile POS chrome — menu + cart sheet. Uses existing cart/totals only. */
 (function(){
   function $(id){ return document.getElementById(id); }
+
   function openMenu(){
     var m = $("mobileMenu");
     if(!m) return;
     m.classList.add("open");
     m.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
     var sp = $("shiftPill"), ss = $("mmShift");
     if(sp && ss) ss.textContent = sp.textContent || "Shift —";
     var sy = $("syncPill"), ms = $("mmSync");
@@ -2726,14 +2775,29 @@ window.__calcOpen = false;
     if(!m) return;
     m.classList.remove("open");
     m.setAttribute("aria-hidden","true");
+    if(!document.body.classList.contains("m-cart-open")) document.body.style.overflow = "";
+  }
+  function toggleMenu(){
+    var m = $("mobileMenu");
+    if(!m) return;
+    if(m.classList.contains("open")) closeMenu(); else openMenu();
   }
   function openCart(){
+    closeMenu();
     document.body.classList.add("m-cart-open");
-    try{ $("cartSide") && $("cartSide").scrollTop = 0; }catch(e){}
+    document.body.style.overflow = "hidden";
+    try{
+      var cs = $("cartSide");
+      if(cs) cs.scrollTop = 0;
+    }catch(e){}
+    try{ if(typeof renderCart === "function") renderCart(); }catch(e){}
   }
   function closeCart(){
     document.body.classList.remove("m-cart-open");
+    if(!$("mobileMenu") || !$("mobileMenu").classList.contains("open"))
+      document.body.style.overflow = "";
   }
+
   function refreshMobileCartBar(){
     var countEl = $("mCartCount"), totalEl = $("mCartTotal");
     if(!countEl && !totalEl) return;
@@ -2752,24 +2816,38 @@ window.__calcOpen = false;
         totalText = sym + Number(t.total||0).toFixed(2);
       } else {
         var gt = $("grandTotal");
-        if(gt) totalText = (gt.textContent || totalText).trim();
+        if(gt && gt.textContent) totalText = gt.textContent.trim();
       }
     }catch(e){}
     if(totalEl) totalEl.textContent = totalText;
   }
-  // Expose for hooks from existing renderCart/updateTotals
+
   window.__orbitRefreshMobileCartBar = refreshMobileCartBar;
   window.__orbitOpenMobileCart = openCart;
   window.__orbitCloseMobileCart = closeCart;
+  window.__orbitToggleMobileMenu = toggleMenu;
+  window.__orbitOpenMobileMenu = openMenu;
+  window.__orbitCloseMobileMenu = closeMenu;
 
   function bind(){
     var mb = $("mobileMenuBtn");
-    if(mb) mb.addEventListener("click", openMenu);
+    if(mb && !mb.dataset.bound){
+      mb.dataset.bound = "1";
+      mb.addEventListener("click", function(e){ e.preventDefault(); e.stopPropagation(); toggleMenu(); }, true);
+    }
     var mc = $("mobileMenuClose");
-    if(mc) mc.addEventListener("click", closeMenu);
+    if(mc && !mc.dataset.bound){
+      mc.dataset.bound = "1";
+      mc.addEventListener("click", function(e){ e.preventDefault(); closeMenu(); });
+    }
     var menu = $("mobileMenu");
-    if(menu) menu.addEventListener("click", function(e){ if(e.target === menu) closeMenu(); });
+    if(menu && !menu.dataset.bound){
+      menu.dataset.bound = "1";
+      menu.addEventListener("click", function(e){ if(e.target === menu) closeMenu(); });
+    }
     document.querySelectorAll("#mobileMenu [data-mm]").forEach(function(btn){
+      if(btn.dataset.bound) return;
+      btn.dataset.bound = "1";
       btn.addEventListener("click", function(){
         var id = btn.getAttribute("data-mm");
         closeMenu();
@@ -2778,20 +2856,58 @@ window.__calcOpen = false;
       });
     });
     var openBtn = $("mCartOpenBtn");
-    if(openBtn) openBtn.addEventListener("click", function(e){ e.stopPropagation(); openCart(); });
+    if(openBtn && !openBtn.dataset.bound){
+      openBtn.dataset.bound = "1";
+      openBtn.addEventListener("click", function(e){ e.preventDefault(); e.stopPropagation(); openCart(); }, true);
+    }
     var bar = $("mCartBar");
-    if(bar) bar.addEventListener("click", function(e){
-      if(e.target && e.target.id === "mCartOpenBtn") return;
-      openCart();
-    });
+    if(bar && !bar.dataset.bound){
+      bar.dataset.bound = "1";
+      bar.addEventListener("click", function(e){ openCart(); }, true);
+    }
     var closeBtn = $("mCartClose");
-    if(closeBtn) closeBtn.addEventListener("click", closeCart);
+    if(closeBtn && !closeBtn.dataset.bound){
+      closeBtn.dataset.bound = "1";
+      closeBtn.addEventListener("click", function(e){ e.preventDefault(); closeCart(); }, true);
+    }
     var bd = $("mCartBackdrop");
-    if(bd) bd.addEventListener("click", closeCart);
+    if(bd && !bd.dataset.bound){
+      bd.dataset.bound = "1";
+      bd.addEventListener("click", closeCart);
+    }
     refreshMobileCartBar();
   }
+
+  // Bind immediately and on ready/load (Capacitor WebView safe)
+  try{ bind(); }catch(e){}
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
-  else bind();
+  window.addEventListener("load", bind);
+  setTimeout(bind, 300);
+  setTimeout(bind, 1000);
+})();
+</script>
+
+
+<script>
+(function(){
+  window.__orbitScaleInvoicePreview = function(){
+    try{
+      if(!window.matchMedia || !window.matchMedia("(max-width:768px)").matches) return;
+      var root = document.getElementById("exportPreview");
+      if(!root) return;
+      var sheet = root.querySelector(".invoice-sheet") || root.firstElementChild;
+      if(!sheet) return;
+      var designW = parseInt(sheet.style.width,10) || sheet.offsetWidth || 600;
+      var avail = Math.max(280, (root.parentElement && root.parentElement.clientWidth) || window.innerWidth) - 16;
+      var s = Math.min(1, avail / designW);
+      if(!isFinite(s) || s <= 0) s = 1;
+      root.style.transformOrigin = "top left";
+      root.style.transform = "scale(" + s + ")";
+      root.style.width = designW + "px";
+      var h = (sheet.offsetHeight || 800) * s;
+      if(root.parentElement) root.parentElement.style.minHeight = (h + 8) + "px";
+    }catch(e){}
+  };
 })();
 </script>
 
