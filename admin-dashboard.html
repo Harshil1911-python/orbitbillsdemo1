@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <title>Admin dashboard TechSerenia</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,12 +72,7 @@
   .mobile-bar .brand{padding:0;font-size:15px;}
   .mobile-bar img{height:34px;width:auto;border-radius:7px;object-fit:contain;}
   .hamburger{border:1px solid var(--border);background:#fff;border-radius:9px;width:40px;height:40px;
-    display:flex;align-items:center;justify-content:center;font-size:18px;-webkit-tap-highlight-color:transparent;}
-  .mm-brand-footer{margin-top:12px;padding:14px 8px 6px;border-top:1px solid var(--border);text-align:center;}
-  .mm-brand-logo{height:34px;width:auto;margin:0 auto 8px;display:block;object-fit:contain;}
-  .mm-brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);margin-bottom:6px;}
-  .mm-brand-about{font-size:11.5px;line-height:1.45;color:var(--slate);margin:0 0 8px;text-align:left;}
-  .mm-brand-link{font-size:12px;font-weight:600;color:var(--blue-deep);text-decoration:none;}
+    display:flex;align-items:center;justify-content:center;font-size:18px;}
 
   /* ---------- Main ---------- */
   .main{flex:1;padding:28px 36px;max-width:1180px;min-width:0;}
@@ -261,18 +254,70 @@
 
   @media (max-width:900px){
     .layout{flex-direction:column;}
+    .sidebar{display:none;}
+    .sidebar.mobile-open{
+      display:flex;position:fixed;inset:0 20% 0 0;z-index:70;height:100vh;width:auto;box-shadow:0 0 30px rgba(0,0,0,.2);
+    }
+    .mobile-bar{display:flex;}
+    .main{padding:18px 16px 90px;}
+    .form-grid,.form-grid.cols-3{grid-template-columns:1fr;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    .modal{padding:18px;max-height:92vh;}
+    .modal-backdrop{padding:0;align-items:flex-end;}
+    .modal{border-radius:16px 16px 0 0;max-width:100%;width:100%;}
+    .items-builder .item-row{grid-template-columns:1fr;gap:6px;padding-bottom:14px;}
+    .designer-wrap{flex-direction:column;}
+    .designer-canvas-outer{max-width:100%;}
+    .page-head{flex-direction:column;align-items:flex-start;}
+  }
+  @media (max-width:520px){
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    .card{padding:16px;}
+  }
+
+  .overlay-scrim{display:none;position:fixed;inset:0;background:rgba(16,26,43,.35);z-index:65;}
+  .overlay-scrim.show{display:block;}
+
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+    .modal-backdrop, .sidebar, .mobile-bar, .overlay-scrim { display: none !important; }
+  }
+
+  /* Native More action sheet */
+  .row-more-btn{
+    min-width:44px;min-height:40px;padding:8px 12px;border-radius:10px;
+    border:1px solid var(--border);background:#fff;color:var(--blue-deep);
+    font-weight:700;font-size:13px;white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  }
+  .row-more-btn:active{background:var(--blue-tint);}
+  .admin-action-sheet{max-width:420px;width:100%;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));}
+  .admin-action-sheet h3{font-size:16px;margin-bottom:4px;}
+  .aas-sub{font-size:12px;color:var(--slate);margin-bottom:12px;}
+  .aas-actions{display:flex;flex-direction:column;gap:8px;}
+  .aas-actions .btn{width:100%;justify-content:flex-start;min-height:48px;font-size:15px;text-align:left;}
+  .aas-info{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+  .aas-info .aas-row{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--blue-tint-2);border-radius:10px;border:1px solid var(--border);}
+  .aas-info .aas-k{font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;}
+  .aas-info .aas-v{font-size:14px;font-weight:600;color:var(--ink);word-break:break-word;}
+  .mm-brand-footer{margin-top:12px;padding:14px 8px 6px;border-top:1px solid var(--border);text-align:center;}
+  .mm-brand-logo{height:34px;width:auto;margin:0 auto 8px;display:block;object-fit:contain;}
+  .mm-brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px;}
+  .mm-brand-about{font-size:11.5px;line-height:1.45;color:var(--slate);margin:0 0 8px;text-align:left;}
+  .mm-brand-link{font-size:12px;font-weight:600;color:var(--blue-deep);text-decoration:none;}
+
+  @media (max-width:900px){
     html,body{max-width:100%;overflow-x:hidden;}
     body{
       padding-top:calc(52px + env(safe-area-inset-top, 0px));
       background:var(--blue-tint-2);
     }
-    /* Permanent white under status bar (battery/time) */
     body::before{
       content:"";position:fixed;top:0;left:0;right:0;
       height:env(safe-area-inset-top, 0px);
       background:#ffffff;z-index:80;pointer-events:none;
     }
-    /* Fixed logo + hamburger — does not scroll away */
     .mobile-bar{
       display:flex!important;
       position:fixed!important;top:0;left:0;right:0;z-index:75;
@@ -283,65 +328,44 @@
       background:#ffffff!important;border-bottom:1px solid var(--border);
       box-sizing:border-box;
     }
-    .mobile-bar .brand{padding:0;margin:0;line-height:1;}
-    .mobile-bar img{height:30px!important;width:auto;border-radius:6px;object-fit:contain;}
-    .hamburger{
-      width:42px;height:42px;border-radius:11px;font-size:18px;
-      box-shadow:0 1px 4px rgba(15,23,42,.08);
-    }
+    .mobile-bar img{height:30px!important;width:auto;}
+    .hamburger{width:42px;height:42px;border-radius:11px;}
+    .layout{flex-direction:column;}
     .sidebar{display:none;}
     .sidebar.mobile-open{
       display:flex!important;flex-direction:column;
-      position:fixed!important;
-      top:0;left:0;bottom:0;
-      width:min(300px,88vw)!important;
-      max-width:300px;
-      z-index:90;height:100%!important;
+      position:fixed!important;top:0;left:0;bottom:0;
+      width:min(300px,88vw)!important;z-index:90;height:100%!important;
       padding:12px 10px calc(16px + env(safe-area-inset-bottom,0px));
       padding-top:max(12px, env(safe-area-inset-top, 0px));
       box-shadow:8px 0 28px rgba(15,23,42,.15);
       overflow-y:auto;-webkit-overflow-scrolling:touch;
     }
-    .sidebar.mobile-open .brand{display:none;} /* logo already in top bar */
+    .sidebar.mobile-open .brand{display:none;}
     .main{padding:16px 14px calc(28px + env(safe-area-inset-bottom,0px));}
     .form-grid,.form-grid.cols-3{grid-template-columns:1fr;}
     .stat-grid{grid-template-columns:1fr 1fr;gap:10px;}
-    .stat-card{padding:14px;}
-    .stat-card .value{font-size:22px;}
-    .card{padding:14px;border-radius:12px;}
-    .page-head{flex-direction:column;align-items:flex-start;margin-bottom:16px;gap:8px;}
+    .page-head{flex-direction:column;align-items:flex-start;}
     .page-head h1{font-size:20px;}
-    .page-head p{font-size:13px;}
-    table{font-size:13px;}
-    .table-wrap, .table-scroll, [class*="table"]{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    input,select,textarea,.btn,button.nav-item{
-      min-height:44px;font-size:16px; /* reduce iOS zoom */
-    }
-    .btn,.btn-sm{min-height:40px;padding:10px 14px;}
-    .modal{padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;}
-    .modal-backdrop{padding:0;align-items:flex-end;z-index:100;}
-    .modal{border-radius:16px 16px 0 0;max-width:100%;width:100%;}
-    .items-builder .item-row{grid-template-columns:1fr;gap:6px;padding-bottom:14px;}
-    .designer-wrap{flex-direction:column;}
-    .designer-canvas-outer{max-width:100%;}
-    .toolbar,.actions-row,.row-actions{flex-wrap:wrap;gap:8px;}
-    .chart-wrap,canvas{max-width:100%!important;}
-  }
-  @media (max-width:520px){
-    .stat-grid{grid-template-columns:1fr 1fr;}
     .card{padding:14px;}
-    .main{padding:14px 12px calc(28px + env(safe-area-inset-bottom,0px));}
+    input,select,textarea{min-height:44px;font-size:16px;}
+    .btn,.btn-sm{min-height:40px;}
+    .modal-backdrop{padding:0;align-items:flex-end;z-index:100;}
+    .modal{border-radius:16px 16px 0 0;max-width:100%;width:100%;
+      max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;
+      padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));}
+    /* Hide inline action stacks on phone — use More sheet */
+    td.actions-cell .btn-sm, span.actions-cell .btn-sm{display:none!important;}
+    td.actions-cell .row-more-btn, span.actions-cell .row-more-btn{display:inline-flex!important;align-items:center;justify-content:center;}
+    .table-wrap, table{max-width:100%;}
+    .card > div[style*="overflow"], .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   }
-
+  @media (min-width:901px){
+    td.actions-cell .row-more-btn, span.actions-cell .row-more-btn{display:none!important;}
+  }
   .overlay-scrim{display:none;position:fixed;inset:0;background:rgba(16,26,43,.4);z-index:85;}
   .overlay-scrim.show{display:block;}
 
-  @media print {
-    body * { visibility: hidden; }
-    #printArea, #printArea * { visibility: visible; }
-    #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-    .modal-backdrop, .sidebar, .mobile-bar, .overlay-scrim { display: none !important; }
-  }
 </style>
 </head>
 <body>
@@ -1493,6 +1517,20 @@
 
 <!-- ================= MODALS ================= -->
 
+
+<!-- Native row actions sheet -->
+<div class="modal-backdrop" id="adminActionSheet">
+  <div class="modal admin-action-sheet">
+    <h3 id="aasTitle">Actions</h3>
+    <p class="aas-sub" id="aasSub"></p>
+    <div class="aas-info" id="aasInfo" style="display:none"></div>
+    <div class="aas-actions" id="aasActions"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button type="button" class="btn btn-ghost btn-block" onclick="closeModal('adminActionSheet')" style="width:100%;min-height:48px">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="productModal">
   <div class="modal">
     <h3 id="productModalTitle">Add product</h3>
@@ -1948,7 +1986,8 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 function money(n){ return "₹" + Number(n || 0).toFixed(2); }
-function openModal(id){ document.getElementById(id).classList.add("open"); }
+function openModal(id){ const el=document.getElementById(id); if(el) el.classList.add("open"); }
+document.getElementById("adminActionSheet")?.addEventListener("click", function(e){ if(e.target === this) closeModal("adminActionSheet"); });
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 
 async function api(path, options){
@@ -2035,11 +2074,10 @@ document.querySelectorAll(".nav-group-head").forEach(head => {
     if (!wasOpen) group.classList.add("open");
   });
 });
-function openMobileNav(){ document.getElementById("sidebar").classList.add("mobile-open"); document.getElementById("mobileScrim").classList.add("show"); document.body.style.overflow="hidden"; }
-function closeMobileNav(){ document.getElementById("sidebar").classList.remove("mobile-open"); document.getElementById("mobileScrim").classList.remove("show"); document.body.style.overflow=""; }
+function openMobileNav(){ document.getElementById("sidebar").classList.add("mobile-open"); document.getElementById("mobileScrim").classList.add("show"); }
+function closeMobileNav(){ document.getElementById("sidebar").classList.remove("mobile-open"); document.getElementById("mobileScrim").classList.remove("show"); }
 document.getElementById("hamburgerBtn").addEventListener("click", openMobileNav);
 document.getElementById("mobileScrim").addEventListener("click", closeMobileNav);
-// Close drawer after picking a section on phone
 document.querySelectorAll(".nav-item[data-panel]").forEach(function(btn){
   btn.addEventListener("click", function(){
     if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav();
@@ -2107,8 +2145,11 @@ async function renderTaxSlabs(){
       <td>${escapeHtml(t.name)}</td><td>${t.percentage}%</td>
       <td>${t.is_default ? '<span class="pill retail">Default</span>' : ''}</td>
       <td>
+        <span class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="editTaxSlab(${t.id})">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteTaxSlab(${t.id})">Delete</button>
+        ${moreBtn(`onclick="taxMore(${t.id})"`)}
+        </span>
       </td>
     </tr>
   `).join("");
@@ -2123,6 +2164,14 @@ document.getElementById("openAddTaxSlab").addEventListener("click", () => {
   openModal("taxSlabModal");
 });
 
+function taxMore(id){
+  const t = (taxSlabsCache||[]).find(x => Number(x.id)===Number(id));
+  if(!t){ editTaxSlab(id); return; }
+  openAdminActions(t.name||"Tax slab", t.percentage != null ? (t.percentage+"%") : "", [
+    { label: "Edit", primary: true, run: () => editTaxSlab(t.id) },
+    { label: "Delete", danger: true, run: () => deleteTaxSlab(t.id) },
+  ]);
+}
 function editTaxSlab(id){
   const t = taxSlabsCache.find(x => x.id === id);
   if (!t) return;
@@ -2169,6 +2218,69 @@ function initialsColor(name){
   let hash = 0;
   for (const ch of (name || "P")) hash = (hash * 31 + ch.charCodeAt(0)) % colors.length;
   return colors[Math.abs(hash) % colors.length];
+}
+
+// ---------- Native "More" action sheet (phone) ----------
+window.__aasHandlers = [];
+function openAdminActions(title, subtitle, actions){
+  const sheet = document.getElementById("adminActionSheet");
+  const titleEl = document.getElementById("aasTitle");
+  const subEl = document.getElementById("aasSub");
+  const infoEl = document.getElementById("aasInfo");
+  const body = document.getElementById("aasActions");
+  if(!sheet || !body) return;
+  if(titleEl) titleEl.textContent = title || "Actions";
+  if(subEl){ subEl.textContent = subtitle || ""; subEl.style.display = subtitle ? "block" : "none"; }
+  if(infoEl){ infoEl.style.display = "none"; infoEl.innerHTML = ""; }
+  window.__aasHandlers = Array.isArray(actions) ? actions : [];
+  body.innerHTML = window.__aasHandlers.map((a, i) => {
+    const danger = a.danger ? " btn-danger" : (a.primary ? " btn-primary" : " btn-ghost");
+    return `<button type="button" class="btn${danger}" data-aas="${i}">${escapeHtml(a.label||"Action")}</button>`;
+  }).join("");
+  body.querySelectorAll("[data-aas]").forEach(btn => {
+    btn.addEventListener("click", function(){
+      const idx = parseInt(this.getAttribute("data-aas"), 10);
+      const act = window.__aasHandlers[idx];
+      closeModal("adminActionSheet");
+      try{ if(act && typeof act.run === "function") act.run(); }catch(e){ console.error(e); }
+    });
+  });
+  openModal("adminActionSheet");
+}
+function openAdminInfo(title, subtitle, fields, extraActions){
+  const sheet = document.getElementById("adminActionSheet");
+  const titleEl = document.getElementById("aasTitle");
+  const subEl = document.getElementById("aasSub");
+  const infoEl = document.getElementById("aasInfo");
+  const body = document.getElementById("aasActions");
+  if(!sheet) return;
+  if(titleEl) titleEl.textContent = title || "Details";
+  if(subEl){ subEl.textContent = subtitle || ""; subEl.style.display = subtitle ? "block" : "none"; }
+  if(infoEl){
+    infoEl.style.display = "flex";
+    infoEl.innerHTML = (fields||[]).map(f =>
+      `<div class="aas-row"><span class="aas-k">${escapeHtml(f.label||"")}</span><span class="aas-v">${f.html != null ? f.html : escapeHtml(String(f.value??"—"))}</span></div>`
+    ).join("");
+  }
+  window.__aasHandlers = Array.isArray(extraActions) ? extraActions : [];
+  if(body){
+    body.innerHTML = window.__aasHandlers.map((a, i) => {
+      const danger = a.danger ? " btn-danger" : (a.primary ? " btn-primary" : " btn-ghost");
+      return `<button type="button" class="btn${danger}" data-aas="${i}">${escapeHtml(a.label||"Action")}</button>`;
+    }).join("");
+    body.querySelectorAll("[data-aas]").forEach(btn => {
+      btn.addEventListener("click", function(){
+        const idx = parseInt(this.getAttribute("data-aas"), 10);
+        const act = window.__aasHandlers[idx];
+        closeModal("adminActionSheet");
+        try{ if(act && typeof act.run === "function") act.run(); }catch(e){ console.error(e); }
+      });
+    });
+  }
+  openModal("adminActionSheet");
+}
+function moreBtn(onClickAttr){
+  return `<button type="button" class="row-more-btn" ${onClickAttr}>More</button>`;
 }
 
 async function renderProducts(filter){
@@ -2226,17 +2338,43 @@ async function renderProducts(filter){
       <td>${Number(p.price).toFixed(2)}</td>
       <td>${p.stock}${p.has_variants ? ` <span style="color:var(--slate);font-size:11px" title="Variant stock total">(+${p.variant_stock||0} var)</span>` : ""}</td>
       <td>${p.expiry_date ? escapeHtml(String(p.expiry_date).slice(0,10)) : "—"}</td>
-      <td>
+      <td class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="showBarcode(${p.id})">Barcode</button>
         <button class="btn btn-ghost btn-sm" onclick="openVariants(${p.id})">Variants</button>
         <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button>
+        ${moreBtn(`onclick="productMore(${p.id})"`)}
       </td>
     </tr>`;
   }).join("");
   document.getElementById("productsEmpty").style.display = rows.length ? "none" : "block";
 }
 
+function productMore(id){
+  const p = (productsCache||[]).find(x => Number(x.id) === Number(id));
+  if(!p){ openAdminInfo("Product", "#"+id, [{label:"Status", value:"Not in cache — try refresh"}]); return; }
+  openAdminActions(p.name || "Product", [p.brand, p.sku, p.barcode].filter(Boolean).join(" · "), [
+    { label: "Edit product", primary: true, run: () => editProduct(p.id) },
+    { label: "Barcode / QR", run: () => showBarcode(p.id) },
+    { label: "Variants & batches", run: () => openVariants(p.id) },
+    { label: "Product details", run: () => openAdminInfo(p.name, "Product info", [
+        {label:"Brand", value: p.brand||"—"},
+        {label:"Category", value: p.category||"—"},
+        {label:"SKU", value: p.sku||"—"},
+        {label:"Barcode", value: p.barcode||"—"},
+        {label:"Price", value: Number(p.price||0).toFixed(2)},
+        {label:"Stock", value: String(p.stock??"—")},
+        {label:"Unit", value: p.unit||"—"},
+        {label:"Tax", value: p.tax_name || (p.tax_percentage != null ? p.tax_percentage+"%" : "—")},
+        {label:"Expiry", value: p.expiry_date ? String(p.expiry_date).slice(0,10) : "—"},
+        {label:"Notes", value: p.notes||"—"},
+      ], [
+        { label: "Edit", primary: true, run: () => editProduct(p.id) },
+        { label: "Delete", danger: true, run: () => deleteProduct(p.id) },
+      ])},
+    { label: "Delete", danger: true, run: () => deleteProduct(p.id) },
+  ]);
+}
 document.getElementById("productSearch").addEventListener("input", e => renderProducts(e.target.value));
 document.getElementById("productCategoryFilter")?.addEventListener("change", () => renderProducts(document.getElementById("productSearch").value));
 document.getElementById("productBrandFilter")?.addEventListener("change", () => renderProducts(document.getElementById("productSearch").value));
@@ -2366,18 +2504,38 @@ async function renderClients(filter){
       <td><input type="checkbox" class="client-check" value="${c.id}"></td>
       <td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td><td>${escapeHtml(c.phone)}</td>
       <td><span class="credit-amount ${c.credit_balance >= 0 ? 'pos' : 'neg'}">${money(c.credit_balance)}</span></td>
-      <td>
+      <td class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="editClient(${c.id})">Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="openClientDetail(${c.id})">History</button>
         <button class="btn btn-ghost btn-sm" onclick="openStatement(${c.id})">Statement</button>
         <button class="btn btn-ghost btn-sm" onclick="composeToClient('${escapeHtml(c.email||"")}')">Email</button>
         <button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id})">Delete</button>
+        ${moreBtn(`onclick="clientMore(${c.id})"`)}
       </td>
     </tr>
   `).join("");
   document.getElementById("clientsEmpty").style.display = clientsCache.length ? "none" : "block";
 }
 
+function clientMore(id){
+  const c = (clientsCache||[]).find(x => Number(x.id) === Number(id));
+  if(!c) return;
+  openAdminActions(c.name || "Client", c.phone || c.email || "", [
+    { label: "Edit client", primary: true, run: () => editClient(c.id) },
+    { label: "History", run: () => openClientDetail(c.id) },
+    { label: "Statement", run: () => openStatement(c.id) },
+    { label: "Email", run: () => composeToClient(c.email||"") },
+    { label: "Client details", run: () => openAdminInfo(c.name, "Client info", [
+        {label:"Email", value: c.email||"—"},
+        {label:"Phone", value: c.phone||"—"},
+        {label:"Credit balance", value: money(c.credit_balance)},
+        {label:"Address", value: c.address||"—"},
+        {label:"GSTIN", value: c.gstin||c.tax_id||"—"},
+        {label:"Notes", value: c.notes||"—"},
+      ], [{ label: "Edit", primary: true, run: () => editClient(c.id) }])},
+    { label: "Delete", danger: true, run: () => deleteClient(c.id) },
+  ]);
+}
 document.getElementById("clientSearch").addEventListener("input", e => renderClients(e.target.value));
 document.getElementById("openAddClient").addEventListener("click", () => {
   document.getElementById("clientForm").reset();
@@ -2587,7 +2745,7 @@ async function renderInvoices(filter){
       <td>${(inv.items || []).length} item(s)</td><td>${money(inv.total)}</td>
       <td><span class="pill ${inv.status}">${escapeHtml(inv.status)}</span></td>
       <td>${inv.created_at ? formatIndiaTime(inv.created_at) : ""}</td>
-      <td>
+      <td class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="viewInvoice(${inv.id})">View</button>
         <button class="btn btn-ghost btn-sm" onclick="shareInvoice(${inv.id})">Share</button>
         <button class="btn btn-ghost btn-sm" onclick="whatsappInvoice(${inv.id})">WhatsApp</button>
@@ -2596,12 +2754,36 @@ async function renderInvoices(filter){
         <button class="btn btn-ghost btn-sm" onclick="editInvoice(${inv.id})">Edit</button>
         ${inv.status === "unpaid" ? `<button class="btn btn-ghost btn-sm" onclick="markPaid(${inv.id})">Mark paid</button>` : `<button class="btn btn-ghost btn-sm" onclick="markUnpaid(${inv.id})">Unpaid</button>`}
         <button class="btn btn-danger btn-sm" onclick="deleteInvoice(${inv.id})">Delete</button>
+        ${moreBtn(`onclick="invoiceMore(${inv.id})"`)}
       </td>
     </tr>
   `).join("");
   document.getElementById("invoicesEmpty").style.display = invoicesCache.length ? "none" : "block";
 }
 
+function invoiceMore(id){
+  const inv = (invoicesCache||[]).find(x => Number(x.id) === Number(id));
+  if(!inv) return;
+  const acts = [
+    { label: "View invoice", primary: true, run: () => viewInvoice(inv.id) },
+    { label: "Share", run: () => shareInvoice(inv.id) },
+    { label: "WhatsApp", run: () => whatsappInvoice(inv.id) },
+    { label: "Record payment", run: () => openPayment(inv.id) },
+    { label: "Payment link", run: () => paymentLink(inv.id) },
+    { label: "Edit", run: () => editInvoice(inv.id) },
+  ];
+  if(inv.status === "unpaid") acts.push({ label: "Mark paid", run: () => markPaid(inv.id) });
+  else acts.push({ label: "Mark unpaid", run: () => markUnpaid(inv.id) });
+  acts.push({ label: "Invoice details", run: () => openAdminInfo(inv.invoice_number||"Invoice", inv.client_name||"", [
+    {label:"Status", value: inv.status||"—"},
+    {label:"Total", value: money(inv.total)},
+    {label:"Items", value: String((inv.items||[]).length)},
+    {label:"Created", value: inv.created_at ? formatIndiaTime(inv.created_at) : "—"},
+    {label:"Due", value: inv.due_date||"—"},
+  ], [{ label: "View", primary: true, run: () => viewInvoice(inv.id) }])});
+  acts.push({ label: "Delete", danger: true, run: () => deleteInvoice(inv.id) });
+  openAdminActions(inv.invoice_number || "Invoice", inv.client_name || "", acts);
+}
 document.getElementById("invoiceSearch").addEventListener("input", e => renderInvoices(e.target.value));
 
 async function populateClientSelect(selectedId){
@@ -4021,8 +4203,11 @@ async function renderSuppliers(filter){
       <td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.email)}</td><td>${escapeHtml(s.phone)}</td>
       <td>${escapeHtml(s.gstin)}</td>
       <td>
+        <span class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="editSupplier(${s.id})">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteSupplier(${s.id})">Delete</button>
+        ${moreBtn(`onclick="supplierMore(${s.id})"`)}
+        </span>
       </td>
     </tr>`).join("");
   document.getElementById("suppliersEmpty").style.display = suppliersCache.length ? "none" : "block";
@@ -4034,6 +4219,12 @@ document.getElementById("openAddSupplier")?.addEventListener("click", () => {
   document.getElementById("supplierModalTitle").textContent = "Add supplier";
   openModal("supplierModal");
 });
+function supplierMore(id){
+  openAdminActions("Supplier", "#"+id, [
+    { label: "Edit", primary: true, run: () => editSupplier(id) },
+    { label: "Delete", danger: true, run: () => deleteSupplier(id) },
+  ]);
+}
 function editSupplier(id){
   const s = suppliersCache.find(x => x.id === id);
   if (!s) return;
@@ -4952,8 +5143,11 @@ async function renderPriceLists(){
     <td>${(p.items||[]).length}</td>
     <td>${p.clientCount != null ? p.clientCount : (p.clients||[]).length}</td>
     <td style="white-space:nowrap">
+      <span class="actions-cell">
       <button class="btn btn-ghost btn-sm" type="button" onclick="openPriceListEditor(${p.id})">Edit</button>
       <button class="btn btn-danger btn-sm" type="button" onclick="deletePriceList(${p.id})">Delete</button>
+      ${moreBtn(`onclick="priceListMore(${p.id})"`)}
+      </span>
     </td>
   </tr>`).join("") || '<tr><td colspan="4">No lists yet — create one to assign special prices to customers.</td></tr>';
 }
@@ -4970,7 +5164,13 @@ document.getElementById("openPriceList")?.addEventListener("click", async () => 
   await renderPriceLists();
   if (d.ok && d.id) openPriceListEditor(d.id);
 });
-async function openPriceListEditor(id){
+async function priceListMore(id){
+  openAdminActions("Price list", "#"+id, [
+    { label: "Edit", primary: true, run: () => openPriceListEditor(id) },
+    { label: "Delete", danger: true, run: () => deletePriceList(id) },
+  ]);
+}
+function openPriceListEditor(id){
   const [listRes, prodRes, cliRes] = await Promise.all([
     api(`/price-lists/${id}`),
     api("/products"),
@@ -5101,15 +5301,31 @@ async function renderNotifications(){
     <td>${escapeHtml(n.due_date||"—")}${n.overdue?' <span class="pill unpaid">Overdue</span>':''}</td>
     <td><span class="pill ${escapeHtml(n.status||"")}">${escapeHtml(n.status||"")}</span></td>
     <td>${n.type === "pay_later" ? '<span class="pill partial">Pay Later</span>' : '<span class="pill unpaid">Unpaid</span>'}</td>
-    <td style="white-space:nowrap">
+    <td class="actions-cell" style="white-space:nowrap">
       <button class="btn btn-ghost btn-sm" type="button" onclick="notifEdit(${n.id})">Edit</button>
       <button class="btn btn-ghost btn-sm" type="button" onclick="notifResetOutstanding(${n.id})" title="Mark paid / clear outstanding">Reset</button>
       <button class="btn btn-ghost btn-sm" type="button" onclick="notifWriteOff(${n.id})">Write off</button>
       <button class="btn btn-ghost btn-sm" type="button" onclick="notifDismiss(${n.id})">Dismiss</button>
       <button class="btn btn-danger btn-sm" type="button" onclick="notifDeleteInvoice(${n.id})">Delete</button>
+      ${moreBtn(`onclick="notifMore(${n.id},'${escapeHtml(n.invoice_number||"").replace(/'/g,"&#39;")}','${escapeHtml(n.client_name||"").replace(/'/g,"&#39;")}',${Number(n.outstanding)||0},'${escapeHtml(n.due_date||"")}','${escapeHtml(n.status||"")}',${n.overdue?1:0})"`)}
     </td>
   </tr>`).join("");
   if (empty) empty.style.display = rows.length ? "none" : "block";
+}
+function notifMore(id, invNo, client, outstanding, due, status, overdue){
+  openAdminActions(invNo || "Notification", client || "", [
+    { label: "Edit", primary: true, run: () => notifEdit(id) },
+    { label: "Reset outstanding", run: () => notifResetOutstanding(id) },
+    { label: "Write off", run: () => notifWriteOff(id) },
+    { label: "Details", run: () => openAdminInfo(invNo||"Notification", client||"", [
+        {label:"Outstanding", value: money(outstanding)},
+        {label:"Due date", value: due||"—"},
+        {label:"Status", value: status||"—"},
+        {label:"Overdue", value: overdue ? "Yes" : "No"},
+      ], [{ label: "Edit", primary: true, run: () => notifEdit(id) }])},
+    { label: "Dismiss", run: () => notifDismiss(id) },
+    { label: "Delete invoice", danger: true, run: () => notifDeleteInvoice(id) },
+  ]);
 }
 function notifDismiss(id){
   let dismissed = [];
@@ -5402,8 +5618,11 @@ async function renderCoupons(){
         ${c.expires_at?`<div style="color:var(--slate);font-size:12px">Expires ${escapeHtml(c.expires_at)}</div>`:""}
       </div>
       <div style="display:flex;gap:6px;margin-top:12px">
+        <span class="actions-cell">
         <button class="btn btn-ghost btn-sm" type="button" onclick="editCoupon(${c.id})">Edit</button>
         <button class="btn btn-danger btn-sm" type="button" onclick="deleteCoupon(${c.id})">Delete</button>
+        ${moreBtn(`onclick="couponMore(${c.id})"`)}
+        </span>
       </div>
     </div>`).join("");
 }
@@ -5412,7 +5631,13 @@ async function deleteCoupon(id){
   await api(`/coupons/${id}`, { method: "DELETE" });
   renderCoupons();
 }
-async function editCoupon(id){
+async function couponMore(id){
+  openAdminActions("Coupon", "#"+id, [
+    { label: "Edit", primary: true, run: () => editCoupon(id) },
+    { label: "Delete", danger: true, run: () => deleteCoupon(id) },
+  ]);
+}
+function editCoupon(id){
   const d = await api("/coupons");
   const c = (d.coupons||[]).find(x => x.id === id);
   if (!c) return;
