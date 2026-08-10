@@ -90,21 +90,31 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .table-scroll table{min-width:480px}
 @media(max-width:900px){
-  /* overridden by OrbitBills Phone rules below */
   .layout{grid-template-columns:1fr}
+  .sales-side{border-right:0;border-bottom:1px solid var(--line)}
+  .cart-side{position:sticky;bottom:0;max-height:55vh;overflow:auto;box-shadow:0 -4px 20px rgba(15,23,42,.08);border-radius:16px 16px 0 0;z-index:40}
+  .text-list{max-height:36vh}
+  .photo-grid{max-height:36vh}
   .hint{display:none}
 }
 /* Phones: bigger tap targets, collapsible cart, no-wrap header actions */
 @media(max-width:640px){
+  header.app-bar{padding:8px 10px;gap:6px}
   .brand{font-size:14px}
+  .header-actions{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;padding-bottom:2px;scrollbar-width:none}
+  .header-actions::-webkit-scrollbar{display:none}
+  .header-actions .btn,.header-actions .pill,.header-actions .badge{flex:0 0 auto}
   .panel-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;width:100%}
   .panel-tab{flex:0 0 auto}
-  .btn{min-height:42px;padding:9px 14px}
+  .btn{min-height:40px;padding:9px 14px}
   .btn-sm{min-height:36px;padding:8px 12px;font-size:12.5px}
   .text-row{padding:12px}
   .text-row .name{font-size:14px}
   .form-field input,.form-field select,.form-field textarea{padding:10px 11px;font-size:16px}
   .row-2{grid-template-columns:1fr}
+  .cart-side{max-height:min(62vh,520px)}
+  .cart-side.collapsed{max-height:52px;overflow:hidden}
+  .cart-toggle{display:flex}
   table{font-size:12.5px}
   th,td{padding:6px}
   .modal{max-height:96vh}
@@ -113,226 +123,240 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .cart-toggle .chev{transition:transform .15s}
 .cart-side.collapsed .cart-toggle .chev{transform:rotate(180deg)}
 .cart-side.collapsed > *:not(.cart-toggle){display:none}
-/* ---- OrbitBills Phone ---- */
-.pos-hub{
-  display:none;min-height:calc(100vh - 48px);padding:16px 14px 24px;
-  background:linear-gradient(180deg,#eef4fc 0%,var(--bg) 45%);
-}
-.pos-hub.open{display:block}
-.pos-hub-head{margin-bottom:16px}
-.pos-hub-head h1{font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-.pos-hub-head p{font-size:13px;color:var(--muted)}
-.pos-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:480px;margin:0 auto 14px}
-.pos-hub-tile{
-  background:var(--card);border:1px solid var(--line);border-radius:14px;
-  padding:18px 12px 16px;text-align:left;cursor:pointer;
-  box-shadow:0 2px 12px rgba(15,23,42,.05);
-  display:flex;flex-direction:column;align-items:flex-start;gap:10px;
-  min-height:118px;-webkit-tap-highlight-color:transparent;
-}
-.pos-hub-tile:active{background:#f8fafc}
-.pos-hub-tile .hub-icon{
-  width:40px;height:40px;border-radius:10px;background:var(--tint);
-  display:flex;align-items:center;justify-content:center;color:var(--brand);
-}
-.pos-hub-tile .hub-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.pos-hub-tile h2{font-size:14.5px;font-weight:700;letter-spacing:-.01em;margin:0}
-.pos-hub-tile p{font-size:11.5px;color:var(--muted);line-height:1.4;margin:0}
-.pos-hub-tile .hub-count{
-  font-size:11px;font-weight:700;color:var(--brand);background:var(--tint);
-  padding:2px 8px;border-radius:999px
-}
-.pos-hub-meta{max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pos-hub-meta .hm-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
-.pos-hub-meta .hm-label{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.pos-hub-meta .hm-val{font-family:var(--display);font-weight:700;font-size:16px;margin-top:4px}
 
-.pos-mode-bar{
-  display:none;align-items:center;gap:8px;padding:8px 12px;
-  background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:48px;z-index:45
-}
-.pos-mode-bar .mode-title{font-weight:700;font-size:14px;flex:1}
-.pos-mode-bar .btn-back{
-  min-width:40px;min-height:40px;border-radius:10px;border:1px solid var(--line);
-  background:#fff;font-weight:700;font-size:18px;cursor:pointer;color:var(--brand);line-height:1
-}
+/* ========== OrbitBills Mobile POS (presentation only) ========== */
+.m-only{display:none}
+.d-only{display:initial}
+.mobile-menu-btn,.mobile-menu,.m-cart-bar,.m-cart-sheet,.m-cart-backdrop{display:none}
 
-/* Compact phone header + vertical menu */
-.header-menu-btn{
-  display:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
-  background:#fff;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0
-}
-.header-menu-btn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round}
-.phone-menu{
-  display:none;position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.4)
-}
-.phone-menu.open{display:block}
-.phone-menu-panel{
-  position:absolute;top:0;right:0;width:min(300px,86vw);height:100%;
-  background:#fff;border-left:1px solid var(--line);
-  padding:16px 12px;overflow:auto;
-  box-shadow:-8px 0 30px rgba(15,23,42,.12);
-  display:flex;flex-direction:column;gap:4px
-}
-.phone-menu-panel h3{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px 10px;font-weight:600}
-.phone-menu-panel button,.phone-menu-panel .pm-item{
-  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  padding:12px 12px;border:0;background:none;border-radius:10px;
-  font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:44px
-}
-.phone-menu-panel button:hover,.phone-menu-panel .pm-item:hover{background:var(--tint);color:var(--brand)}
-.phone-menu-close{align-self:flex-end;margin-bottom:4px}
+@media (max-width:768px){
+  .m-only{display:flex}
+  .d-hide-mobile{display:none!important}
 
-/* Hub must fully hide the POS layout (prevents Text POS appearing under hub on scroll) */
-body.hub-open .layout,
-body.hub-open .pos-mode-bar{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
-body.hub-open .pos-hub{display:block!important;visibility:visible!important;height:auto!important;overflow:visible!important;pointer-events:auto!important}
-body.mode-open .pos-hub{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
-body.mode-open .layout{display:flex!important;flex-direction:column;visibility:visible!important;height:auto!important;overflow:visible!important;pointer-events:auto!important}
-body.mode-open .pos-mode-bar{display:flex!important;visibility:visible!important}
-body.text-pos-search .search-bar input#productSearch{font-size:16px;min-height:48px}
-body.text-pos-search #textEmpty.search-prompt{
-  display:block;padding:20px 12px;color:var(--muted);font-size:13.5px;line-height:1.55;text-align:center
-}
-
-/* Sticky pay bar + custom item (MyBillBook-style phone POS) */
-.phone-paybar{
-  display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
-  background:#fff;border-top:1px solid var(--line);
-  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
-  box-shadow:0 -6px 24px rgba(15,23,42,.1);
-  gap:8px;align-items:center
-}
-.phone-paybar .pp-total{flex:1;min-width:0}
-.phone-paybar .pp-label{font-size:11px;color:var(--muted);font-weight:600}
-.phone-paybar .pp-amt{font-family:var(--display);font-weight:700;font-size:20px;color:var(--brand);line-height:1.1}
-.phone-paybar .btn{min-height:46px;flex:1.1}
-.custom-item-bar{display:none;gap:8px;margin:8px 0 4px}
-.custom-item-bar .btn{flex:1}
-
-/* Mobile POS — safe areas for status bar / home indicator */
-@media(max-width:900px){
-  html,body{height:100%;overflow-x:hidden}
+  html,body{max-width:100%;overflow-x:hidden}
   body{
     padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:0;
     background:var(--bg);
   }
 
-  /* Top app bar: clear of notch / status bar */
+  /* Compact sticky header */
   header.app-bar{
-    position:sticky;top:0;z-index:50;
+    position:sticky;top:0;z-index:60;
     padding:8px 12px;
     padding-top:max(8px, env(safe-area-inset-top, 0px));
     min-height:calc(48px + env(safe-area-inset-top, 0px));
-    gap:8px;
+    flex-wrap:nowrap;gap:8px;
   }
-  header.app-bar .brand span:not(.brand-mark){display:none}
-  .header-actions{gap:8px;flex-wrap:nowrap;width:auto;overflow:visible}
-  .header-actions > *:not(#indiaClock):not(.header-menu-btn){display:none!important}
-  #indiaClock{display:inline-flex!important;min-width:auto;font-size:12px;padding:6px 8px}
-  .header-menu-btn{display:inline-flex}
+  .brand{font-size:15px;gap:6px;min-width:0}
+  .brand span{display:none} /* hide "Billing" subtitle */
+  .header-actions{gap:6px;flex-wrap:nowrap;overflow:visible;width:auto}
+  /* Hide desktop header controls — available in ☰ menu */
+  .header-actions > .btn,
+  .header-actions > .pill,
+  .header-actions > .badge:not(#indiaClock){display:none!important}
+  #indiaClock{
+    display:inline-flex!important;min-width:auto!important;
+    font-size:11.5px;padding:5px 8px;font-variant-numeric:tabular-nums
+  }
+  .mobile-menu-btn{
+    display:inline-flex!important;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
+    background:#fff;cursor:pointer;flex-shrink:0;padding:0
+  }
+  .mobile-menu-btn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round}
 
-  /* Hide hub on phone — go straight into POS */
-  .pos-hub{display:none!important}
-  body.hub-open .pos-hub{display:none!important}
-  body.hub-open .layout,
-  body.mode-open .layout{
-    display:flex!important;flex-direction:column;visibility:visible!important;
-    height:auto!important;overflow:visible!important;pointer-events:auto!important;
+  /* Mobile slide-over menu */
+  .mobile-menu{
+    display:none;position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.4)
+  }
+  .mobile-menu.open{display:block}
+  .mobile-menu-panel{
+    position:absolute;top:0;right:0;width:min(300px,88vw);height:100%;
+    background:#fff;border-left:1px solid var(--line);
+    padding:12px 10px calc(16px + env(safe-area-inset-bottom,0px));
+    overflow:auto;box-shadow:-8px 0 28px rgba(15,23,42,.12);
+    display:flex;flex-direction:column;gap:2px
+  }
+  .mobile-menu-panel h4{
+    font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+    font-weight:600;padding:10px 10px 6px;margin:0
+  }
+  .mobile-menu-panel button{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:12px;border:0;background:none;border-radius:10px;
+    font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:44px
+  }
+  .mobile-menu-panel button:active{background:var(--tint);color:var(--brand)}
+  .mobile-menu-panel .mm-status{
+    padding:8px 12px;font-size:13px;color:var(--muted);font-weight:500
+  }
+
+  /* Single column — products primary */
+  .layout{
+    display:flex!important;flex-direction:column;
     min-height:auto;
-    /* room for sticky pay bar + home indicator */
-    padding-bottom:calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));
   }
-  body.hub-open .pos-mode-bar,
-  body.mode-open .pos-mode-bar{display:none!important} /* cleaner: no mode bar chrome */
+  .sales-side{
+    border-right:0;border-bottom:none;
+    padding:10px 12px 12px;overflow:visible;min-width:0;width:100%
+  }
 
-  .sales-side{border-right:0;border-bottom:none;padding:10px 12px 8px;overflow:visible}
+  /* Cart moves into bottom sheet on mobile — hide inline cart column content from flow
+     but keep in DOM for JS. Visual cart is the sheet. */
   .cart-side{
-    position:static!important;max-height:none!important;overflow:visible!important;
-    box-shadow:none!important;border-radius:0!important;border-top:1px solid var(--line);
-    padding:12px 12px 8px;margin-top:0
+    position:fixed!important;
+    left:0;right:0;
+    bottom:0;
+    z-index:70;
+    max-height:min(88vh, 720px)!important;
+    overflow:auto!important;
+    border-radius:18px 18px 0 0!important;
+    box-shadow:0 -8px 32px rgba(15,23,42,.18)!important;
+    border-top:1px solid var(--line);
+    padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px))!important;
+    transform:translateY(110%);
+    transition:transform .22s ease;
+    background:var(--card)!important;
+    width:100%;
   }
-  .cart-side.collapsed{max-height:none!important;overflow:visible!important}
-  .cart-side.collapsed > *:not(.cart-toggle){display:revert}
+  body.m-cart-open .cart-side{
+    transform:translateY(0);
+  }
+  body.m-cart-open .m-cart-backdrop{display:block}
   .cart-toggle{display:none!important}
-  .text-list,.photo-grid{max-height:none!important}
-  .hint{display:none}
-  .panel-tabs{display:none!important}
-  .btn{min-height:44px}
-  .form-field input,.form-field select,.form-field textarea{font-size:16px;min-height:44px}
-  #stockSummary{display:none!important}
-
-  /* Sticky search under header */
-  .search-bar{
-    position:sticky;
-    top:calc(48px + env(safe-area-inset-top, 0px));
-    z-index:40;
-    background:var(--bg);
-    padding:8px 0 6px;
-    margin:0 0 6px;
-    gap:6px;
+  .cart-side > h3{
+    position:sticky;top:0;background:var(--card);padding:4px 0 10px;
+    display:flex;align-items:center;justify-content:space-between;z-index:2
   }
-  .search-bar input#productSearch{flex:1;min-width:0;min-height:46px;font-size:16px}
-  .custom-item-bar{display:flex;margin:0 0 8px}
-  .text-list{border:0;box-shadow:none;background:transparent;border-radius:0}
+  .cart-side > h3::after{content:none}
+  .m-cart-close{
+    display:inline-flex!important;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;font-size:18px;cursor:pointer;color:var(--muted)
+  }
+
+  .m-cart-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:65
+  }
+
+  /* Tabs: horizontal scroll */
+  .panel-tabs{
+    width:100%;max-width:100%;
+    overflow-x:auto;flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .panel-tabs::-webkit-scrollbar{display:none}
+  .panel-tab{flex:0 0 auto;min-height:40px;padding:8px 14px;font-size:13px}
+
+  /* Search */
+  .search-bar{gap:6px;margin-bottom:8px}
+  .search-bar input{
+    min-height:46px;font-size:16px;border-radius:12px;padding:12px 14px
+  }
+  #scanField{max-width:100px!important}
+
+  /* Product list — card style, full height scroll */
+  .text-list{
+    max-height:none!important;
+    border:0;box-shadow:none;background:transparent;border-radius:0
+  }
   .text-row{
     background:#fff;border:1px solid var(--line);border-radius:12px;
-    margin-bottom:8px;padding:12px
+    margin-bottom:8px;padding:12px;gap:10px;align-items:flex-start
   }
-  .cart-side h3{font-size:14px}
+  .text-row .name{font-size:14.5px}
+  .text-row .meta{font-size:12px}
+  .text-row .price{font-size:16px;font-weight:700}
+  .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px}
 
-  /* Bottom pay bar — clear of home indicator */
-  .phone-paybar{
-    display:flex!important;
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  .photo-grid{max-height:none!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .photo-tile{min-height:120px}
+
+  .hint{display:none}
+  #stockSummary{margin-top:8px}
+  #stockSummary > div{border-radius:12px}
+
+  /* Low banners compact */
+  .low-banner{font-size:12.5px;padding:8px 10px;border-radius:10px;margin-bottom:8px}
+
+  /* Sticky cart bar */
+  .m-cart-bar{
+    display:flex!important;position:fixed;left:0;right:0;bottom:0;z-index:55;
+    align-items:center;gap:10px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+    background:#0b3d91;color:#fff;
+    box-shadow:0 -6px 24px rgba(11,61,145,.25);
   }
+  .m-cart-bar .mcb-info{flex:1;min-width:0}
+  .m-cart-bar .mcb-label{font-size:12px;opacity:.9;font-weight:500}
+  .m-cart-bar .mcb-amt{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.15}
+  .m-cart-bar .btn{
+    background:#fff;color:var(--brand);border:0;font-weight:700;
+    min-height:44px;padding:10px 16px;border-radius:10px;flex:0 0 auto
+  }
+  body.m-cart-open .m-cart-bar{display:none!important}
 
-  /* Calculator above pay bar + home indicator */
+  /* Cart form fields more touchable */
+  .cart-side .form-field input,
+  .cart-side .form-field select,
+  .cart-side .form-field textarea{min-height:44px;font-size:16px}
+  .cart-side .btn-block{min-height:48px;font-size:15px}
+  .cart-side .row-2{grid-template-columns:1fr}
+  .qty-control button{min-width:40px;min-height:40px}
+
+  /* Action buttons stack */
+  .cart-side .btn-ok.btn-block,
+  .cart-side #btnPayLater,
+  .cart-side #btnWhatsApp{width:100%;margin-top:6px}
+
+  /* Calculator above cart bar */
   #calcFab{
     right:14px!important;
-    bottom:calc(100px + env(safe-area-inset-bottom, 0px))!important;
+    bottom:calc(80px + env(safe-area-inset-bottom,0px))!important;
     z-index:10050!important;
     touch-action:manipulation!important;
   }
+  body.m-cart-open #calcFab{
+    bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;
+  }
   #calcPopup{
-    z-index:10060!important;
     left:50%!important;right:auto!important;
     top:50%!important;bottom:auto!important;
     transform:translate(-50%,-50%)!important;
+    z-index:10060!important;
     width:min(320px,92vw)!important;
-    max-height:min(70vh, calc(100vh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    max-height:min(70vh, calc(100vh - 100px));
     overflow:auto!important;
   }
   #calcPopup.open{display:block!important}
+
+  /* Modals full-width friendly */
+  .modal{width:min(520px,96vw);max-height:92vh}
+  .modal-bg{padding:env(safe-area-inset-top,8px) 8px env(safe-area-inset-bottom,8px)}
 }
 
-#calcFab{
-  z-index:10050!important;
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent;
+@media (max-width:480px){
+  .photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+  .text-row{flex-wrap:wrap}
+  .text-row > div:last-child{width:100%;justify-content:space-between}
 }
-#calcPopup{z-index:10060!important}
-#calcPopup.open{display:block!important}
 
-
-@media(min-width:901px){
-  body.hub-open .pos-hub{display:none}
-  body.hub-open .layout{display:grid}
-  body.hub-open .pos-mode-bar{display:none}
-  body.mode-open .pos-mode-bar{display:none}
-  .header-menu-btn,.phone-menu{display:none!important}
+@media (min-width:769px){
+  .mobile-menu-btn,.mobile-menu,.m-cart-bar,.m-cart-backdrop,.m-cart-close{display:none!important}
+  body.m-cart-open .cart-side{transform:none!important;position:static!important;max-height:none!important}
 }
 
 @media print{
   body *{visibility:hidden!important}
   #printRoot,#printRoot *{visibility:visible!important}
   #printRoot{display:block!important;position:absolute;left:0;top:0;width:100%}
-  .modal-bg,header,.toast,.pos-hub,.pos-mode-bar,.phone-menu{display:none!important}
+  .modal-bg,header,.toast{display:none!important}
 }
 </style>
 </head>
-<body class="mode-open text-pos-search">
+<body>
 <header class="app-bar">
   <div class="brand">
     <span class="brand-mark" style="height:34px;display:flex;align-items:center;flex-shrink:0">
@@ -350,97 +374,45 @@ body.text-pos-search #textEmpty.search-prompt{
     <button class="btn btn-ghost btn-sm" id="btnRefreshSync" type="button" title="Sync">↻</button>
     <button class="btn btn-ghost btn-sm" id="btnHelp" type="button">Keys</button>
     <button class="btn btn-ghost btn-sm" id="signOutBtn" type="button">Sign out</button>
-    <button type="button" class="header-menu-btn" id="headerMenuBtn" aria-label="Menu" title="Menu">
-      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" title="Menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </div>
 </header>
 
-<div class="phone-menu" id="phoneMenu" aria-hidden="true">
-  <div class="phone-menu-panel" role="dialog" aria-label="Billing menu">
-    <button type="button" class="btn btn-ghost btn-sm phone-menu-close" id="phoneMenuClose">Close</button>
-    <h3>Actions</h3>
-    <button type="button" data-relay="btnDayClose">Day close</button>
-    <button type="button" data-relay="btnRecent">Recents</button>
-    <button type="button" data-relay="btnRefreshSync">Sync data</button>
-    <button type="button" data-relay="btnHelp">Keyboard shortcuts</button>
-    <button type="button" id="pmHome">POS home</button>
-    <h3>Session</h3>
-    <div class="pm-item" style="font-weight:500;color:var(--muted);font-size:13px" id="pmShiftLabel">Shift —</div>
-    <div class="pm-item" style="font-weight:500;color:var(--muted);font-size:13px" id="pmSyncLabel">Sync</div>
-    <button type="button" data-relay="signOutBtn" style="color:var(--bad)">Sign out</button>
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mobile-menu-panel" role="dialog" aria-label="Menu">
+    <button type="button" id="mobileMenuClose" style="align-self:flex-end;color:var(--muted)">Close</button>
+    <h4>Status</h4>
+    <div class="mm-status" id="mmShift">Shift —</div>
+    <div class="mm-status" id="mmSync">Sync</div>
+    <h4>Actions</h4>
+    <button type="button" data-mm="btnDayClose">Day close</button>
+    <button type="button" data-mm="btnRecent">Recent bills</button>
+    <button type="button" data-mm="btnRefreshSync">Sync</button>
+    <button type="button" data-mm="btnHelp">Keyboard shortcuts</button>
+    <h4>Session</h4>
+    <button type="button" data-mm="signOutBtn" style="color:var(--bad)">Sign out</button>
   </div>
 </div>
-
-<!-- Phone home -->
-<section class="pos-hub open" id="posHub" aria-label="POS home">
-  <div class="pos-hub-head">
-    <h1>Billing</h1>
-    <p>Choose a selling mode for this device.</p>
-  </div>
-  <div class="pos-hub-grid">
-    <button type="button" class="pos-hub-tile" data-mode="text" id="hubTextPos">
-      <div class="hub-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
-      </div>
-      <h2>Text POS</h2>
-      <p>Search by name, SKU or barcode</p>
-    </button>
-    <button type="button" class="pos-hub-tile" data-mode="photo" id="hubPhotoPos">
-      <div class="hub-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 16l5-4 4 3 3-2 6 4"/></svg>
-      </div>
-      <h2>Photo POS</h2>
-      <p>Browse products as image tiles</p>
-    </button>
-    <button type="button" class="pos-hub-tile" data-mode="held" id="hubHeld">
-      <div class="hub-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M8 6h2v12H8zM14 6h2v12h-2z"/></svg>
-      </div>
-      <h2>Held</h2>
-      <p>Resume parked bills</p>
-      <span class="hub-count" id="hubHeldCount" style="display:none">0</span>
-    </button>
-    <button type="button" class="pos-hub-tile" data-mode="recent" id="hubRecent">
-      <div class="hub-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
-      </div>
-      <h2>Recents</h2>
-      <p>Invoices on this device</p>
-    </button>
-  </div>
-  <div class="pos-hub-meta">
-    <div class="hm-card"><div class="hm-label">Shift</div><div class="hm-val" id="hubShiftVal">—</div></div>
-    <div class="hm-card"><div class="hm-label">Cart items</div><div class="hm-val" id="hubCartVal">0</div></div>
-  </div>
-</section>
-
-<div class="pos-mode-bar" id="posModeBar">
-  <button type="button" class="btn-back" id="btnPosBack" aria-label="Back to home">←</button>
-  <span class="mode-title" id="posModeTitle">Text POS</span>
-  <button type="button" class="btn btn-ghost btn-sm" id="btnPosHome" style="flex:0 0 auto">Home</button>
-</div>
+<div class="m-cart-backdrop" id="mCartBackdrop"></div>
 
 <div class="layout">
 <section class="sales-side">
   <div class="low-banner" id="lowBanner"></div>
   <div class="low-banner" id="dueBanner" style="background:#fef3c7;color:var(--warn);display:none"></div>
   <div class="panel-tabs">
-    <button class="panel-tab active" data-panel="textPanel" type="button">Text POS</button>
-    <button class="panel-tab" data-panel="photoPanel" type="button">Photo POS</button>
+    <button class="panel-tab active" data-panel="textPanel" type="button">Products</button>
+    <button class="panel-tab" data-panel="photoPanel" type="button">Photos</button>
     <button class="panel-tab" data-panel="heldPanel" type="button">Held <span id="heldCount"></span></button>
-    <button class="panel-tab" data-panel="recentPanel" type="button">Recents</button>
+    <button class="panel-tab" data-panel="recentPanel" type="button">Recent</button>
   </div>
   <div class="search-bar">
-    <input id="productSearch" placeholder="Search name, SKU or barcode" autocomplete="off" enterkeyhint="search">
-    <input id="scanField" placeholder="Scan" style="max-width:96px" autocomplete="off" inputmode="none">
+    <input id="productSearch" placeholder="Search products" autocomplete="off">
+    <input id="scanField" placeholder="Barcode" style="max-width:140px" autocomplete="off">
   </div>
-  <div class="custom-item-bar" id="customItemBar">
-    <button type="button" class="btn btn-ghost btn-sm" id="btnCustomItem">+ Custom item</button>
-    <button type="button" class="btn btn-ghost btn-sm" id="btnClearSearch" style="flex:0 0 auto">Clear</button>
-  </div>
-  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty search-prompt" id="textEmpty">Search a product, or add a custom item below.</div></div>
-  <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div><div class="empty" id="photoEmpty" style="display:none">No products</div></div>
+  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty" style="display:none">No products</div></div>
+  <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div></div>
   <div class="sales-panel" id="heldPanel"><div class="toolbar"><button class="btn btn-primary btn-sm" id="btnHold" type="button">Hold cart</button></div><div id="heldList"></div></div>
   <div class="sales-panel" id="recentPanel"><div id="recentList"></div></div>
   <div id="stockSummary" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 6px">
@@ -465,7 +437,7 @@ body.text-pos-search #textEmpty.search-prompt{
 </section>
 <aside class="cart-side" id="cartSide">
   <div class="cart-toggle" id="cartToggle"><span>Sale <span id="cartToggleSummary" style="color:var(--muted);font-weight:600"></span></span><span class="chev">▲</span></div>
-  <h3>Sale</h3>
+  <h3>Sale <button type="button" class="m-cart-close" id="mCartClose" aria-label="Close cart" style="display:none">×</button></h3>
   <div class="form-field"><label>Client</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="clientSelect" style="flex:1"><option value="">Walk-in</option></select>
@@ -879,12 +851,18 @@ function buildInvoiceExportDocument(inv, paper){
   }
   fit();
   window.addEventListener("resize", fit);
-  window.addEventListener("load", fit);
-  // After images
+  if (window.matchMedia) {
+    try { window.matchMedia("print").addListener(fit); } catch(e) {}
+  }
+  window.addEventListener("beforeprint", fit);
+  // run again after images
   setTimeout(fit, 50);
   setTimeout(fit, 250);
 })();
 <\/script>
+
+
+
 </body></html>`;
 }
 
@@ -1172,115 +1150,6 @@ function outstandingOf(inv){
   return Math.max(0, tot-ap);
 }
 
-/* Phone hub + search-first Text POS + vertical menu */
-let textPosSearchOnly = true;
-const POS_MODE_TITLES = { text: "Text POS", photo: "Photo POS", held: "Held bills", recent: "Recents" };
-const POS_MODE_PANELS = { text: "textPanel", photo: "photoPanel", held: "heldPanel", recent: "recentPanel" };
-
-function isPhoneLayout(){
-  return window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
-}
-
-function openPosHub(){
-  document.body.classList.add("hub-open");
-  document.body.classList.remove("mode-open", "text-pos-search");
-  const hub = document.getElementById("posHub");
-  if (hub) hub.classList.add("open");
-  updateHubMeta();
-  window.scrollTo(0, 0);
-}
-
-function openPosMode(mode){
-  mode = mode || "text";
-  document.body.classList.remove("hub-open");
-  document.body.classList.add("mode-open");
-  if (mode === "text") document.body.classList.add("text-pos-search");
-  else document.body.classList.remove("text-pos-search");
-  const hub = document.getElementById("posHub");
-  if (hub) hub.classList.remove("open");
-  const title = document.getElementById("posModeTitle");
-  if (title) title.textContent = POS_MODE_TITLES[mode] || mode;
-  const panelId = POS_MODE_PANELS[mode] || "textPanel";
-  document.querySelectorAll(".panel-tab").forEach(t => {
-    t.classList.toggle("active", t.dataset.panel === panelId);
-  });
-  document.querySelectorAll(".sales-panel").forEach(p => {
-    p.classList.toggle("active", p.id === panelId);
-  });
-  if (mode === "held") loadHeld();
-  if (mode === "recent") renderRecentList();
-  if (mode === "text") {
-    textPosSearchOnly = true;
-    const search = document.getElementById("productSearch");
-    if (search) {
-      search.value = "";
-      renderProductLists("");
-      setTimeout(() => { try { search.focus(); } catch (e) {} }, 80);
-    }
-  } else if (mode === "photo") {
-    textPosSearchOnly = false;
-    renderProductLists(document.getElementById("productSearch")?.value || "");
-  }
-  window.scrollTo(0, 0);
-}
-
-function updateHubMeta(){
-  const cartEl = document.getElementById("hubCartVal");
-  if (cartEl) {
-    const n = (typeof cart !== "undefined" && cart) ? cart.reduce((s, i) => s + (Number(i.qty) || 0), 0) : 0;
-    cartEl.textContent = String(n);
-  }
-  const shiftPill = document.getElementById("shiftPill");
-  const hubShift = document.getElementById("hubShiftVal");
-  if (hubShift && shiftPill) hubShift.textContent = (shiftPill.textContent || "—").replace(/^Shift\s*/i, "") || "—";
-  const pmShift = document.getElementById("pmShiftLabel");
-  if (pmShift && shiftPill) pmShift.textContent = shiftPill.textContent || "Shift —";
-  const syncPill = document.getElementById("syncPill");
-  const pmSync = document.getElementById("pmSyncLabel");
-  if (pmSync && syncPill) pmSync.textContent = "Status: " + (syncPill.textContent || "Sync");
-  const heldCount = document.getElementById("heldCount");
-  const hubHeld = document.getElementById("hubHeldCount");
-  if (hubHeld && heldCount) {
-    const t = (heldCount.textContent || "").replace(/[^\d]/g, "");
-    if (t && t !== "0") { hubHeld.style.display = "inline-block"; hubHeld.textContent = t; }
-    else hubHeld.style.display = "none";
-  }
-}
-
-function openPhoneMenu(){
-  const m = document.getElementById("phoneMenu");
-  if (!m) return;
-  m.classList.add("open");
-  m.setAttribute("aria-hidden", "false");
-  updateHubMeta();
-}
-function closePhoneMenu(){
-  const m = document.getElementById("phoneMenu");
-  if (!m) return;
-  m.classList.remove("open");
-  m.setAttribute("aria-hidden", "true");
-}
-document.getElementById("headerMenuBtn")?.addEventListener("click", openPhoneMenu);
-document.getElementById("phoneMenuClose")?.addEventListener("click", closePhoneMenu);
-document.getElementById("phoneMenu")?.addEventListener("click", (e) => {
-  if (e.target.id === "phoneMenu") closePhoneMenu();
-});
-document.querySelectorAll("#phoneMenu [data-relay]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const id = btn.getAttribute("data-relay");
-    closePhoneMenu();
-    const target = document.getElementById(id);
-    if (target) target.click();
-  });
-});
-document.getElementById("pmHome")?.addEventListener("click", () => { closePhoneMenu(); openPosHub(); });
-
-document.querySelectorAll(".pos-hub-tile").forEach(tile => {
-  tile.addEventListener("click", () => openPosMode(tile.dataset.mode));
-});
-document.getElementById("btnPosBack")?.addEventListener("click", () => openPosHub());
-document.getElementById("btnPosHome")?.addEventListener("click", () => openPosHub());
-
 document.querySelectorAll(".panel-tab").forEach(tab=>{
   tab.addEventListener("click",()=>{
     document.querySelectorAll(".panel-tab").forEach(t=>t.classList.remove("active"));
@@ -1288,37 +1157,12 @@ document.querySelectorAll(".panel-tab").forEach(tab=>{
     tab.classList.add("active"); document.getElementById(tab.dataset.panel).classList.add("active");
     if(tab.dataset.panel==="heldPanel") loadHeld();
     if(tab.dataset.panel==="recentPanel") renderRecentList();
-    if(tab.dataset.panel==="textPanel"){
-      textPosSearchOnly = true;
-      document.body.classList.add("text-pos-search");
-      const search = document.getElementById("productSearch");
-      if(search){ search.value=""; renderProductLists(""); setTimeout(()=>{ try{search.focus();}catch(e){} },50); }
-    } else {
-      textPosSearchOnly = false;
-      document.body.classList.remove("text-pos-search");
-      if(tab.dataset.panel==="photoPanel") renderProductLists(document.getElementById("productSearch")?.value||"");
-    }
   });
 });
 
 function renderProductLists(filter){
   const term=(filter||"").toLowerCase().trim();
-  const emptyEl=document.getElementById("textEmpty");
-  if(textPosSearchOnly && !term){
-    visibleProducts=[];
-    document.getElementById("textList").innerHTML="";
-    if(emptyEl){
-      emptyEl.className="empty search-prompt";
-      emptyEl.style.display="block";
-      emptyEl.textContent="Search a product, or add a custom item.";
-    }
-    if(!document.getElementById("photoPanel")?.classList.contains("active")) return;
-  }
-  if(textPosSearchOnly){
-    visibleProducts=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):[];
-  } else {
-    visibleProducts=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):allProducts.slice();
-  }
+  visibleProducts=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):allProducts.slice();
   const defL=parseInt(branding.default_low_stock_limit)||5;
   document.getElementById("textList").innerHTML=visibleProducts.map((p,idx)=>{
     const low=(p.stock||0)<=(p.low_stock_limit!=null?p.low_stock_limit:defL);
@@ -1333,87 +1177,13 @@ function renderProductLists(filter){
       <div style="display:flex;align-items:center"><span class="price">${priceFor(p).toFixed(2)}${isWeightUnit(p.unit)?"/"+esc(p.unit||"u"):""}</span>
       <button class="btn btn-primary btn-sm" type="button" onclick="addToCart(${p.id})">Add</button></div></div>`;
   }).join("");
-  if(emptyEl){
-    if(!visibleProducts.length){
-      emptyEl.style.display="block";
-      if(textPosSearchOnly && !term){
-        emptyEl.className="empty search-prompt";
-        emptyEl.textContent="Search a product, or add a custom item.";
-      } else if(textPosSearchOnly && term){
-        emptyEl.className="empty";
-        emptyEl.textContent="No products match \u201c"+term+"\u201d";
-      } else {
-        emptyEl.className="empty";
-        emptyEl.textContent="No products";
-      }
-    } else emptyEl.style.display="none";
-  }
-  const photoList = document.getElementById("photoPanel")?.classList.contains("active")
-    ? (term ? allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)) : allProducts.slice())
-    : (textPosSearchOnly ? [] : (term ? allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)) : allProducts.slice()));
-  document.getElementById("photoGrid").innerHTML=photoList.map(p=>{
+  document.getElementById("textEmpty").style.display=visibleProducts.length?"none":"block";
+  document.getElementById("photoGrid").innerHTML=visibleProducts.map(p=>{
     const sw=p.photo_path?`<div class="swatch"><img src="${esc(p.photo_path)}" alt=""></div>`:`<div class="swatch">${esc((p.name||"P")[0])}</div>`;
     return `<button class="photo-tile" type="button" onclick="addToCart(${p.id})">${sw}<div class="tile-name" title="${esc(p.name)}">${esc(p.name)}</div><div class="tile-price">${priceFor(p).toFixed(2)}</div></button>`;
   }).join("");
-  const photoEmpty=document.getElementById("photoEmpty");
-  if(photoEmpty) photoEmpty.style.display=photoList.length?"none":"block";
 }
 document.getElementById("productSearch").addEventListener("input",e=>renderProductLists(e.target.value));
-
-document.getElementById("btnClearSearch")?.addEventListener("click", () => {
-  const s = document.getElementById("productSearch");
-  if (s) { s.value = ""; renderProductLists(""); s.focus(); }
-});
-
-function addCustomCartItem(){
-  const name = (prompt("Custom item name") || "").trim();
-  if (!name) return;
-  const priceRaw = prompt("Price (₹)", "0");
-  if (priceRaw === null) return;
-  const price = Math.max(0, parseFloat(priceRaw) || 0);
-  let tax = 0;
-  try {
-    const def = (taxSlabs || []).find(t => t.is_default) || (taxSlabs || [])[0];
-    if (def) tax = Number(def.percentage) || 0;
-  } catch (e) {}
-  const taxRaw = prompt("Tax % (optional)", String(tax));
-  if (taxRaw === null) return;
-  tax = Math.max(0, parseFloat(taxRaw) || 0);
-  if (typeof pushCartLine === "function") {
-    pushCartLine({
-      productId: null, variantId: null, name: name, price: price, qty: 1,
-      taxPercent: tax, unit: "pcs", overridden: false, custom: true
-    });
-  } else {
-    cart.push({ productId: null, name, price, qty: 1, taxPercent: tax, unit: "pcs", custom: true });
-    renderCart();
-  }
-  toast("Added " + name);
-  try {
-    document.getElementById("cartSide")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch (e) {}
-}
-document.getElementById("btnCustomItem")?.addEventListener("click", addCustomCartItem);
-
-function refreshPhonePaybar(){
-  const el = document.getElementById("phonePayTotal");
-  if (!el) return;
-  try {
-    const t = typeof calc === "function" ? calc() : { total: 0 };
-    const sym = (branding && branding.currency_symbol) || "₹";
-    el.textContent = sym + Number(t.total || 0).toFixed(2);
-  } catch (e) {
-    el.textContent = "₹0.00";
-  }
-}
-document.getElementById("phonePayPrint")?.addEventListener("click", () => {
-  const btn = document.getElementById("btnPayPrint");
-  if (btn) btn.click();
-});
-document.getElementById("phonePayScrollCart")?.addEventListener("click", () => {
-  try { document.getElementById("cartSide")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
-});
-
 document.getElementById("scanField").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return; e.preventDefault();
   const code=e.target.value.trim(); e.target.value=""; if(!code)return;
@@ -1677,13 +1447,9 @@ document.getElementById("plConfirm")?.addEventListener("click", async ()=>{
 /* Pay Later button is refreshed from renderCart / updateTotals */
 
 function pushCartLine(line){
-  // Merge discrete non-override lines with same product (or same custom name+price)
+  // Merge only exact same product+variant+price (non-overridden discrete items)
   if(!line.variantId && !isWeightUnit(line.unit) && !line.overridden){
-    const existing=cart.find(i=>{
-      if(i.variantId || i.overridden || isWeightUnit(i.unit)) return false;
-      if(line.productId!=null) return i.productId===line.productId;
-      return !i.productId && i.name===(line.name||"Item") && Number(i.price)===Number(line.price||0);
-    });
+    const existing=cart.find(i=>i.productId===line.productId && !i.variantId && !i.overridden && !isWeightUnit(i.unit));
     if(existing){ existing.qty=Math.round((Number(existing.qty)+Number(line.qty||1))*1000)/1000; renderCart(); return; }
   }
   cart.push({
@@ -1695,7 +1461,6 @@ function pushCartLine(line){
     taxPercent:Number(line.taxPercent)||0,
     unit:line.unit||"",
     overridden:!!line.overridden,
-    custom:!!line.custom,
   });
   renderCart();
 }
@@ -1824,7 +1589,8 @@ function changeQty(i,d){
 function removeItem(i){ cart.splice(i,1); renderCart(); }
 function renderCart(){
   const el=document.getElementById("cartItems");
-  if(!cart.length){ el.innerHTML='<div class="cart-empty">Cart empty</div>'; updateTotals(); try{updateHubMeta();}catch(e){} try{refreshPhonePaybar();}catch(e){} return; }
+  if(!cart.length){ el.innerHTML='<div class="cart-empty">Cart empty</div>'; updateTotals();
+  try{ if(window.__orbitRefreshMobileCartBar) window.__orbitRefreshMobileCartBar(); }catch(e){} return; }
   el.innerHTML=cart.map((it,i)=>{
     const qtyLabel=isWeightUnit(it.unit)?`${Number(it.qty).toFixed(3)} ${esc(it.unit||"")}`:String(it.qty);
     return `<div class="cart-item"><div>
@@ -1836,7 +1602,6 @@ function renderCart(){
     <button type="button" onclick="removeItem(${i})" style="color:var(--bad);border-color:transparent;background:transparent">×</button></div></div>`;
   }).join("");
   updateTotals();
-  try{updateHubMeta();}catch(e){} try{refreshPhonePaybar();}catch(e){}
 }
 function manualDiscount(subtotal){
   const raw=parseFloat(document.getElementById("discountInput").value)||0;
@@ -1863,7 +1628,7 @@ function updateTotals(){
   document.getElementById("totalOut").textContent=t.total.toFixed(2);
   const tendered=parseFloat(document.getElementById("cashTendered").value)||0;
   document.getElementById("changeDue").textContent=Math.max(0,tendered-t.total).toFixed(2);
-  try{refreshPhonePaybar();}catch(e){}
+  try{ if(window.__orbitRefreshMobileCartBar) window.__orbitRefreshMobileCartBar(); }catch(e){}
   const summaryEl=document.getElementById("cartToggleSummary");
   if(summaryEl){
     const n=cart.reduce((s,i)=>s+i.qty,0);
@@ -2181,7 +1946,6 @@ async function loadHeld(){
     <div class="meta">${esc(h.client_name||"Walk-in")} · ${(h.cart||[]).length} lines</div></div>
     <div><button class="btn btn-primary btn-sm" type="button" onclick="resumeHeld(${h.id})">Resume</button>
     <button class="btn btn-danger btn-sm" type="button" onclick="deleteHeld(${h.id})">Delete</button></div></div>`).join(""):'<div class="empty">No held bills</div>';
-  try{updateHubMeta();}catch(e){}
 }
 async function resumeHeld(id){
   const d=await api(`/held-bills/${id}`); if(!d.ok)return; const h=d.heldBill;
@@ -2189,9 +1953,7 @@ async function resumeHeld(id){
   document.getElementById("discountInput").value=h.discount||0; document.getElementById("creditInput").value=h.credit_applied||0;
   if(h.client_id) document.getElementById("clientSelect").value=String(h.client_id);
   renderCart(); await api(`/held-bills/${id}`,{method:"DELETE"}); toast("Resumed "+(h.label||"bill"));
-  if(typeof openPosMode==="function" && isPhoneLayout()) openPosMode("text");
-  else document.querySelector('.panel-tab[data-panel="textPanel"]').click();
-  loadHeld(); if(bc) bc.postMessage({type:"held_changed"});
+  document.querySelector('.panel-tab[data-panel="textPanel"]').click(); loadHeld(); if(bc) bc.postMessage({type:"held_changed"});
 }
 async function deleteHeld(id){ if(!confirm("Delete held bill?"))return; await api(`/held-bills/${id}`,{method:"DELETE"}); toast("Held bill deleted"); loadHeld(); if(bc) bc.postMessage({type:"held_changed"}); }
 document.getElementById("btnHold").addEventListener("click", holdCart);
@@ -2226,7 +1988,6 @@ async function refreshShiftPill(){
   const pill=document.getElementById("shiftPill");
   if(openShift){ pill.textContent="Shift #"+openShift.id; pill.className="pill open"; }
   else { pill.textContent="No shift"; pill.className="pill closed"; }
-  try{updateHubMeta();}catch(e){}
 }
 document.getElementById("btnShift").addEventListener("click",()=>{
   const body=document.getElementById("shiftBody");
@@ -2274,10 +2035,7 @@ async function openRecentInvoice(id){
   }
   showLayoutPreview("exportPreview"); document.getElementById("exportPreviewShell").style.display="block"; openModal("exportModal");
 }
-document.getElementById("btnRecent").addEventListener("click",()=>{
-  if(typeof openPosMode==="function" && isPhoneLayout()) openPosMode("recent");
-  else document.querySelector('.panel-tab[data-panel="recentPanel"]').click();
-});
+document.getElementById("btnRecent").addEventListener("click",()=>document.querySelector('.panel-tab[data-panel="recentPanel"]').click());
 
 document.getElementById("btnDayClose").addEventListener("click",()=>{
   document.getElementById("dayCloseDate").value=new Date().toISOString().slice(0,10); openModal("dayCloseModal"); loadDayClose();
@@ -2679,13 +2437,11 @@ window.__calcOpen = false;
     if (isCalcOpen()) closeCalc();
     else openCalc();
   }
-  // Event delegation — FAB open is handled by mobile-safe script to avoid double-toggle
+  // Event delegation so it works even if nodes are after this script
   document.addEventListener("click", function(e){
     const fab = e.target.closest && e.target.closest("#calcFab");
     if (fab) {
-      // Desktop only here; mobile uses dedicated touch handler
-      const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-      if (coarse || ("ontouchstart" in window)) return;
+      if (fab.dataset.skipClick) { e.preventDefault(); e.stopPropagation(); return; }
       e.preventDefault();
       e.stopPropagation();
       toggleCalc();
@@ -2695,8 +2451,6 @@ window.__calcOpen = false;
     if (closeBtn) {
       e.preventDefault();
       closeCalc();
-      const b = document.getElementById("calcBackdrop");
-      if (b) { b.classList.remove("open"); }
       return;
     }
     const keyBtn = e.target.closest && e.target.closest(".calc-key");
@@ -2707,23 +2461,6 @@ window.__calcOpen = false;
       return;
     }
   }, true);
-
-  // Sync openCalc/closeCalc with backdrop for desktop path
-  const _openCalc = openCalc, _closeCalc = closeCalc;
-  openCalc = function(){
-    _openCalc();
-    const b = document.getElementById("calcBackdrop");
-    if (b) { b.classList.add("open"); b.setAttribute("aria-hidden","false"); }
-  };
-  closeCalc = function(){
-    _closeCalc();
-    const b = document.getElementById("calcBackdrop");
-    if (b) { b.classList.remove("open"); b.setAttribute("aria-hidden","true"); }
-  };
-  // expose for mobile script
-  window.__orbitOpenCalc = openCalc;
-  window.__orbitCloseCalc = closeCalc;
-  window.__orbitToggleCalc = toggleCalc;
 
   document.addEventListener("keydown", function(e){
     const open = isCalcOpen();
@@ -2759,36 +2496,19 @@ window.__calcOpen = false;
   await checkDueBanner();
   setInterval(()=>runPosSync(false), 8000);
   tsOnSync(()=>runPosSync(true));
-  // Mobile: skip hub — open Text POS immediately (clean POS)
-  document.body.classList.remove("hub-open");
-  document.body.classList.add("mode-open");
-  if(typeof openPosMode==="function") openPosMode("text");
-  else {
-    textPosSearchOnly = true;
-    document.body.classList.add("text-pos-search");
-  }
-  try{updateHubMeta();}catch(e){}
-  window.addEventListener("resize", ()=>{
-    if(!isPhoneLayout() && document.body.classList.contains("hub-open")){
-      openPosMode("text");
-    }
-  });
 })();
 </script>
 
-<!-- Phone sticky pay bar -->
-<div class="phone-paybar" id="phonePaybar">
-  <div class="pp-total">
-    <div class="pp-label">Bill total</div>
-    <div class="pp-amt" id="phonePayTotal">₹0.00</div>
+<!-- Mobile sticky cart bar -->
+<div class="m-cart-bar" id="mCartBar" role="button" tabindex="0" aria-label="Open cart">
+  <div class="mcb-info">
+    <div class="mcb-label"><span id="mCartCount">0</span> items</div>
+    <div class="mcb-amt" id="mCartTotal">₹0.00</div>
   </div>
-  <button type="button" class="btn btn-ghost" id="phonePayScrollCart">Cart</button>
-  <button type="button" class="btn btn-ok" id="phonePayPrint">Pay</button>
+  <button type="button" class="btn" id="mCartOpenBtn">View cart</button>
 </div>
 
 <!-- Calculator FAB -->
-<div id="calcBackdrop" aria-hidden="true"></div>
-
 <button type="button" id="calcFab" title="Calculator (press 0)" aria-label="Open calculator">
   <img src="calc.png" alt="Calculator" onerror="this.style.display='none';this.parentElement.textContent='∑';">
 </button>
@@ -2822,30 +2542,23 @@ window.__calcOpen = false;
 </div>
 <style>
 #calcFab{
-  position:fixed;right:14px;bottom:18px;z-index:10050;
+  position:fixed;right:18px;bottom:18px;z-index:10050;
   width:56px;height:56px;border-radius:50%;border:2px solid #fff;
-  background:#0b3d91;color:#fff;font-size:22px;font-weight:700;
-  box-shadow:0 8px 28px rgba(11,61,145,.45);cursor:pointer;
+  background:#0b3d91;color:#fff;font-size:24px;font-weight:700;
+  box-shadow:0 8px 28px rgba(11,61,145,.45);cursor:grab;
   display:flex;align-items:center;justify-content:center;
-  line-height:1;padding:0;overflow:hidden;
-  touch-action:manipulation;user-select:none;
-  -webkit-tap-highlight-color:transparent;
+  line-height:1;padding:0;overflow:hidden;touch-action:manipulation;user-select:none;
 }
-#calcFab img{width:28px;height:28px;object-fit:contain;pointer-events:none;display:block}
+#calcFab.dragging{cursor:grabbing;opacity:.92}
+#calcFab img{width:32px;height:32px;object-fit:contain;pointer-events:none;display:block}
 #calcFab:hover{background:#1e5bb8}
 #calcPopup{
-  display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
-  z-index:10060;width:min(320px,92vw);background:#0f172a;color:#fff;border-radius:16px;
-  padding:14px;box-shadow:0 16px 48px rgba(15,23,42,.45);
-  border:1px solid #334155;touch-action:manipulation;
+  display:none;position:fixed;right:18px;bottom:84px;z-index:10060;
+  width:min(300px,92vw);background:#0f172a;color:#fff;border-radius:16px;
+  padding:14px;box-shadow:0 16px 48px rgba(15,23,42,.4);
+  border:1px solid #334155;touch-action:none;
 }
-#calcPopup.open{display:block!important}
-/* backdrop when calc open */
-#calcBackdrop{
-  display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:10055;
-}
-#calcBackdrop.open{display:block}
-
+#calcPopup.open{display:block}
 .calc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;cursor:grab;user-select:none}
 .calc-head.dragging{cursor:grabbing}
 #calcClose{background:transparent;border:0;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1}
@@ -2869,109 +2582,216 @@ window.__calcOpen = false;
 
 
 <script>
-/* Calculator drag disabled on touch devices — was blocking open */
+/* Calculator drag — runs after FAB is in the DOM */
 (function () {
-  function isTouch(){
-    return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches)
-      || ("ontouchstart" in window)
-      || (navigator.maxTouchPoints > 0);
-  }
-  if (isTouch()) return; // no drag on phones
   function initCalcDrag() {
     const fab = document.getElementById("calcFab");
     const popup = document.getElementById("calcPopup");
-    if (!fab || fab.dataset.dragReady === "1") return;
+    if (!fab) return;
+    if (fab.dataset.dragReady === "1") return;
+    // Touch phones: no drag — prevents blocking calculator open
+    if ((window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || ("ontouchstart" in window && navigator.maxTouchPoints > 0)) {
+      fab.style.touchAction = "manipulation";
+      return;
+    }
     fab.dataset.dragReady = "1";
+
     let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
     function place(x, y) {
-      const fw = fab.offsetWidth || 56, fh = fab.offsetHeight || 56;
+      const fw = fab.offsetWidth || 56;
+      const fh = fab.offsetHeight || 56;
       x = clamp(x, 4, window.innerWidth - fw - 4);
       y = clamp(y, 4, window.innerHeight - fh - 4);
-      fab.style.left = x + "px"; fab.style.top = y + "px";
-      fab.style.right = "auto"; fab.style.bottom = "auto"; fab.style.position = "fixed";
+      fab.style.left = x + "px";
+      fab.style.top = y + "px";
+      fab.style.right = "auto";
+      fab.style.bottom = "auto";
+      fab.style.position = "fixed";
+      if (popup && (popup.classList.contains("open") || popup.style.display === "block")) {
+        const pw = popup.offsetWidth || 300;
+        const ph = popup.offsetHeight || 320;
+        let px = x + fw - pw;
+        let py = y - ph - 12;
+        if (py < 4) py = y + fh + 12;
+        px = clamp(px, 4, window.innerWidth - pw - 4);
+        py = clamp(py, 4, window.innerHeight - ph - 4);
+        popup.style.left = px + "px";
+        popup.style.top = py + "px";
+        popup.style.right = "auto";
+        popup.style.bottom = "auto";
+        popup.style.position = "fixed";
+      }
+      try { localStorage.setItem("ts_calc_pos", JSON.stringify({ x: x, y: y })); } catch (e) {}
     }
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("ts_calc_pos") || "null");
+      if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
+        place(saved.x, saved.y);
+      }
+    } catch (e) {}
+
     function onDown(e) {
       if (e.button != null && e.button !== 0) return;
-      dragging = true; moved = false; fab.classList.add("dragging");
+      dragging = true;
+      moved = false;
+      fab.classList.add("dragging");
       const pt = e.touches ? e.touches[0] : e;
-      sx = pt.clientX; sy = pt.clientY;
-      const r = fab.getBoundingClientRect(); ox = r.left; oy = r.top;
+      sx = pt.clientX;
+      sy = pt.clientY;
+      const r = fab.getBoundingClientRect();
+      ox = r.left;
+      oy = r.top;
+      e.preventDefault();
+      e.stopPropagation();
     }
     function onMove(e) {
       if (!dragging) return;
       const pt = e.touches ? e.touches[0] : e;
-      if (Math.abs(pt.clientX - sx) + Math.abs(pt.clientY - sy) > 18) moved = true;
-      place(ox + (pt.clientX - sx), oy + (pt.clientY - sy));
+      const dx = pt.clientX - sx;
+      const dy = pt.clientY - sy;
+      if (Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+      place(ox + dx, oy + dy);
+      e.preventDefault();
     }
     function onUp() {
       if (!dragging) return;
-      dragging = false; fab.classList.remove("dragging");
+      dragging = false;
+      fab.classList.remove("dragging");
+      if (moved) {
+        fab.dataset.skipClick = "1";
+        setTimeout(function () { try { delete fab.dataset.skipClick; } catch (err) {} }, 120);
+      }
     }
-    fab.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
+
+    fab.addEventListener("pointerdown", onDown, { passive: false });
+    window.addEventListener("pointermove", onMove, { passive: false });
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    fab.addEventListener("mousedown", onDown);
+    fab.addEventListener("touchstart", onDown, { passive: false });
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+
+    document.addEventListener("click", function (e) {
+      const t = e.target && e.target.closest && e.target.closest("#calcFab");
+      if (t && t.dataset.skipClick) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, true);
+
+    if (popup) {
+      const obs = new MutationObserver(function () {
+        if (popup.classList.contains("open") || popup.style.display === "block") {
+          const r = fab.getBoundingClientRect();
+          place(r.left, r.top);
+        }
+      });
+      obs.observe(popup, { attributes: true, attributeFilter: ["class", "style"] });
+    }
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCalcDrag);
-  else initCalcDrag();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCalcDrag);
+  } else {
+    initCalcDrag();
+  }
+  window.addEventListener("load", initCalcDrag);
 })();
 </script>
 
 
 <script>
-/* Mobile-safe calculator — no drag, direct touch handlers */
+/* Mobile POS chrome only — uses existing cart/calc/API state. No business logic changes. */
 (function(){
   function $(id){ return document.getElementById(id); }
-  function openCalc(){
-    var p = $("calcPopup"), b = $("calcBackdrop");
-    if (!p) return;
-    p.classList.add("open");
-    p.style.display = "block";
-    if (b) { b.classList.add("open"); b.setAttribute("aria-hidden","false"); }
-    window.__calcOpen = true;
+  function openMenu(){
+    var m = $("mobileMenu");
+    if(!m) return;
+    m.classList.add("open");
+    m.setAttribute("aria-hidden","false");
+    var sp = $("shiftPill"), ss = $("mmShift");
+    if(sp && ss) ss.textContent = sp.textContent || "Shift —";
+    var sy = $("syncPill"), ms = $("mmSync");
+    if(sy && ms) ms.textContent = "Status: " + (sy.textContent || "Sync");
   }
-  function closeCalc(){
-    var p = $("calcPopup"), b = $("calcBackdrop");
-    if (p) { p.classList.remove("open"); p.style.display = "none"; }
-    if (b) { b.classList.remove("open"); b.setAttribute("aria-hidden","true"); }
-    window.__calcOpen = false;
+  function closeMenu(){
+    var m = $("mobileMenu");
+    if(!m) return;
+    m.classList.remove("open");
+    m.setAttribute("aria-hidden","true");
   }
-  function toggleCalc(e){
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (typeof window.__orbitToggleCalc === "function") {
-      // Use main calculator state/engine
-      var p = $("calcPopup");
-      var isOpen = p && (p.classList.contains("open") || p.style.display === "block");
-      if (isOpen) {
-        if (window.__orbitCloseCalc) window.__orbitCloseCalc();
-        else closeCalc();
-      } else {
-        if (window.__orbitOpenCalc) window.__orbitOpenCalc();
-        else openCalc();
+  function openCart(){
+    document.body.classList.add("m-cart-open");
+    try{ $("cartSide") && $("cartSide").scrollTop = 0; }catch(e){}
+  }
+  function closeCart(){
+    document.body.classList.remove("m-cart-open");
+  }
+  function refreshMobileCartBar(){
+    var countEl = $("mCartCount"), totalEl = $("mCartTotal");
+    if(!countEl && !totalEl) return;
+    var n = 0;
+    try{
+      if(typeof cart !== "undefined" && Array.isArray(cart)){
+        n = cart.reduce(function(s,i){ return s + (Number(i.qty)||0); }, 0);
       }
-      return;
-    }
-    if (window.__calcOpen) closeCalc(); else openCalc();
+    }catch(e){}
+    if(countEl) countEl.textContent = String(n);
+    var totalText = "₹0.00";
+    try{
+      if(typeof calc === "function"){
+        var t = calc();
+        var sym = (typeof branding !== "undefined" && branding && branding.currency_symbol) || "₹";
+        totalText = sym + Number(t.total||0).toFixed(2);
+      } else {
+        var gt = $("grandTotal");
+        if(gt) totalText = (gt.textContent || totalText).trim();
+      }
+    }catch(e){}
+    if(totalEl) totalEl.textContent = totalText;
   }
+  // Expose for hooks from existing renderCart/updateTotals
+  window.__orbitRefreshMobileCartBar = refreshMobileCartBar;
+  window.__orbitOpenMobileCart = openCart;
+  window.__orbitCloseMobileCart = closeCart;
+
   function bind(){
-    var fab = $("calcFab");
-    if (!fab || fab.dataset.calcBound === "1") return;
-    fab.dataset.calcBound = "1";
-    // Prefer click; also handle touchend for stubborn mobile browsers
-    fab.addEventListener("click", toggleCalc, true);
-    fab.addEventListener("touchend", function(e){
-      // Only treat as tap if not a scroll
-      e.preventDefault();
-      toggleCalc(e);
-    }, { passive: false });
-    var cls = $("calcClose");
-    if (cls) cls.addEventListener("click", function(e){ e.preventDefault(); closeCalc(); });
-    var bd = $("calcBackdrop");
-    if (bd) bd.addEventListener("click", closeCalc);
+    var mb = $("mobileMenuBtn");
+    if(mb) mb.addEventListener("click", openMenu);
+    var mc = $("mobileMenuClose");
+    if(mc) mc.addEventListener("click", closeMenu);
+    var menu = $("mobileMenu");
+    if(menu) menu.addEventListener("click", function(e){ if(e.target === menu) closeMenu(); });
+    document.querySelectorAll("#mobileMenu [data-mm]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-mm");
+        closeMenu();
+        var t = $(id);
+        if(t) t.click();
+      });
+    });
+    var openBtn = $("mCartOpenBtn");
+    if(openBtn) openBtn.addEventListener("click", function(e){ e.stopPropagation(); openCart(); });
+    var bar = $("mCartBar");
+    if(bar) bar.addEventListener("click", function(e){
+      if(e.target && e.target.id === "mCartOpenBtn") return;
+      openCart();
+    });
+    var closeBtn = $("mCartClose");
+    if(closeBtn) closeBtn.addEventListener("click", closeCart);
+    var bd = $("mCartBackdrop");
+    if(bd) bd.addEventListener("click", closeCart);
+    refreshMobileCartBar();
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
   else bind();
-  window.addEventListener("load", bind);
 })();
 </script>
 
