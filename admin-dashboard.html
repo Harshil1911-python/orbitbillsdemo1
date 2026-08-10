@@ -87,10 +87,22 @@
   .card h3{font-size:16px;margin-bottom:14px;}
   .card p.hint{color:var(--slate);font-size:13px;margin-bottom:14px;}
 
-  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
-  .stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
-  .stat-card .label{font-size:13px;color:var(--slate);margin-bottom:6px;}
-  .stat-card .value{font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px;}
+  .stat-grid.stat-grid-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .stat-card{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 16px;min-width:0;overflow:hidden;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+  }
+  .stat-card .label{
+    font-size:12px;color:var(--slate);margin-bottom:8px;font-weight:600;
+    letter-spacing:.02em;text-transform:uppercase;
+  }
+  .stat-card .value{
+    font-size:clamp(18px, 4vw, 26px);font-weight:700;font-family:'Space Grotesk',sans-serif;
+    line-height:1.15;word-break:break-word;overflow-wrap:anywhere;
+  }
+  .stat-card .hint-line{font-size:11px;color:var(--slate);margin-top:6px;line-height:1.35;}
   .stat-card.warn .value{color:var(--amber);}
 
   .btn{
@@ -330,6 +342,13 @@
     .main{padding:16px 14px calc(28px + env(safe-area-inset-bottom,0px));}
     .form-grid,.form-grid.cols-3{grid-template-columns:1fr;}
     .stat-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .stat-grid.stat-grid-3{grid-template-columns:1fr;gap:10px;}
+    @media (min-width:480px){
+      .stat-grid.stat-grid-3{grid-template-columns:1fr 1fr;}
+    }
+    @media (min-width:640px){
+      .stat-grid.stat-grid-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+    }
     .page-head{flex-direction:column;align-items:flex-start;}
     .page-head h1{font-size:20px;}
     .card{padding:14px;}
@@ -457,21 +476,21 @@
         <div class="stat-card" style="border-color:#fde8c8;"><div class="label">Returns</div><div class="value" id="statReturnsCount">0</div></div>
         <div class="stat-card" style="border-color:#fde8c8;"><div class="label">Returns total</div><div class="value" id="statReturnsTotal" style="color:var(--amber);">0</div></div>
       </div>
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card" style="border-color:#c6e8d4;">
+      <div class="stat-grid stat-grid-3">
+        <div class="stat-card" style="border-color:#bbf7d0;background:linear-gradient(180deg,#f0fdf4 0%,#fff 55%);">
           <div class="label">Cash received</div>
           <div class="value" id="statPayCash" style="color:var(--green);">₹0</div>
-          <div style="font-size:12px;color:var(--slate);margin-top:4px;">From billing · cash payments</div>
+          <div class="hint-line">Cash payments collected</div>
         </div>
-        <div class="stat-card" style="border-color:#cfe0fb;">
-          <div class="label">Bank received</div>
+        <div class="stat-card" style="border-color:#bfdbfe;background:linear-gradient(180deg,#eff6ff 0%,#fff 55%);">
+          <div class="label">Bank / UPI / Card</div>
           <div class="value" id="statPayBank" style="color:var(--blue-deep);">₹0</div>
-          <div style="font-size:12px;color:var(--slate);margin-top:4px;">UPI + card / bank transfers</div>
+          <div class="hint-line">Digital &amp; bank transfers</div>
         </div>
-        <div class="stat-card" style="border-color:#e8dff0;">
-          <div class="label">Other received</div>
+        <div class="stat-card" style="border-color:#e9d5ff;background:linear-gradient(180deg,#faf5ff 0%,#fff 55%);">
+          <div class="label">Other methods</div>
           <div class="value" id="statPayOther" style="color:var(--purple);">₹0</div>
-          <div style="font-size:12px;color:var(--slate);margin-top:4px;">Other payment methods</div>
+          <div class="hint-line">All other payment methods</div>
         </div>
       </div>
       <div class="card">
@@ -808,7 +827,7 @@
           <p>Create and edit invoices. Use Branding &amp; design to change how they look when printed.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <a class="btn btn-ghost" href="/api/admin/invoices/export" target="_blank">Export CSV</a>
+          <button type="button" class="btn btn-ghost" id="btnExportInvoicesCsv">Export CSV</button>
           <button class="btn btn-primary" id="openAddInvoice">Create invoice</button>
         </div>
       </div>
@@ -2741,43 +2760,64 @@ document.getElementById("invDiscount").addEventListener("input", recalcInvoiceTo
 document.getElementById("addInvItemRow").addEventListener("click", () => addInvItemRow());
 
 async function renderInvoices(filter){
-  const q = filter !== undefined ? filter : document.getElementById("invoiceSearch").value;
-  const statusEl = document.getElementById("invoiceStatusFilter");
-  const status = statusEl ? statusEl.value : "";
-  const fromEl = document.getElementById("invoiceFromFilter");
-  const toEl = document.getElementById("invoiceToFilter");
-  let url = "/invoices";
-  const params = [];
-  if (q) params.push("q=" + encodeURIComponent(q));
-  if (status) params.push("status=" + encodeURIComponent(status));
-  if (fromEl && fromEl.value) params.push("from=" + encodeURIComponent(fromEl.value));
-  if (toEl && toEl.value) params.push("to=" + encodeURIComponent(toEl.value));
-  if (params.length) url += "?" + params.join("&");
-  const data = await api(url);
-  if (!data.ok) return;
-  invoicesCache = data.invoices;
   const tbody = document.getElementById("invoicesTableBody");
-  tbody.innerHTML = invoicesCache.map(inv => `
-    <tr>
+  const empty = document.getElementById("invoicesEmpty");
+  try{
+    if(tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;color:var(--slate)">Loading invoices…</td></tr>`;
+    const qRaw = filter !== undefined ? filter : (document.getElementById("invoiceSearch")?.value || "");
+    const q = String(qRaw || "").trim().toLowerCase();
+    const status = (document.getElementById("invoiceStatusFilter")?.value || "").trim();
+    const from = (document.getElementById("invoiceFromFilter")?.value || "").trim();
+    const to = (document.getElementById("invoiceToFilter")?.value || "").trim();
+    const data = await api("/invoices");
+    if (!data || !data.ok) {
+      if(tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;color:var(--red)">${escapeHtml((data&&data.error)||"Could not load invoices")}</td></tr>`;
+      return;
+    }
+    let rows = Array.isArray(data.invoices) ? data.invoices.slice() : [];
+    // Client-side filters (IndexedDB list endpoint has no query params)
+    if (status) rows = rows.filter(inv => String(inv.status||"") === status);
+    if (from) rows = rows.filter(inv => String(inv.created_at||"").slice(0,10) >= from);
+    if (to) rows = rows.filter(inv => String(inv.created_at||"").slice(0,10) <= to);
+    if (q) {
+      rows = rows.filter(inv => {
+        const hay = [inv.invoice_number, inv.client_name, inv.status, inv.notes]
+          .map(x => String(x||"").toLowerCase()).join(" ");
+        return hay.includes(q);
+      });
+    }
+    invoicesCache = rows;
+    if(!tbody) return;
+    tbody.innerHTML = rows.map(inv => {
+      const items = inv.items || [];
+      const st = inv.status || "unpaid";
+      return `<tr>
       <td><input type="checkbox" class="inv-check" value="${inv.id}"></td>
-      <td>${escapeHtml(inv.invoice_number)}</td><td>${escapeHtml(inv.client_name)}</td>
-      <td>${(inv.items || []).length} item(s)</td><td>${money(inv.total)}</td>
-      <td><span class="pill ${inv.status}">${escapeHtml(inv.status)}</span></td>
-      <td>${inv.created_at ? formatIndiaTime(inv.created_at) : ""}</td>
+      <td>${escapeHtml(inv.invoice_number||"")}</td>
+      <td>${escapeHtml(inv.client_name||"Walk-in")}</td>
+      <td>${items.length} item(s)</td>
+      <td>${money(inv.total)}</td>
+      <td><span class="pill ${escapeHtml(st)}">${escapeHtml(st)}</span></td>
+      <td>${inv.created_at ? formatIndiaTime(inv.created_at) : "—"}</td>
       <td class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="viewInvoice(${inv.id})">View</button>
         <button class="btn btn-ghost btn-sm" onclick="shareInvoice(${inv.id})">Share</button>
         <button class="btn btn-ghost btn-sm" onclick="whatsappInvoice(${inv.id})">WhatsApp</button>
         <button class="btn btn-ghost btn-sm" onclick="openPayment(${inv.id})">Pay</button>
-        <button class="btn btn-ghost btn-sm" onclick="paymentLink(${inv.id})">Pay link</button>
         <button class="btn btn-ghost btn-sm" onclick="editInvoice(${inv.id})">Edit</button>
-        ${inv.status === "unpaid" ? `<button class="btn btn-ghost btn-sm" onclick="markPaid(${inv.id})">Mark paid</button>` : `<button class="btn btn-ghost btn-sm" onclick="markUnpaid(${inv.id})">Unpaid</button>`}
+        ${st === "unpaid" || st === "partial"
+          ? `<button class="btn btn-ghost btn-sm" onclick="markPaid(${inv.id})">Mark paid</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="markUnpaid(${inv.id})">Unpaid</button>`}
         <button class="btn btn-danger btn-sm" onclick="deleteInvoice(${inv.id})">Delete</button>
         ${moreBtn(`onclick="invoiceMore(${inv.id})"`)}
       </td>
-    </tr>
-  `).join("");
-  document.getElementById("invoicesEmpty").style.display = invoicesCache.length ? "none" : "block";
+    </tr>`;
+    }).join("");
+    if(empty) empty.style.display = rows.length ? "none" : "block";
+  }catch(err){
+    console.error("renderInvoices", err);
+    if(tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;color:var(--red)">Error loading invoices</td></tr>`;
+  }
 }
 
 function invoiceMore(id){
@@ -2818,16 +2858,21 @@ document.getElementById("invClientSelect").addEventListener("change", e => {
 });
 
 document.getElementById("openAddInvoice").addEventListener("click", async () => {
-  await renderProducts();
-  await populateClientSelect();
-  document.getElementById("invoiceForm").reset();
-  document.getElementById("invId").value = "";
-  document.getElementById("invNumber").value = "INV-" + Date.now().toString().slice(-6);
-  document.getElementById("invItemsBuilder").innerHTML = "";
-  addInvItemRow();
-  document.getElementById("invoiceModalTitle").textContent = "Create invoice";
-  document.getElementById("invoiceFormMsg").textContent = "";
-  openModal("invoiceModal");
+  try{
+    await renderProducts();
+    await populateClientSelect();
+    document.getElementById("invoiceForm").reset();
+    document.getElementById("invId").value = "";
+    document.getElementById("invNumber").value = "INV-" + Date.now().toString().slice(-6);
+    document.getElementById("invItemsBuilder").innerHTML = "";
+    addInvItemRow();
+    document.getElementById("invoiceModalTitle").textContent = "Create invoice";
+    document.getElementById("invoiceFormMsg").textContent = "";
+    openModal("invoiceModal");
+  }catch(err){
+    console.error(err);
+    alert("Could not open create invoice");
+  }
 });
 
 async function editInvoice(id){
@@ -2843,7 +2888,8 @@ async function editInvoice(id){
   document.getElementById("invDiscount").value = inv.discount;
   document.getElementById("invNotes").value = inv.notes || "";
   document.getElementById("invItemsBuilder").innerHTML = "";
-  (inv.items.length ? inv.items : [{}]).forEach(it => addInvItemRow({
+  const invItems = Array.isArray(inv.items) ? inv.items : [];
+  (invItems.length ? invItems : [{}]).forEach(it => addInvItemRow({
     productId: it.product_id, name: it.name, qty: it.qty, price: it.price, taxPercent: it.tax_percent,
   }));
   document.getElementById("invoiceModalTitle").textContent = "Edit invoice";
@@ -4050,13 +4096,19 @@ function formatIndiaTime(d){
 
 
 async function viewInvoice(id){
+  try{
   const data = await api(`/invoices/${id}`);
-  if (!data.ok) { alert(data.error || "Could not load invoice."); return; }
+  if (!data || !data.ok) { alert((data && data.error) || "Could not load invoice."); return; }
   const inv = data.invoice;
-  const branding = data.branding || {};
-  const layout = data.layout;
+  if (!inv) { alert("Invoice not found."); return; }
+  const branding = data.branding || (typeof brandingCache !== "undefined" ? brandingCache : {}) || {};
+  let layout = data.layout;
+  if (layout && typeof layout.elements === "string") {
+    try { layout.elements = JSON.parse(layout.elements); } catch(e){ layout.elements = []; }
+  }
   const canvas = document.getElementById("viewInvoiceCanvas");
-  if (!layout) {
+  if (!canvas) { alert("Preview area missing"); return; }
+  if (!layout || !Array.isArray(layout.elements) || !layout.elements.length) {
     canvas.innerHTML = `<div style="padding:24px;"><h3>${escapeHtml(inv.invoice_number)}</h3>
       <p>Client: ${escapeHtml(inv.client_name)}</p>
       <p>Total: ${money(inv.total)}</p>
@@ -4108,6 +4160,10 @@ async function viewInvoice(id){
   }
   window.__viewingInvoice = inv;
   openModal("viewInvoiceModal");
+  }catch(err){
+    console.error("viewInvoice", err);
+    alert("Could not open invoice");
+  }
 }
 async function markPaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "paid", method: "cash" } }); renderInvoices(); renderOverview(); }
 async function markUnpaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "unpaid" } }); renderInvoices(); renderOverview(); }
@@ -4512,29 +4568,57 @@ document.getElementById("printBarcodeBtn")?.addEventListener("click", () => wind
 // SHARE LINK + WHATSAPP
 // =========================================================================
 async function shareInvoice(id){
-  const data = await api(`/invoices/${id}/share`, { method: "POST" });
-  if (!data.ok) { alert(data.error || "Could not create link"); return; }
-  const url = location.origin + data.path;
-  if (navigator.clipboard) {
-    try { await navigator.clipboard.writeText(url); alert("Share link copied:\n" + url); return; } catch(e) {}
+  try{
+    const data = await api(`/invoices/${id}/share`, { method: "POST" });
+    const inv = (invoicesCache||[]).find(x => Number(x.id)===Number(id));
+    const summary = inv
+      ? ("Invoice " + (inv.invoice_number||id) + "\nClient: " + (inv.client_name||"Walk-in") + "\nTotal: " + money(inv.total) + "\nStatus: " + (inv.status||""))
+      : ("Invoice #" + id);
+    let url = "";
+    if (data && data.ok) {
+      url = data.url || data.path || "";
+      if (url && url.charAt(0) === "#") url = location.href.split("#")[0] + url;
+      else if (url && url.charAt(0) === "/") url = location.origin + url;
+      else if (!url && data.token) url = location.origin + "/#local-share-" + data.token;
+    }
+    const textOut = url ? (summary + "\n" + url) : summary;
+    if (navigator.share) {
+      try { await navigator.share({ title: "Invoice", text: textOut }); return; } catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    if (navigator.clipboard) {
+      try { await navigator.clipboard.writeText(textOut); alert("Invoice summary copied"); return; } catch(e) {}
+    }
+    prompt("Copy:", textOut);
+  }catch(err){
+    console.error(err);
+    alert("Share failed");
   }
-  prompt("Copy share link:", url);
 }
 async function whatsappInvoice(id){
-  let phone = "";
-  const invData = await api(`/invoices/${id}`);
-  if (invData.ok && invData.invoice.client_id) {
-    const cdata = await api("/clients");
-    const c = (cdata.clients||[]).find(x => x.id === invData.invoice.client_id);
-    if (c) phone = c.phone || "";
+  try{
+    let phone = "";
+    let inv = (invoicesCache||[]).find(x => Number(x.id)===Number(id));
+    if (!inv) {
+      const invData = await api(`/invoices/${id}`);
+      if (invData && invData.ok) inv = invData.invoice;
+    }
+    if (inv && inv.client_id) {
+      const cdata = await api("/clients");
+      const c = (cdata.clients||[]).find(x => Number(x.id)===Number(inv.client_id));
+      if (c) phone = (c.phone || "").replace(/\D/g,"");
+    }
+    if (!phone) phone = (prompt("Client WhatsApp number (with country code, e.g. 9198xxxxxxx):", "") || "").replace(/\D/g,"");
+    const msg = inv
+      ? `Invoice ${inv.invoice_number||id}\nTotal: ${money(inv.total)}\nStatus: ${inv.status||""}\nThank you — OrbitBills`
+      : `Invoice #${id}`;
+    const url = phone
+      ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg))
+      : ("https://wa.me/?text=" + encodeURIComponent(msg));
+    window.open(url, "_blank");
+  }catch(err){
+    console.error(err);
+    alert("WhatsApp open failed");
   }
-  if (!phone) phone = prompt("Client WhatsApp number (with country code, e.g. 9198xxxxxxx):", "") || "";
-  const data = await api("/whatsapp/invoice-link", {
-    method: "POST",
-    body: { invoiceId: id, phone, baseUrl: location.origin },
-  });
-  if (!data.ok) { alert(data.error || "Failed"); return; }
-  window.open(data.waUrl, "_blank");
 }
 
 // =========================================================================
@@ -4662,13 +4746,27 @@ async function deletePayment(pid, invoiceId){
   openPayment(invoiceId); renderInvoices(); renderOverview();
 }
 async function paymentLink(invoiceId){
-  const data = await api(`/invoices/${invoiceId}/payment-link`);
-  if (!data.ok) { alert(data.error || "Failed"); return; }
-  const share = location.origin + data.sharePath;
-  let text = "Share / pay page:\n" + share;
-  if (data.upiLink) text += "\n\nUPI link:\n" + data.upiLink + "\nAmount due: " + data.amountDue;
-  if (navigator.clipboard) { try { await navigator.clipboard.writeText(share); } catch(e){} }
-  alert(text + "\n\n(Share URL copied if clipboard allowed)");
+  try{
+    const inv = (invoicesCache||[]).find(x => Number(x.id)===Number(invoiceId));
+    const due = inv ? Math.max(0, Number(inv.total||0) - Number(inv.amount_paid||0)) : 0;
+    let textOut = inv
+      ? ("Invoice " + (inv.invoice_number||invoiceId) + " · Due " + money(due))
+      : ("Invoice #" + invoiceId);
+    try{
+      const upi = (typeof brandingCache !== "undefined" && brandingCache.upi_id) ? brandingCache.upi_id : "";
+      if (upi && due > 0) textOut += "\nUPI: " + upi + " · Amount: " + due.toFixed(2);
+    }catch(e){}
+    if (navigator.share) {
+      try { await navigator.share({ title: "Payment", text: textOut }); return; } catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    if (navigator.clipboard) {
+      try { await navigator.clipboard.writeText(textOut); alert("Payment info copied"); return; } catch(e) {}
+    }
+    prompt("Copy:", textOut);
+  }catch(err){
+    console.error(err);
+    alert("Payment link unavailable offline");
+  }
 }
 
 // =========================================================================
