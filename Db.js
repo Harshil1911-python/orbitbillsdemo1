@@ -11,9 +11,9 @@ const TS_DEFAULT_USERS = [
   { name: "Accountant", email: "accountant@techserenia.com", password: "TechSerenia@2026", role: "accountant" },
 ];
 const TS_ROLE_REDIRECTS = {
-  admin: "/admin-dashboard.html",
-  billing: "/billing.html",
-  accountant: "/accountant-dashboard.html",
+  admin: "admin-dashboard.html",
+  billing: "billing.html",
+  accountant: "accountant-dashboard.html",
   client: "/client-portal.html",
 };
 

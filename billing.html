@@ -2702,73 +2702,124 @@ async function sendInvoiceWhatsApp(){
   const invNo = lastInvoicePayload.invoiceNumber || "invoice";
   const brand = (branding && (branding.brand_name || branding.brandName)) || "OrbitBills";
   const total = money(lastInvoicePayload.total);
+  const clientName = lastInvoicePayload.clientName || "";
   const msgText =
-    "Hello" + (lastInvoicePayload.clientName ? " " + lastInvoicePayload.clientName : "") + ",\n" +
+    "Hello" + (clientName ? " " + clientName : "") + ",\n" +
     "Please find your invoice *" + invNo + "* from *" + brand + "*.\n" +
     "Total: " + total + "\n" +
     "Status: " + (lastInvoicePayload.status || "");
   let file = null;
   let blob = null;
   try {
-    toast("Preparing " + kind.toUpperCase() + "…");
+    toast("Preparing " + kind.toUpperCase() + " for WhatsApp…");
     if (kind === "pdf") {
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
-      const paper = (document.getElementById("printPaperSize") || {}).value || "a4";
+      const paper = selectedPaper ? selectedPaper() : { wPt:595.28, hPt:841.89, label:"A4" };
       blob = canvasToSimplePdf(canvas, paper);
+      if (!(blob instanceof Blob)) blob = new Blob([blob], { type: "application/pdf" });
+      else blob = new Blob([blob], { type: "application/pdf" });
       file = new File([blob], "invoice-" + invNo + ".pdf", { type: "application/pdf" });
     } else {
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
-      blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-      if (blob) file = new File([blob], "invoice-" + invNo + ".png", { type: "image/png" });
+      blob = await new Promise(function(resolve){ canvas.toBlob(function(b){ resolve(b); }, "image/png"); });
+      if (!blob) {
+        const dataUrl = canvas.toDataURL("image/png");
+        const raw = atob(dataUrl.split(",")[1] || "");
+        const arr = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+        blob = new Blob([arr], { type: "image/png" });
+      }
+      file = new File([blob], "invoice-" + invNo + ".png", { type: "image/png" });
     }
-  } catch (e) {
-    console.error(e);
-    toast("Could not generate invoice file — opening WhatsApp with text only");
+    try { registerOrbitDownload(blob, file.name, { kind: kind, mime: file.type, invoiceNumber: invNo, total: lastInvoicePayload.total }); } catch (e) {}
+  } catch (prepErr) {
+    console.warn(prepErr);
+    toast("Could not build invoice file — opening WhatsApp with text only");
   }
 
-  // Prefer Web Share Level 2 when available (mobile): share sheet with file attached
-  // so user can pick WhatsApp and the invoice is ready to send.
+  // 1) Capacitor / native: Share with file (user picks WhatsApp — file already attached)
   try {
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: "Invoice " + invNo, text: msgText });
-      toast("Share sheet opened — choose WhatsApp to send with invoice attached");
-      return;
+    if (window.__orbitNativeShare && blob) {
+      const ok = await window.__orbitNativeShare({
+        title: "Invoice " + invNo,
+        text: msgText,
+        blob: blob,
+        filename: file ? file.name : ("invoice-" + invNo + "." + kind)
+      });
+      if (ok) {
+        toast("Share opened — choose WhatsApp (invoice file attached)");
+        try { if (window.__orbitHaptic) window.__orbitHaptic("success"); } catch (e) {}
+        return;
+      }
+    }
+  } catch (eNat) { console.warn("native share", eNat); }
+
+  // 2) Capacitor Share plugin direct
+  try {
+    const Cap = window.Capacitor;
+    const plugins = Cap && Cap.Plugins;
+    const Share = plugins && plugins.Share;
+    const Filesystem = plugins && plugins.Filesystem;
+    if (Share && Share.share && Filesystem && Filesystem.writeFile && blob) {
+      const b64 = await new Promise(function(resolve, reject){
+        const r = new FileReader();
+        r.onload = function(){ const s = String(r.result || ""); const i = s.indexOf(","); resolve(i >= 0 ? s.slice(i + 1) : s); };
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+      const path = "OrbitBills/" + (file ? file.name : ("invoice-" + invNo + ".png"));
+      await Filesystem.writeFile({ path: path, data: b64, directory: "CACHE", recursive: true });
+      const uriRes = await Filesystem.getUri({ path: path, directory: "CACHE" });
+      const uri = uriRes && (uriRes.uri || uriRes);
+      if (uri) {
+        await Share.share({ title: "Invoice " + invNo, text: msgText, url: uri, dialogTitle: "Send invoice via WhatsApp" });
+        toast("Choose WhatsApp — invoice is attached");
+        return;
+      }
+    }
+  } catch (eCap) { console.warn(eCap); }
+
+  // 3) Web Share API with file (mobile Chrome / Safari — pick WhatsApp)
+  try {
+    if (file && navigator.share) {
+      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Invoice " + invNo, text: msgText });
+        toast("Choose WhatsApp — invoice attached and ready to send");
+        try { if (window.__orbitHaptic) window.__orbitHaptic("success"); } catch (e) {}
+        return;
+      }
     }
   } catch (shareErr) {
     if (shareErr && shareErr.name === "AbortError") { toast("Share cancelled"); return; }
-    console.warn("Web Share failed, falling back to wa.me", shareErr);
+    console.warn("Web Share failed", shareErr);
   }
 
-  // Fallback: download + compact WhatsApp popup pre-addressed to the client number
+  // 4) Fallback: open WhatsApp chat with text (no file API available)
   if (blob) {
     try {
       const urlObj = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = urlObj;
       a.download = file ? file.name : ("invoice-" + invNo + (kind === "pdf" ? ".pdf" : ".png"));
+      document.body.appendChild(a);
       a.click();
-      setTimeout(() => URL.revokeObjectURL(urlObj), 4000);
+      setTimeout(function(){ try{ document.body.removeChild(a); URL.revokeObjectURL(urlObj); }catch(e){} }, 4000);
     } catch (e) { console.warn(e); }
   }
-  const attachHint = file ? "\n(Invoice file downloaded — attach it in this chat and Send)" : "";
-  const chEl = document.getElementById("waChannel");
-  const channel = (chEl && chEl.value) || "auto";
-  const useWeb = channel === "web" ? true : channel === "app" ? false : ((window.innerWidth || 0) >= 900);
-  const waUrl = useWeb
-    ? ("https://web.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msgText + attachHint))
-    : ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msgText + attachHint));
-  const w = Math.min(useWeb ? 1100 : 480, window.screen.availWidth || 480);
-  const h = Math.min(useWeb ? 800 : 720, window.screen.availHeight || 720);
-  const left = Math.max(0, Math.round(((window.screen.availWidth || w) - w) / 2));
-  const top = Math.max(0, Math.round(((window.screen.availHeight || h) - h) / 2));
-  const features = "popup=yes,width=" + w + ",height=" + h + ",left=" + left + ",top=" + top + ",resizable=yes,scrollbars=yes";
-  const popup = window.open(waUrl, "orbitbills_whatsapp", features);
-  if (!popup) window.location.href = waUrl;
+  const attachHint = file ? "\\n(Invoice file saved — attach it in this chat and Send)" : "";
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "") || (window.innerWidth || 0) < 900;
+  const waUrl = isMobile
+    ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msgText + attachHint))
+    : ("https://web.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msgText + attachHint));
+  try {
+    const opened = window.open(waUrl, "_blank");
+    if (!opened) window.location.href = waUrl;
+  } catch (e) {
+    window.location.href = waUrl;
+  }
   toast(file
-    ? (useWeb
-        ? "WhatsApp Web opened — attach the downloaded invoice in the chat and Send"
-        : "WhatsApp opened for this number — attach the downloaded invoice and Send")
-    : (useWeb ? "WhatsApp Web opened for this number" : "WhatsApp opened for this number"));
+    ? "WhatsApp opened — attach the saved invoice and Send"
+    : "WhatsApp opened for this customer");
 }
 document.getElementById("btnWhatsApp")?.addEventListener("click", () => { sendInvoiceWhatsApp(); });
 
