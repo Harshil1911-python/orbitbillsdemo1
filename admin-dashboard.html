@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Admin dashboard TechSerenia</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,7 +74,12 @@
   .mobile-bar .brand{padding:0;font-size:15px;}
   .mobile-bar img{height:34px;width:auto;border-radius:7px;object-fit:contain;}
   .hamburger{border:1px solid var(--border);background:#fff;border-radius:9px;width:40px;height:40px;
-    display:flex;align-items:center;justify-content:center;font-size:18px;}
+    display:flex;align-items:center;justify-content:center;font-size:18px;-webkit-tap-highlight-color:transparent;}
+  .mm-brand-footer{margin-top:12px;padding:14px 8px 6px;border-top:1px solid var(--border);text-align:center;}
+  .mm-brand-logo{height:34px;width:auto;margin:0 auto 8px;display:block;object-fit:contain;}
+  .mm-brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);margin-bottom:6px;}
+  .mm-brand-about{font-size:11.5px;line-height:1.45;color:var(--slate);margin:0 0 8px;text-align:left;}
+  .mm-brand-link{font-size:12px;font-weight:600;color:var(--blue-deep);text-decoration:none;}
 
   /* ---------- Main ---------- */
   .main{flex:1;padding:28px 36px;max-width:1180px;min-width:0;}
@@ -253,28 +261,79 @@
 
   @media (max-width:900px){
     .layout{flex-direction:column;}
+    html,body{max-width:100%;overflow-x:hidden;}
+    body{
+      padding-top:calc(52px + env(safe-area-inset-top, 0px));
+      background:var(--blue-tint-2);
+    }
+    /* Permanent white under status bar (battery/time) */
+    body::before{
+      content:"";position:fixed;top:0;left:0;right:0;
+      height:env(safe-area-inset-top, 0px);
+      background:#ffffff;z-index:80;pointer-events:none;
+    }
+    /* Fixed logo + hamburger — does not scroll away */
+    .mobile-bar{
+      display:flex!important;
+      position:fixed!important;top:0;left:0;right:0;z-index:75;
+      padding:8px 12px;
+      padding-top:max(8px, env(safe-area-inset-top, 0px));
+      min-height:calc(48px + env(safe-area-inset-top, 0px));
+      align-items:center;justify-content:space-between;
+      background:#ffffff!important;border-bottom:1px solid var(--border);
+      box-sizing:border-box;
+    }
+    .mobile-bar .brand{padding:0;margin:0;line-height:1;}
+    .mobile-bar img{height:30px!important;width:auto;border-radius:6px;object-fit:contain;}
+    .hamburger{
+      width:42px;height:42px;border-radius:11px;font-size:18px;
+      box-shadow:0 1px 4px rgba(15,23,42,.08);
+    }
     .sidebar{display:none;}
     .sidebar.mobile-open{
-      display:flex;position:fixed;inset:0 20% 0 0;z-index:70;height:100vh;width:auto;box-shadow:0 0 30px rgba(0,0,0,.2);
+      display:flex!important;flex-direction:column;
+      position:fixed!important;
+      top:0;left:0;bottom:0;
+      width:min(300px,88vw)!important;
+      max-width:300px;
+      z-index:90;height:100%!important;
+      padding:12px 10px calc(16px + env(safe-area-inset-bottom,0px));
+      padding-top:max(12px, env(safe-area-inset-top, 0px));
+      box-shadow:8px 0 28px rgba(15,23,42,.15);
+      overflow-y:auto;-webkit-overflow-scrolling:touch;
     }
-    .mobile-bar{display:flex;}
-    .main{padding:18px 16px 90px;}
+    .sidebar.mobile-open .brand{display:none;} /* logo already in top bar */
+    .main{padding:16px 14px calc(28px + env(safe-area-inset-bottom,0px));}
     .form-grid,.form-grid.cols-3{grid-template-columns:1fr;}
-    .stat-grid{grid-template-columns:1fr 1fr;}
-    .modal{padding:18px;max-height:92vh;}
-    .modal-backdrop{padding:0;align-items:flex-end;}
+    .stat-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .stat-card{padding:14px;}
+    .stat-card .value{font-size:22px;}
+    .card{padding:14px;border-radius:12px;}
+    .page-head{flex-direction:column;align-items:flex-start;margin-bottom:16px;gap:8px;}
+    .page-head h1{font-size:20px;}
+    .page-head p{font-size:13px;}
+    table{font-size:13px;}
+    .table-wrap, .table-scroll, [class*="table"]{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    input,select,textarea,.btn,button.nav-item{
+      min-height:44px;font-size:16px; /* reduce iOS zoom */
+    }
+    .btn,.btn-sm{min-height:40px;padding:10px 14px;}
+    .modal{padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;}
+    .modal-backdrop{padding:0;align-items:flex-end;z-index:100;}
     .modal{border-radius:16px 16px 0 0;max-width:100%;width:100%;}
     .items-builder .item-row{grid-template-columns:1fr;gap:6px;padding-bottom:14px;}
     .designer-wrap{flex-direction:column;}
     .designer-canvas-outer{max-width:100%;}
-    .page-head{flex-direction:column;align-items:flex-start;}
+    .toolbar,.actions-row,.row-actions{flex-wrap:wrap;gap:8px;}
+    .chart-wrap,canvas{max-width:100%!important;}
   }
   @media (max-width:520px){
     .stat-grid{grid-template-columns:1fr 1fr;}
-    .card{padding:16px;}
+    .card{padding:14px;}
+    .main{padding:14px 12px calc(28px + env(safe-area-inset-bottom,0px));}
   }
 
-  .overlay-scrim{display:none;position:fixed;inset:0;background:rgba(16,26,43,.35);z-index:65;}
+  .overlay-scrim{display:none;position:fixed;inset:0;background:rgba(16,26,43,.4);z-index:85;}
   .overlay-scrim.show{display:block;}
 
   @media print {
@@ -359,7 +418,13 @@
     </div>
     <div class="sidebar-foot">
       <div id="adminIndiaClock" title="India Standard Time" style="font-size:12px;font-weight:600;color:var(--slate);padding:8px 12px 4px;font-variant-numeric:tabular-nums;line-height:1.35">—</div>
-      <button type="button" id="signOutBtn" style="font-size:13px;font-weight:600;color:var(--blue-deep);display:flex;align-items:center;padding:10px 12px;min-height:44px;background:none;border:none;width:100%;text-align:left;cursor:pointer;">Sign out</button>
+      <button type="button" id="signOutBtn" style="font-size:13px;font-weight:600;color:var(--red);display:flex;align-items:center;padding:10px 12px;min-height:44px;background:none;border:none;width:100%;text-align:left;cursor:pointer;">Sign out</button>
+      <div class="mm-brand-footer">
+        <img src="logo.png" alt="TechSerenia" class="mm-brand-logo" onerror="this.style.display='none'">
+        <div class="mm-brand-name">TechSerenia</div>
+        <p class="mm-brand-about">OrbitBills is built by TechSerenia — simple, offline-first billing for shops in India. Sell, track stock, and manage invoices on your phone without depending on the cloud.</p>
+        <a class="mm-brand-link" href="aboutus.html">About us</a>
+      </div>
     </div>
   </aside>
 
@@ -1970,10 +2035,16 @@ document.querySelectorAll(".nav-group-head").forEach(head => {
     if (!wasOpen) group.classList.add("open");
   });
 });
-function openMobileNav(){ document.getElementById("sidebar").classList.add("mobile-open"); document.getElementById("mobileScrim").classList.add("show"); }
-function closeMobileNav(){ document.getElementById("sidebar").classList.remove("mobile-open"); document.getElementById("mobileScrim").classList.remove("show"); }
+function openMobileNav(){ document.getElementById("sidebar").classList.add("mobile-open"); document.getElementById("mobileScrim").classList.add("show"); document.body.style.overflow="hidden"; }
+function closeMobileNav(){ document.getElementById("sidebar").classList.remove("mobile-open"); document.getElementById("mobileScrim").classList.remove("show"); document.body.style.overflow=""; }
 document.getElementById("hamburgerBtn").addEventListener("click", openMobileNav);
 document.getElementById("mobileScrim").addEventListener("click", closeMobileNav);
+// Close drawer after picking a section on phone
+document.querySelectorAll(".nav-item[data-panel]").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav();
+  });
+});
 
 document.querySelectorAll(".modal-tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -5639,5 +5710,6 @@ document.getElementById("btnDayEnd")?.addEventListener("click", async () => {
 renderOverview();
 </script>
 
+<script src="orbit-native.js"></script>
 </body>
 </html>
