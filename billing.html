@@ -1152,6 +1152,7 @@ function buildInvoiceExportDocument(inv, paper){
 
 
 
+<script src="/orbit-native.js"></script>
 </body></html>`;
 }
 
@@ -1912,7 +1913,7 @@ function pushCartLine(line){
     const existing=cart.find(i=>i.productId===line.productId && !i.variantId && !i.overridden && !isWeightUnit(i.unit));
     if(existing){ existing.qty=Math.round((Number(existing.qty)+Number(line.qty||1))*1000)/1000; renderCart(); return; }
   }
-  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+  try{ if(window.__orbitHaptic) window.__orbitHaptic("light"); else if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
   cart.push({
     productId:line.productId||null,
     variantId:line.variantId||null,
