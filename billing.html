@@ -183,52 +183,91 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .phone-menu-panel button:hover,.phone-menu-panel .pm-item:hover{background:var(--tint);color:var(--brand)}
 .phone-menu-close{align-self:flex-end;margin-bottom:4px}
 
-body.hub-open .layout{display:none}
-body.hub-open .pos-hub{display:block}
-body.mode-open .pos-hub{display:none}
-body.mode-open .layout{display:grid}
-body.mode-open .pos-mode-bar{display:flex}
+/* Hub must fully hide the POS layout (prevents Text POS appearing under hub on scroll) */
+body.hub-open .layout,
+body.hub-open .pos-mode-bar{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
+body.hub-open .pos-hub{display:block!important;visibility:visible!important;height:auto!important;overflow:visible!important;pointer-events:auto!important}
+body.mode-open .pos-hub{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
+body.mode-open .layout{display:flex!important;flex-direction:column;visibility:visible!important;height:auto!important;overflow:visible!important;pointer-events:auto!important}
+body.mode-open .pos-mode-bar{display:flex!important;visibility:visible!important}
 body.text-pos-search .search-bar input#productSearch{font-size:16px;min-height:48px}
 body.text-pos-search #textEmpty.search-prompt{
-  display:block;padding:24px 14px;color:var(--muted);font-size:14px;line-height:1.55
+  display:block;padding:20px 12px;color:var(--muted);font-size:13.5px;line-height:1.55;text-align:center
 }
 
-/* Phone: single full-page scroll — no split sticky cart panel */
+/* Sticky pay bar + custom item (MyBillBook-style phone POS) */
+.phone-paybar{
+  display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:#fff;border-top:1px solid var(--line);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -6px 24px rgba(15,23,42,.1);
+  gap:8px;align-items:center
+}
+.phone-paybar .pp-total{flex:1;min-width:0}
+.phone-paybar .pp-label{font-size:11px;color:var(--muted);font-weight:600}
+.phone-paybar .pp-amt{font-family:var(--display);font-weight:700;font-size:20px;color:var(--brand);line-height:1.1}
+.phone-paybar .btn{min-height:46px;flex:1.1}
+.custom-item-bar{display:none;gap:8px;margin:8px 0 4px}
+.custom-item-bar .btn{flex:1}
+
+/* Phone: single scroll column, MyBillBook-like Text POS */
 @media(max-width:900px){
   header.app-bar{padding:8px 12px;gap:8px;min-height:48px}
-  header.app-bar .brand span:not(.brand-mark){display:none} /* logo only */
+  header.app-bar .brand span:not(.brand-mark){display:none}
   .header-actions{gap:8px;flex-wrap:nowrap;width:auto;overflow:visible}
   .header-actions > *:not(#indiaClock):not(.header-menu-btn){display:none!important}
   #indiaClock{display:inline-flex!important;min-width:auto;font-size:12px;padding:6px 8px}
   .header-menu-btn{display:inline-flex}
 
-  .layout{
-    display:flex!important;flex-direction:column;min-height:auto;
+  body.mode-open .layout{
+    display:flex!important;flex-direction:column;min-height:auto;padding-bottom:84px
   }
-  body.mode-open .layout{display:flex!important}
-  .sales-side{
-    border-right:0;border-bottom:none;padding:12px;overflow:visible
-  }
+  body.hub-open .layout{display:none!important}
+  .sales-side{border-right:0;border-bottom:none;padding:10px 12px 8px;overflow:visible}
   .cart-side{
     position:static!important;max-height:none!important;overflow:visible!important;
     box-shadow:none!important;border-radius:0!important;border-top:1px solid var(--line);
-    padding:14px 12px 28px;margin-top:0
+    padding:12px 12px 16px;margin-top:0
   }
   .cart-side.collapsed{max-height:none!important;overflow:visible!important}
   .cart-side.collapsed > *:not(.cart-toggle){display:revert}
   .cart-toggle{display:none!important}
   .text-list,.photo-grid{max-height:none!important}
-  .text-list{max-height:none}
-  .photo-grid{max-height:none}
   .hint{display:none}
-  .panel-tabs{width:100%;overflow-x:auto;flex-wrap:nowrap}
-  .panel-tab{flex:0 0 auto;min-height:40px}
-  .btn{min-height:42px}
+  .panel-tabs{display:none!important} /* mode chosen from hub / mode bar */
+  .btn{min-height:44px}
   .form-field input,.form-field select,.form-field textarea{font-size:16px;min-height:44px}
-  .stock-summary-phone-hide #stockSummary{display:none}
-  #stockSummary{margin-top:12px}
+  #stockSummary{display:none!important}
   .pos-mode-bar{top:48px}
+  body.mode-open .phone-paybar{display:flex}
+  body.mode-open .custom-item-bar{display:flex}
+  body.hub-open .phone-paybar,body.hub-open .custom-item-bar{display:none!important}
+  body.hub-open #calcFab{display:flex!important}
+  /* Search sticks under mode bar */
+  body.mode-open .search-bar{
+    position:sticky;top:96px;z-index:40;background:var(--bg);
+    padding:8px 0;margin:0 0 6px
+  }
+  body.mode-open .search-bar input#productSearch{flex:1;min-width:0}
+  body.mode-open .text-list{
+    border:0;box-shadow:none;background:transparent;border-radius:0
+  }
+  body.mode-open .text-row{
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    margin-bottom:8px;padding:12px
+  }
+  body.mode-open .cart-side h3{font-size:14px}
+  body.mode-open .cart-items{max-height:none}
+  /* Calc above pay bar */
+  body.mode-open #calcFab{bottom:88px!important;z-index:10050!important}
+  body.hub-open #calcFab{bottom:18px!important;z-index:10050!important}
+  #calcPopup{z-index:10060!important}
 }
+
+#calcFab{z-index:10050!important}
+#calcPopup{z-index:10060!important}
+#calcPopup.open{display:block!important}
+
 
 @media(min-width:901px){
   body.hub-open .pos-hub{display:none}
@@ -346,10 +385,14 @@ body.text-pos-search #textEmpty.search-prompt{
     <button class="panel-tab" data-panel="recentPanel" type="button">Recents</button>
   </div>
   <div class="search-bar">
-    <input id="productSearch" placeholder="Search products by name, SKU, barcode…" autocomplete="off" enterkeyhint="search">
-    <input id="scanField" placeholder="Barcode" style="max-width:140px" autocomplete="off">
+    <input id="productSearch" placeholder="Search name, SKU or barcode" autocomplete="off" enterkeyhint="search">
+    <input id="scanField" placeholder="Scan" style="max-width:96px" autocomplete="off" inputmode="none">
   </div>
-  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty search-prompt" id="textEmpty">Type to search products — nothing loads until you search.</div></div>
+  <div class="custom-item-bar" id="customItemBar">
+    <button type="button" class="btn btn-ghost btn-sm" id="btnCustomItem">+ Custom item</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="btnClearSearch" style="flex:0 0 auto">Clear</button>
+  </div>
+  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty search-prompt" id="textEmpty">Search a product, or add a custom item below.</div></div>
   <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div><div class="empty" id="photoEmpty" style="display:none">No products</div></div>
   <div class="sales-panel" id="heldPanel"><div class="toolbar"><button class="btn btn-primary btn-sm" id="btnHold" type="button">Hold cart</button></div><div id="heldList"></div></div>
   <div class="sales-panel" id="recentPanel"><div id="recentList"></div></div>
@@ -789,18 +832,12 @@ function buildInvoiceExportDocument(inv, paper){
   }
   fit();
   window.addEventListener("resize", fit);
-  if (window.matchMedia) {
-    try { window.matchMedia("print").addListener(fit); } catch(e) {}
-  }
-  window.addEventListener("beforeprint", fit);
-  // run again after images
+  window.addEventListener("load", fit);
+  // After images
   setTimeout(fit, 50);
   setTimeout(fit, 250);
 })();
 <\/script>
-
-
-
 </body></html>`;
 }
 
@@ -1226,7 +1263,7 @@ function renderProductLists(filter){
     if(emptyEl){
       emptyEl.className="empty search-prompt";
       emptyEl.style.display="block";
-      emptyEl.textContent="Type to search products — nothing loads until you search.";
+      emptyEl.textContent="Search a product, or add a custom item.";
     }
     if(!document.getElementById("photoPanel")?.classList.contains("active")) return;
   }
@@ -1254,7 +1291,7 @@ function renderProductLists(filter){
       emptyEl.style.display="block";
       if(textPosSearchOnly && !term){
         emptyEl.className="empty search-prompt";
-        emptyEl.textContent="Type to search products — nothing loads until you search.";
+        emptyEl.textContent="Search a product, or add a custom item.";
       } else if(textPosSearchOnly && term){
         emptyEl.className="empty";
         emptyEl.textContent="No products match \u201c"+term+"\u201d";
@@ -1275,6 +1312,61 @@ function renderProductLists(filter){
   if(photoEmpty) photoEmpty.style.display=photoList.length?"none":"block";
 }
 document.getElementById("productSearch").addEventListener("input",e=>renderProductLists(e.target.value));
+
+document.getElementById("btnClearSearch")?.addEventListener("click", () => {
+  const s = document.getElementById("productSearch");
+  if (s) { s.value = ""; renderProductLists(""); s.focus(); }
+});
+
+function addCustomCartItem(){
+  const name = (prompt("Custom item name") || "").trim();
+  if (!name) return;
+  const priceRaw = prompt("Price (₹)", "0");
+  if (priceRaw === null) return;
+  const price = Math.max(0, parseFloat(priceRaw) || 0);
+  let tax = 0;
+  try {
+    const def = (taxSlabs || []).find(t => t.is_default) || (taxSlabs || [])[0];
+    if (def) tax = Number(def.percentage) || 0;
+  } catch (e) {}
+  const taxRaw = prompt("Tax % (optional)", String(tax));
+  if (taxRaw === null) return;
+  tax = Math.max(0, parseFloat(taxRaw) || 0);
+  if (typeof pushCartLine === "function") {
+    pushCartLine({
+      productId: null, variantId: null, name: name, price: price, qty: 1,
+      taxPercent: tax, unit: "pcs", overridden: false, custom: true
+    });
+  } else {
+    cart.push({ productId: null, name, price, qty: 1, taxPercent: tax, unit: "pcs", custom: true });
+    renderCart();
+  }
+  toast("Added " + name);
+  try {
+    document.getElementById("cartSide")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {}
+}
+document.getElementById("btnCustomItem")?.addEventListener("click", addCustomCartItem);
+
+function refreshPhonePaybar(){
+  const el = document.getElementById("phonePayTotal");
+  if (!el) return;
+  try {
+    const t = typeof calc === "function" ? calc() : { total: 0 };
+    const sym = (branding && branding.currency_symbol) || "₹";
+    el.textContent = sym + Number(t.total || 0).toFixed(2);
+  } catch (e) {
+    el.textContent = "₹0.00";
+  }
+}
+document.getElementById("phonePayPrint")?.addEventListener("click", () => {
+  const btn = document.getElementById("btnPayPrint");
+  if (btn) btn.click();
+});
+document.getElementById("phonePayScrollCart")?.addEventListener("click", () => {
+  try { document.getElementById("cartSide")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+});
+
 document.getElementById("scanField").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return; e.preventDefault();
   const code=e.target.value.trim(); e.target.value=""; if(!code)return;
@@ -1538,9 +1630,13 @@ document.getElementById("plConfirm")?.addEventListener("click", async ()=>{
 /* Pay Later button is refreshed from renderCart / updateTotals */
 
 function pushCartLine(line){
-  // Merge only exact same product+variant+price (non-overridden discrete items)
+  // Merge discrete non-override lines with same product (or same custom name+price)
   if(!line.variantId && !isWeightUnit(line.unit) && !line.overridden){
-    const existing=cart.find(i=>i.productId===line.productId && !i.variantId && !i.overridden && !isWeightUnit(i.unit));
+    const existing=cart.find(i=>{
+      if(i.variantId || i.overridden || isWeightUnit(i.unit)) return false;
+      if(line.productId!=null) return i.productId===line.productId;
+      return !i.productId && i.name===(line.name||"Item") && Number(i.price)===Number(line.price||0);
+    });
     if(existing){ existing.qty=Math.round((Number(existing.qty)+Number(line.qty||1))*1000)/1000; renderCart(); return; }
   }
   cart.push({
@@ -1552,6 +1648,7 @@ function pushCartLine(line){
     taxPercent:Number(line.taxPercent)||0,
     unit:line.unit||"",
     overridden:!!line.overridden,
+    custom:!!line.custom,
   });
   renderCart();
 }
@@ -1680,7 +1777,7 @@ function changeQty(i,d){
 function removeItem(i){ cart.splice(i,1); renderCart(); }
 function renderCart(){
   const el=document.getElementById("cartItems");
-  if(!cart.length){ el.innerHTML='<div class="cart-empty">Cart empty</div>'; updateTotals(); try{updateHubMeta();}catch(e){} return; }
+  if(!cart.length){ el.innerHTML='<div class="cart-empty">Cart empty</div>'; updateTotals(); try{updateHubMeta();}catch(e){} try{refreshPhonePaybar();}catch(e){} return; }
   el.innerHTML=cart.map((it,i)=>{
     const qtyLabel=isWeightUnit(it.unit)?`${Number(it.qty).toFixed(3)} ${esc(it.unit||"")}`:String(it.qty);
     return `<div class="cart-item"><div>
@@ -1692,7 +1789,7 @@ function renderCart(){
     <button type="button" onclick="removeItem(${i})" style="color:var(--bad);border-color:transparent;background:transparent">×</button></div></div>`;
   }).join("");
   updateTotals();
-  try{updateHubMeta();}catch(e){}
+  try{updateHubMeta();}catch(e){} try{refreshPhonePaybar();}catch(e){}
 }
 function manualDiscount(subtotal){
   const raw=parseFloat(document.getElementById("discountInput").value)||0;
@@ -1719,6 +1816,7 @@ function updateTotals(){
   document.getElementById("totalOut").textContent=t.total.toFixed(2);
   const tendered=parseFloat(document.getElementById("cashTendered").value)||0;
   document.getElementById("changeDue").textContent=Math.max(0,tendered-t.total).toFixed(2);
+  try{refreshPhonePaybar();}catch(e){}
   const summaryEl=document.getElementById("cartToggleSummary");
   if(summaryEl){
     const n=cart.reduce((s,i)=>s+i.qty,0);
@@ -2538,7 +2636,7 @@ window.__calcOpen = false;
   document.addEventListener("click", function(e){
     const fab = e.target.closest && e.target.closest("#calcFab");
     if (fab) {
-      if (fab.dataset.skipClick) { e.preventDefault(); e.stopPropagation(); return; }
+      /* Mobile: never block open on skipClick — short taps must always work */
       e.preventDefault();
       e.stopPropagation();
       toggleCalc();
@@ -2609,6 +2707,16 @@ window.__calcOpen = false;
 })();
 </script>
 
+<!-- Phone sticky pay bar -->
+<div class="phone-paybar" id="phonePaybar">
+  <div class="pp-total">
+    <div class="pp-label">Bill total</div>
+    <div class="pp-amt" id="phonePayTotal">₹0.00</div>
+  </div>
+  <button type="button" class="btn btn-ghost" id="phonePayScrollCart">Cart</button>
+  <button type="button" class="btn btn-ok" id="phonePayPrint">Pay</button>
+</div>
+
 <!-- Calculator FAB -->
 <button type="button" id="calcFab" title="Calculator (press 0)" aria-label="Open calculator">
   <img src="calc.png" alt="Calculator" onerror="this.style.display='none';this.parentElement.textContent='∑';">
@@ -2643,23 +2751,28 @@ window.__calcOpen = false;
 </div>
 <style>
 #calcFab{
-  position:fixed;right:18px;bottom:18px;z-index:9999;
+  position:fixed;right:14px;bottom:18px;z-index:10050;
   width:56px;height:56px;border-radius:50%;border:2px solid #fff;
-  background:#0b3d91;color:#fff;font-size:24px;font-weight:700;
-  box-shadow:0 8px 28px rgba(11,61,145,.45);cursor:grab;
+  background:#0b3d91;color:#fff;font-size:22px;font-weight:700;
+  box-shadow:0 8px 28px rgba(11,61,145,.45);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  line-height:1;padding:0;overflow:hidden;touch-action:none;user-select:none;
+  line-height:1;padding:0;overflow:hidden;touch-action:manipulation;user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
 #calcFab.dragging{cursor:grabbing;opacity:.92}
-#calcFab img{width:32px;height:32px;object-fit:contain;pointer-events:none;display:block}
+#calcFab img{width:28px;height:28px;object-fit:contain;pointer-events:none;display:block}
 #calcFab:hover{background:#1e5bb8}
 #calcPopup{
-  display:none;position:fixed;right:18px;bottom:84px;z-index:10000;
-  width:min(300px,92vw);background:#0f172a;color:#fff;border-radius:16px;
-  padding:14px;box-shadow:0 16px 48px rgba(15,23,42,.4);
-  border:1px solid #334155;touch-action:none;
+  display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  z-index:10060;width:min(320px,92vw);background:#0f172a;color:#fff;border-radius:16px;
+  padding:14px;box-shadow:0 16px 48px rgba(15,23,42,.45);
+  border:1px solid #334155;touch-action:manipulation;
 }
-#calcPopup.open{display:block}
+#calcPopup.open{display:block!important}
+@media(max-width:900px){
+  body.mode-open #calcFab{bottom:92px}
+  #calcPopup{bottom:auto;top:50%;transform:translate(-50%,-50%);max-height:80vh;overflow:auto}
+}
 .calc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;cursor:grab;user-select:none}
 .calc-head.dragging{cursor:grabbing}
 #calcClose{background:transparent;border:0;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1}
@@ -2749,7 +2862,7 @@ window.__calcOpen = false;
       const pt = e.touches ? e.touches[0] : e;
       const dx = pt.clientX - sx;
       const dy = pt.clientY - sy;
-      if (Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+      if (Math.abs(dx) + Math.abs(dy) > 18) moved = true;
       place(ox + dx, oy + dy);
       e.preventDefault();
     }
@@ -2799,6 +2912,40 @@ window.__calcOpen = false;
     initCalcDrag();
   }
   window.addEventListener("load", initCalcDrag);
+})();
+</script>
+
+
+<script>
+/* Reliable calculator open on mobile */
+(function(){
+  function openCalcUi(){
+    var p = document.getElementById("calcPopup");
+    if (!p) return;
+    p.classList.add("open");
+    p.style.display = "block";
+    window.__calcOpen = true;
+  }
+  function closeCalcUi(){
+    var p = document.getElementById("calcPopup");
+    if (!p) return;
+    p.classList.remove("open");
+    p.style.display = "none";
+    window.__calcOpen = false;
+  }
+  var fab = document.getElementById("calcFab");
+  if (fab) {
+    fab.addEventListener("click", function(){
+      setTimeout(function(){
+        var p = document.getElementById("calcPopup");
+        if (!p) return;
+        var open = p.classList.contains("open") || p.style.display === "block";
+        if (!open) openCalcUi();
+      }, 40);
+    }, false);
+  }
+  var cls = document.getElementById("calcClose");
+  if (cls) cls.addEventListener("click", function(e){ e.preventDefault(); closeCalcUi(); });
 })();
 </script>
 
