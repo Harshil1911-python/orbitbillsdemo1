@@ -149,20 +149,18 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   }
   .brand{font-size:15px;gap:6px;min-width:0}
   .brand span{display:none} /* hide "Billing" subtitle */
-  .header-actions{gap:6px;flex-wrap:nowrap;overflow:visible;width:auto}
-  /* Hide desktop header controls — available in ☰ menu */
+  .header-actions{gap:6px;flex-wrap:nowrap;overflow:visible;width:auto;margin-left:auto}
+  /* Hide all desktop header chrome on phone — only ☰ remains */
   .header-actions > .btn,
   .header-actions > .pill,
-  .header-actions > .badge:not(#indiaClock){display:none!important}
-  #indiaClock{
-    display:inline-flex!important;min-width:auto!important;
-    font-size:11.5px;padding:5px 8px;font-variant-numeric:tabular-nums
-  }
+  .header-actions > .badge{display:none!important}
+  #indiaClock{display:none!important}
   .mobile-menu-btn{
     display:inline-flex!important;align-items:center;justify-content:center;
-    width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
+    width:44px;height:44px;border-radius:12px;border:1px solid var(--line);
     background:#fff;cursor:pointer;flex-shrink:0;padding:0;
-    position:relative;z-index:61;-webkit-tap-highlight-color:transparent
+    position:relative;z-index:61;-webkit-tap-highlight-color:transparent;
+    box-shadow:0 1px 4px rgba(15,23,42,.08)
   }
   .mobile-menu-btn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
   .mobile-menu-btn svg path{stroke:var(--ink);fill:none}
@@ -181,16 +179,17 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   }
   .mobile-menu-panel h4{
     font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
-    font-weight:600;padding:10px 10px 6px;margin:0
+    font-weight:600;padding:14px 10px 6px;margin:0
   }
   .mobile-menu-panel button{
     display:flex;align-items:center;gap:10px;width:100%;text-align:left;
     padding:12px;border:0;background:none;border-radius:10px;
-    font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:44px
+    font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:46px
   }
   .mobile-menu-panel button:active{background:var(--tint);color:var(--brand)}
   .mobile-menu-panel .mm-status{
-    padding:8px 12px;font-size:13px;color:var(--muted);font-weight:500
+    padding:8px 12px;font-size:13px;color:var(--muted);font-weight:500;
+    background:#f8fafc;border-radius:10px;margin:2px 4px
   }
 
   /* Single column — products primary */
@@ -302,7 +301,10 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   .m-cart-bar .mcb-amt{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.15}
   .m-cart-bar .btn{
     background:#fff;color:var(--brand);border:0;font-weight:700;
-    min-height:44px;padding:10px 16px;border-radius:10px;flex:0 0 auto
+    min-height:44px;padding:10px 14px;border-radius:10px;flex:0 0 auto
+  }
+  .m-cart-bar .btn.mcb-dl{
+    background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)
   }
   body.m-cart-open .m-cart-bar{display:none!important}
 
@@ -442,12 +444,14 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
   <div class="mobile-menu-panel" role="dialog" aria-label="Menu">
-    <button type="button" id="mobileMenuClose" style="align-self:flex-end;color:var(--muted)">Close</button>
+    <button type="button" id="mobileMenuClose" style="align-self:flex-end;color:var(--muted)">×</button>
     <h4>Status</h4>
+    <div class="mm-status" id="mmClock">—</div>
     <div class="mm-status" id="mmShift">Shift —</div>
     <div class="mm-status" id="mmSync">Sync</div>
+    <h4>Files</h4>
+    <button type="button" id="mmDownloadsBtn" onclick="window.__orbitOpenDownloads&&window.__orbitOpenDownloads();return false;" style="background:var(--tint);color:var(--brand)">Downloads <span id="mmDlCount" style="margin-left:auto;font-size:12px;opacity:.8"></span></button>
     <h4>Actions</h4>
-    <button type="button" id="mmDownloadsBtn" onclick="window.__orbitOpenDownloads&&window.__orbitOpenDownloads();return false;">Downloads</button>
     <button type="button" data-mm="btnDayClose">Day close</button>
     <button type="button" data-mm="btnRecent">Recent bills</button>
     <button type="button" data-mm="btnRefreshSync">Sync</button>
@@ -1139,21 +1143,90 @@ function registerOrbitDownload(blob, filename, meta){
       try{ if(old && old.url) URL.revokeObjectURL(old.url); }catch(e){}
     }
     try{ if(window.__orbitRenderDownloads) window.__orbitRenderDownloads(); }catch(e){}
-    try{ toast("Saved to Downloads (" + window.__orbitDownloads.length + ")"); }catch(e){}
+    try{ var c=$("mmDlCount"); if(c) c.textContent="("+window.__orbitDownloads.length+")"; }catch(e){}
     return item;
   }catch(e){ console.warn("registerOrbitDownload", e); return null; }
 }
 
-function downloadBlob(blob, filename, meta){
-  try{ registerOrbitDownload(blob, filename, meta || {}); }catch(e){ console.warn(e); }
+function blobToBase64(blob){
+  return new Promise(function(resolve, reject){
+    const r = new FileReader();
+    r.onload = function(){
+      const res = String(r.result || "");
+      const i = res.indexOf(",");
+      resolve(i >= 0 ? res.slice(i + 1) : res);
+    };
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+/** Save file so it can appear in Downloads / Gallery / share targets */
+async function saveBlobToDevice(blob, filename, meta){
+  const item = registerOrbitDownload(blob, filename, meta || {});
+  const mime = (blob && blob.type) || (meta && meta.mime) || "application/octet-stream";
+  // 1) Capacitor Filesystem → Documents / Cache (then share)
+  try{
+    const Cap = window.Capacitor;
+    const plugins = Cap && (Cap.Plugins || (Cap.Plugins = {}));
+    const Filesystem = plugins && (plugins.Filesystem || window.Filesystem);
+    const Directory = (Filesystem && Filesystem.Directory) || (window.Directory) || null;
+    if(Filesystem && Filesystem.writeFile){
+      const b64 = await blobToBase64(blob);
+      const dir = (Directory && (Directory.Documents || Directory.DATA || Directory.Cache)) || "DOCUMENTS";
+      const path = "OrbitBills/" + filename;
+      await Filesystem.writeFile({ path: path, data: b64, directory: dir, recursive: true });
+      // Prefer Share plugin so user can Save to Gallery / WhatsApp
+      const Share = plugins.Share || window.Share;
+      if(Share && Share.share){
+        try{
+          const uriRes = Filesystem.getUri ? await Filesystem.getUri({ path: path, directory: dir }) : null;
+          const uri = uriRes && (uriRes.uri || uriRes);
+          if(uri){
+            await Share.share({ title: filename, text: "Invoice from OrbitBills", url: uri, dialogTitle: "Save or share invoice" });
+            try{ toast("Choose Save to Gallery or an app"); }catch(e){}
+            return item;
+          }
+        }catch(eShare){ console.warn("Cap Share", eShare); }
+      }
+      try{ toast("Saved to device files"); }catch(e){}
+      return item;
+    }
+  }catch(eCap){ console.warn("Capacitor save", eCap); }
+
+  // 2) Web Share API with file (Android Chrome: Save to Photos / WhatsApp / Drive)
+  try{
+    if(navigator.share && navigator.canShare){
+      const file = new File([blob], filename, { type: mime });
+      if(navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: filename, text: "Invoice from OrbitBills" });
+        try{ toast("Shared — pick Gallery or an app"); }catch(e){}
+        return item;
+      }
+    }
+  }catch(eShare2){
+    if(eShare2 && eShare2.name === "AbortError") return item;
+    console.warn("navigator.share", eShare2);
+  }
+
+  // 3) Classic download (Downloads folder — may not appear in Gallery for all OEMs)
   try{
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = filename;
+    a.setAttribute("download", filename);
+    a.type = mime;
     document.body.appendChild(a);
     a.click();
-    setTimeout(function(){ try{ document.body.removeChild(a); }catch(e){} URL.revokeObjectURL(url); }, 60000);
+    setTimeout(function(){ try{ document.body.removeChild(a); URL.revokeObjectURL(url); }catch(e){} }, 80000);
+    try{ toast("Saved — open Files / Downloads. Use Share for Gallery"); }catch(e){}
   }catch(e){ console.warn("downloadBlob trigger", e); }
+  return item;
+}
+
+function downloadBlob(blob, filename, meta){
+  // Fire-and-forget async save (keeps existing call sites sync-friendly)
+  Promise.resolve(saveBlobToDevice(blob, filename, meta || {})).catch(function(e){ console.warn(e); });
 }
 
 async function downloadExport(kind){
@@ -1185,7 +1258,7 @@ async function downloadExport(kind){
         blob = await res.blob();
       }
       downloadBlob(blob, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
-      if (msg) { msg.textContent = "PNG saved · open ☰ Downloads to share"; msg.className = "msg ok"; }
+      if (msg) { msg.textContent = "PNG ready · Share / Save to Gallery from Downloads"; msg.className = "msg ok"; }
       setTimeout(function(){ try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){} }, 120);
       return;
     }
@@ -1194,7 +1267,7 @@ async function downloadExport(kind){
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
       const blob = canvasToSimplePdf(canvas, paper);
       downloadBlob(blob, `invoice-${invNo}.pdf`, Object.assign({kind:"pdf"}, metaBase));
-      if (msg) { msg.textContent = "PDF saved · open ☰ Downloads to share · " + paper.label; msg.className = "msg ok"; }
+      if (msg) { msg.textContent = "PDF ready · Share from Downloads · " + paper.label; msg.className = "msg ok"; }
       try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){}
       return;
     }
@@ -2668,11 +2741,13 @@ window.__calcOpen = false;
 <div class="m-cart-bar" id="mCartBar" role="button" tabindex="0" aria-label="Open cart"
   onclick="window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">
   <div class="mcb-info">
-    <div class="mcb-label"><span id="mCartCount">0</span> items</div>
+    <div class="mcb-label"><span id="mCartCount">0</span> items in cart</div>
     <div class="mcb-amt" id="mCartTotal">₹0.00</div>
   </div>
+  <button type="button" class="btn mcb-dl" id="mCartDlBtn"
+    onclick="event.stopPropagation();window.__orbitOpenDownloads&&window.__orbitOpenDownloads();" title="Downloads">Files</button>
   <button type="button" class="btn" id="mCartOpenBtn"
-    onclick="event.stopPropagation();window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">View cart</button>
+    onclick="event.stopPropagation();window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">Cart</button>
 </div>
 
 <!-- Calculator FAB -->
@@ -2885,10 +2960,15 @@ window.__calcOpen = false;
     m.classList.add("open");
     m.setAttribute("aria-hidden","false");
     document.body.style.overflow = "hidden";
+    var clk = $("indiaClock"), mmc = $("mmClock");
+    if(clk && mmc) mmc.textContent = "Time: " + (clk.textContent || "—");
     var sp = $("shiftPill"), ss = $("mmShift");
     if(sp && ss) ss.textContent = sp.textContent || "Shift —";
     var sy = $("syncPill"), ms = $("mmSync");
     if(sy && ms) ms.textContent = "Status: " + (sy.textContent || "Sync");
+    var dl = window.__orbitDownloads || [];
+    var dc = $("mmDlCount");
+    if(dc) dc.textContent = dl.length ? ("(" + dl.length + ")") : "";
   }
   function closeMenu(){
     var m = $("mobileMenu");
