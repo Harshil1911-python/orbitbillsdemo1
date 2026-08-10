@@ -671,6 +671,26 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
 
 
+
+<div class="modal-bg" id="shareSheetModal">
+  <div class="modal" style="padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))">
+    <h3>Share invoice</h3>
+    <p id="shareSheetSub" style="font-size:13px;color:var(--muted);margin:-4px 0 12px"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button type="button" class="btn btn-primary" id="shareSysBtn" style="min-height:48px">Share…</button>
+      <button type="button" class="btn btn-ok" id="shareWaBtn" style="min-height:48px">WhatsApp</button>
+      <button type="button" class="btn btn-ghost" id="shareTgBtn" style="min-height:48px">Telegram</button>
+      <button type="button" class="btn btn-ghost" id="shareMailBtn" style="min-height:48px">Email</button>
+      <button type="button" class="btn btn-ghost" id="shareSaveBtn" style="min-height:48px">Save file</button>
+      <button type="button" class="btn btn-ghost" id="shareOpenBtn" style="min-height:48px">View file</button>
+    </div>
+    <div class="msg" id="shareSheetMsg" style="margin-top:10px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" data-close="shareSheetModal">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="fileViewerModal">
   <div class="modal wide" style="max-height:94vh">
     <h3 id="fileViewerTitle">File</h3>
@@ -1156,7 +1176,12 @@ function registerOrbitDownload(blob, filename, meta){
       try{ if(old && old.url) URL.revokeObjectURL(old.url); }catch(e){}
     }
     try{ if(window.__orbitRenderDownloads) window.__orbitRenderDownloads(); }catch(e){}
-    try{ var c=$("mmDlCount"); if(c) c.textContent="("+window.__orbitDownloads.length+")"; }catch(e){}
+    try{
+      var n = window.__orbitDownloads.length;
+      var c = document.getElementById("mmDlCount"); if(c) c.textContent = n ? ("("+n+")") : "";
+      var fb = document.getElementById("mCartDlBtn");
+      if(fb) fb.textContent = n ? ("Files ("+n+")") : "Files";
+    }catch(e){}
     return item;
   }catch(e){ console.warn("registerOrbitDownload", e); return null; }
 }
@@ -1708,6 +1733,7 @@ function pushCartLine(line){
     const existing=cart.find(i=>i.productId===line.productId && !i.variantId && !i.overridden && !isWeightUnit(i.unit));
     if(existing){ existing.qty=Math.round((Number(existing.qty)+Number(line.qty||1))*1000)/1000; renderCart(); return; }
   }
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
   cart.push({
     productId:line.productId||null,
     variantId:line.variantId||null,
@@ -3192,7 +3218,7 @@ window.__calcOpen = false;
         +   '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escDl(it.filename)+'</div>'
         +   '<div style="font-size:12px;color:#64748b;margin-top:2px">'+escDl(inv)+total+' · '+escDl(time)+'</div>'
         +   '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'
-        +     '<button type="button" class="btn btn-primary btn-sm" data-dl-share="'+it.id+'">Share</button>'
+        +     '<button type="button" class="btn btn-primary btn-sm" data-dl-share="'+it.id+'">Share…</button>'
         +     '<button type="button" class="btn btn-ghost btn-sm" data-dl-open="'+it.id+'">Open</button>'
         +     '<button type="button" class="btn btn-ghost btn-sm" data-dl-save="'+it.id+'">Save again</button>'
         +     '<button type="button" class="btn btn-danger btn-sm" data-dl-del="'+it.id+'">Delete</button>'
@@ -3206,16 +3232,41 @@ window.__calcOpen = false;
   function findItem(id){
     return (window.__orbitDownloads || []).find(function(x){ return x.id === id; });
   }
-    async function shareItem(id){
-    var it = findItem(id);
-    if(!it || !it.blob){ if(window.toast) toast("File not found"); return; }
-    var mime = it.mime || it.blob.type || "application/octet-stream";
-    if(it.kind === "png" && mime.indexOf("image/") !== 0) mime = "image/png";
-    if(it.kind === "pdf" && mime.indexOf("pdf") < 0) mime = "application/pdf";
-    var title = "Invoice " + (it.invoiceNumber || it.filename);
-    var textMsg = "Invoice " + (it.invoiceNumber || "") + (it.total!=null ? (" · ₹"+Number(it.total).toFixed(2)) : "");
+    
+  function invoiceShareText(it){
+    var inv = it.invoiceNumber ? ("Invoice #" + it.invoiceNumber) : "Invoice";
+    var tot = (it.total != null && isFinite(Number(it.total))) ? ("Total: ₹" + Number(it.total).toFixed(2)) : "";
+    return inv + (tot ? ("\n" + tot) : "") + "\n— OrbitBills";
+  }
 
-    // Capacitor Share plugin
+  async function blobAsFile(it){
+    var mime = it.mime || (it.blob && it.blob.type) || "application/octet-stream";
+    if(it.kind === "png") mime = "image/png";
+    if(it.kind === "pdf") mime = "application/pdf";
+    var blob = it.blob;
+    if(!blob && it.url){
+      try{ blob = await fetch(it.url).then(function(r){ return r.blob(); }); }catch(e){}
+    }
+    if(!blob) throw new Error("No file data");
+    // Re-wrap so type is correct (important for WhatsApp / system share)
+    blob = new Blob([blob], { type: mime });
+    it.blob = blob;
+    it.mime = mime;
+    try{
+      return new File([blob], it.filename || ("invoice." + (it.kind || "bin")), { type: mime, lastModified: Date.now() });
+    }catch(e){
+      // Older WebViews: File may not exist — return blob with name marker
+      blob.name = it.filename;
+      return blob;
+    }
+  }
+
+  async function systemShareFile(it){
+    var title = "Invoice " + (it.invoiceNumber || "");
+    var textMsg = invoiceShareText(it);
+    var file = await blobAsFile(it);
+
+    // Capacitor Share + Filesystem
     try{
       var Cap = window.Capacitor;
       var plugins = Cap && Cap.Plugins;
@@ -3228,47 +3279,133 @@ window.__calcOpen = false;
           r.onerror = reject;
           r.readAsDataURL(it.blob);
         });
-        var path = "OrbitBills/" + it.filename;
-        var dir = "CACHE";
-        try{
-          await Filesystem.writeFile({ path: path, data: b64, directory: dir, recursive: true });
-        }catch(eDir){
-          dir = "DATA";
-          await Filesystem.writeFile({ path: path, data: b64, directory: dir, recursive: true });
+        var path = "OrbitBills/" + (it.filename || "invoice.bin");
+        var dirs = ["CACHE", "DATA", "DOCUMENTS"];
+        var uri = null, usedDir = null;
+        for(var d = 0; d < dirs.length && !uri; d++){
+          try{
+            await Filesystem.writeFile({ path: path, data: b64, directory: dirs[d], recursive: true });
+            var uriRes = await Filesystem.getUri({ path: path, directory: dirs[d] });
+            uri = uriRes && (uriRes.uri || uriRes);
+            usedDir = dirs[d];
+          }catch(eD){}
         }
-        var uriRes = await Filesystem.getUri({ path: path, directory: dir });
-        var uri = uriRes && (uriRes.uri || uriRes);
         if(uri){
           await Share.share({ title: title, text: textMsg, url: uri, dialogTitle: "Share invoice" });
-          return;
+          return true;
         }
       }
     }catch(eCap){ console.warn("cap share", eCap); }
 
-    // Web Share with File
-    try{
-      var file = null;
-      try{ file = new File([it.blob], it.filename, { type: mime }); }catch(eF){ file = null; }
-      if(navigator.share){
-        if(file){
-          try{
-            if(!navigator.canShare || navigator.canShare({ files: [file] })){
-              await navigator.share({ files: [file], title: title, text: textMsg });
-              return;
-            }
-          }catch(e1){ if(e1 && e1.name === "AbortError") return; }
+    // navigator.share with files
+    if(navigator.share){
+      try{
+        if(file && file instanceof File){
+          if(!navigator.canShare || navigator.canShare({ files: [file] })){
+            await navigator.share({ files: [file], title: title, text: textMsg });
+            return true;
+          }
         }
-        // For images: share without files may still work poorly — open viewer instead
+      }catch(e1){
+        if(e1 && e1.name === "AbortError") return true; // user cancelled = ok
       }
-    }catch(err){
-      if(err && err.name === "AbortError") return;
-      console.warn(err);
+      // Some WebViews accept share without canShare check
+      try{
+        if(file && file instanceof File){
+          await navigator.share({ files: [file], title: title, text: textMsg });
+          return true;
+        }
+      }catch(e2){
+        if(e2 && e2.name === "AbortError") return true;
+      }
+      // Text-only share as last web attempt
+      try{
+        await navigator.share({ title: title, text: textMsg });
+        return true;
+      }catch(e3){
+        if(e3 && e3.name === "AbortError") return true;
+      }
     }
-
-    // Last resort: open in-app viewer so user can long-press / system share from there
-    openItem(id);
-    if(window.toast) toast("Use Share in the viewer, or long-press the image");
+    return false;
   }
+
+  function openShareSheet(id){
+    window.__orbitShareItemId = id;
+    var it = findItem(id);
+    if(!it){ if(window.toast) toast("File not found"); return; }
+    var sub = $("shareSheetSub");
+    if(sub) sub.textContent = (it.filename || "") + (it.invoiceNumber ? (" · #" + it.invoiceNumber) : "");
+    var msg = $("shareSheetMsg");
+    if(msg){ msg.textContent = ""; msg.className = "msg"; }
+    if(typeof openModal === "function") openModal("shareSheetModal");
+    else { var m = $("shareSheetModal"); if(m) m.classList.add("open"); }
+  }
+
+  async function shareItem(id){
+    // Always show action sheet — more reliable than silent failures
+    openShareSheet(id);
+  }
+
+  async function doSystemShare(){
+    var id = window.__orbitShareItemId;
+    var it = findItem(id);
+    var msg = $("shareSheetMsg");
+    if(!it){ if(msg){ msg.textContent = "File not found"; msg.className = "msg err"; } return; }
+    if(msg){ msg.textContent = "Opening share…"; msg.className = "msg"; }
+    try{
+      var ok = await systemShareFile(it);
+      if(ok){
+        if(msg){ msg.textContent = "Share sheet opened"; msg.className = "msg ok"; }
+        if(typeof closeModal === "function") closeModal("shareSheetModal");
+      } else {
+        if(msg){ msg.textContent = "System share unavailable — try WhatsApp, Save, or View"; msg.className = "msg err"; }
+      }
+    }catch(e){
+      if(msg){ msg.textContent = "Share failed — try Save or View"; msg.className = "msg err"; }
+    }
+  }
+
+  function doWhatsAppShare(){
+    var id = window.__orbitShareItemId;
+    var it = findItem(id);
+    var msg = $("shareSheetMsg");
+    if(!it) return;
+    var textMsg = invoiceShareText(it);
+    // Prefer system share (user can pick WhatsApp + attachment)
+    systemShareFile(it).then(function(ok){
+      if(ok){
+        if(typeof closeModal === "function") closeModal("shareSheetModal");
+        return;
+      }
+      // Fallback: WhatsApp text (file must be attached manually from Downloads)
+      var url = "https://wa.me/?text=" + encodeURIComponent(textMsg + "\n(Attach the invoice file from Downloads)");
+      window.open(url, "_blank");
+      if(msg){ msg.textContent = "WhatsApp opened — attach the file from Downloads if needed"; msg.className = "msg ok"; }
+    });
+  }
+
+  function doTelegramShare(){
+    var id = window.__orbitShareItemId;
+    var it = findItem(id);
+    if(!it) return;
+    systemShareFile(it).then(function(ok){
+      if(ok){ if(typeof closeModal === "function") closeModal("shareSheetModal"); return; }
+      var textMsg = invoiceShareText(it);
+      window.open("https://t.me/share/url?url=&text=" + encodeURIComponent(textMsg), "_blank");
+    });
+  }
+
+  function doEmailShare(){
+    var id = window.__orbitShareItemId;
+    var it = findItem(id);
+    if(!it) return;
+    systemShareFile(it).then(function(ok){
+      if(ok){ if(typeof closeModal === "function") closeModal("shareSheetModal"); return; }
+      var textMsg = invoiceShareText(it);
+      window.location.href = "mailto:?subject=" + encodeURIComponent("Invoice " + (it.invoiceNumber||"")) + "&body=" + encodeURIComponent(textMsg);
+    });
+  }
+
   function openItem(id){
     var it = findItem(id);
     if(!it) return;
@@ -3395,9 +3532,19 @@ window.__calcOpen = false;
       fShare.dataset.bound = "1";
       fShare.addEventListener("click", function(){
         var id = window.__orbitViewerItemId;
-        if(id) shareItem(id);
+        if(id) openShareSheet(id);
       });
     }
+    function bindShareSheet(){
+      var a;
+      a = $("shareSysBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", doSystemShare); }
+      a = $("shareWaBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", doWhatsAppShare); }
+      a = $("shareTgBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", doTelegramShare); }
+      a = $("shareMailBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", doEmailShare); }
+      a = $("shareSaveBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", function(){ var id=window.__orbitShareItemId; if(id) saveItem(id); }); }
+      a = $("shareOpenBtn"); if(a && !a.dataset.bound){ a.dataset.bound="1"; a.addEventListener("click", function(){ var id=window.__orbitShareItemId; if(typeof closeModal==="function") closeModal("shareSheetModal"); if(id) openItem(id); }); }
+    }
+    bindShareSheet();
     var fSave = $("fileViewerSave");
     if(fSave && !fSave.dataset.bound){
       fSave.dataset.bound = "1";
