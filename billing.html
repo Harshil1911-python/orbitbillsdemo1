@@ -430,6 +430,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <div class="mm-status" id="mmShift">Shift —</div>
     <div class="mm-status" id="mmSync">Sync</div>
     <h4>Actions</h4>
+    <button type="button" id="mmDownloadsBtn">Downloads</button>
     <button type="button" data-mm="btnDayClose">Day close</button>
     <button type="button" data-mm="btnRecent">Recent bills</button>
     <button type="button" data-mm="btnRefreshSync">Sync</button>
@@ -646,6 +647,20 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   <div class="invoice-preview-shell" id="exportPreviewShell" style="display:none;margin-top:10px"><div id="exportPreview"></div></div>
   <div class="modal-actions"><button class="btn btn-ghost" data-close="exportModal" type="button">Close</button></div>
 </div></div>
+
+
+<div class="modal-bg" id="downloadsModal">
+  <div class="modal wide">
+    <h3>Downloads</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">PNG &amp; PDF invoices saved on this device. Share to WhatsApp, Gmail, Drive, and other apps.</p>
+    <div id="downloadsList" style="display:flex;flex-direction:column;gap:10px;min-height:80px"></div>
+    <div class="empty" id="downloadsEmpty" style="display:none">No downloads yet. Export an invoice as PNG or PDF first.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" data-close="downloadsModal">Close</button>
+      <button class="btn btn-ghost" type="button" id="btnClearDownloads">Clear all</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-bg" id="quickClientModal"><div class="modal">
   <h3>New client</h3>
@@ -1082,7 +1097,36 @@ function canvasToSimplePdf(canvas, paper){
   return new Blob([out], { type: "application/pdf" });
 }
 
-function downloadBlob(blob, filename){
+/* In-app download registry — view & share from ☰ → Downloads */
+window.__orbitDownloads = window.__orbitDownloads || [];
+
+function registerOrbitDownload(blob, filename, meta){
+  try{
+    const url = URL.createObjectURL(blob);
+    const item = {
+      id: "dl_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      filename: filename,
+      blob: blob,
+      url: url,
+      mime: blob.type || "application/octet-stream",
+      kind: (meta && meta.kind) || (filename.split(".").pop() || "").toLowerCase(),
+      invoiceNumber: (meta && meta.invoiceNumber) || "",
+      total: (meta && meta.total) != null ? meta.total : null,
+      createdAt: Date.now()
+    };
+    window.__orbitDownloads.unshift(item);
+    // Keep last 30
+    while(window.__orbitDownloads.length > 30){
+      const old = window.__orbitDownloads.pop();
+      try{ if(old && old.url) URL.revokeObjectURL(old.url); }catch(e){}
+    }
+    try{ if(window.__orbitRenderDownloads) window.__orbitRenderDownloads(); }catch(e){}
+    return item;
+  }catch(e){ console.warn("registerOrbitDownload", e); return null; }
+}
+
+function downloadBlob(blob, filename, meta){
+  try{ registerOrbitDownload(blob, filename, meta || {}); }catch(e){}
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = filename; a.click();
@@ -1095,26 +1139,39 @@ async function downloadExport(kind){
   if (msg) { msg.textContent = "Preparing…"; msg.className = "msg"; }
   const invNo = (lastInvoicePayload.invoiceNumber || lastInvoiceId || "invoice").toString().replace(/[^a-zA-Z0-9_-]/g, "_");
   const paper = selectedPaper();
+  const metaBase = {
+    invoiceNumber: lastInvoicePayload.invoiceNumber || invNo,
+    total: lastInvoicePayload.total
+  };
   try {
     if (kind === "html") {
       const fullHtml = await inlineImagesInHtml(buildInvoiceExportDocument(lastInvoicePayload, paper));
-      downloadBlob(new Blob([fullHtml], { type: "text/html;charset=utf-8" }), `invoice-${invNo}.html`);
-      if (msg) { msg.textContent = "HTML downloaded"; msg.className = "msg ok"; }
+      downloadBlob(new Blob([fullHtml], { type: "text/html;charset=utf-8" }), `invoice-${invNo}.html`, Object.assign({kind:"html"}, metaBase));
+      if (msg) { msg.textContent = "HTML saved · open ☰ Downloads to share"; msg.className = "msg ok"; }
       return;
     }
     if (kind === "png") {
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
-      const pngUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a"); a.href = pngUrl; a.download = `invoice-${invNo}.png`; a.click();
-      if (msg) { msg.textContent = "PNG downloaded (same layout as HTML)"; msg.className = "msg ok"; }
+      const blob = await new Promise(function(resolve){ canvas.toBlob(function(b){ resolve(b); }, "image/png"); });
+      if(!blob){
+        // fallback dataURL path
+        const pngUrl = canvas.toDataURL("image/png");
+        const res = await fetch(pngUrl); const b2 = await res.blob();
+        downloadBlob(b2, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
+      } else {
+        downloadBlob(blob, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
+      }
+      if (msg) { msg.textContent = "PNG saved · open ☰ Downloads to share"; msg.className = "msg ok"; }
+      try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){}
       return;
     }
     if (kind === "pdf") {
       // True offline PDF download using the same raster as PNG (identical layout)
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
       const blob = canvasToSimplePdf(canvas, paper);
-      downloadBlob(blob, `invoice-${invNo}.pdf`);
-      if (msg) { msg.textContent = "PDF downloaded · " + paper.label; msg.className = "msg ok"; }
+      downloadBlob(blob, `invoice-${invNo}.pdf`, Object.assign({kind:"pdf"}, metaBase));
+      if (msg) { msg.textContent = "PDF saved · open ☰ Downloads to share · " + paper.label; msg.className = "msg ok"; }
+      try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){}
       return;
     }
     if (msg) { msg.textContent = "Unknown export type"; msg.className = "msg err"; }
@@ -2908,6 +2965,175 @@ window.__calcOpen = false;
       if(root.parentElement) root.parentElement.style.minHeight = (h + 8) + "px";
     }catch(e){}
   };
+})();
+</script>
+
+
+<script>
+/* Downloads panel + native share (WhatsApp, Gmail, etc.) */
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function renderDownloads(){
+    var list = $("downloadsList");
+    var empty = $("downloadsEmpty");
+    if(!list) return;
+    var items = window.__orbitDownloads || [];
+    if(!items.length){
+      list.innerHTML = "";
+      if(empty) empty.style.display = "block";
+      return;
+    }
+    if(empty) empty.style.display = "none";
+    list.innerHTML = items.map(function(it){
+      var when = new Date(it.createdAt);
+      var time = when.toLocaleString();
+      var total = (it.total != null && isFinite(Number(it.total))) ? (" · ₹" + Number(it.total).toFixed(2)) : "";
+      var inv = it.invoiceNumber ? ("#" + it.invoiceNumber) : "";
+      var kind = (it.kind || "").toUpperCase();
+      var preview = "";
+      if((it.kind === "png" || (it.mime||"").indexOf("image/") === 0) && it.url){
+        preview = '<img src="'+it.url+'" alt="" style="width:56px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc">';
+      } else {
+        preview = '<div style="width:56px;height:72px;border-radius:8px;border:1px solid #e2e8f0;background:#e8eef8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0b3d91">'+kind+'</div>';
+      }
+      return '<div class="dl-card" data-id="'+it.id+'" style="display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px">'
+        + preview
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escDl(it.filename)+'</div>'
+        +   '<div style="font-size:12px;color:#64748b;margin-top:2px">'+escDl(inv)+total+' · '+escDl(time)+'</div>'
+        +   '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'
+        +     '<button type="button" class="btn btn-primary btn-sm" data-dl-share="'+it.id+'">Share</button>'
+        +     '<button type="button" class="btn btn-ghost btn-sm" data-dl-open="'+it.id+'">Open</button>'
+        +     '<button type="button" class="btn btn-ghost btn-sm" data-dl-save="'+it.id+'">Save again</button>'
+        +     '<button type="button" class="btn btn-danger btn-sm" data-dl-del="'+it.id+'">Delete</button>'
+        +   '</div>'
+        + '</div></div>';
+    }).join("");
+  }
+  function escDl(s){
+    return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function findItem(id){
+    return (window.__orbitDownloads || []).find(function(x){ return x.id === id; });
+  }
+  async function shareItem(id){
+    var it = findItem(id);
+    if(!it || !it.blob){ if(window.toast) toast("File not found"); return; }
+    var file = null;
+    try{
+      file = new File([it.blob], it.filename, { type: it.mime || it.blob.type || "application/octet-stream" });
+    }catch(e){ file = null; }
+    var title = "Invoice " + (it.invoiceNumber || it.filename);
+    var textMsg = "Invoice " + (it.invoiceNumber || "") + (it.total!=null ? (" · ₹"+Number(it.total).toFixed(2)) : "");
+    try{
+      if(navigator.share){
+        if(file && navigator.canShare){
+          try{
+            if(navigator.canShare({ files: [file] })){
+              await navigator.share({ files: [file], title: title, text: textMsg });
+              return;
+            }
+          }catch(e0){}
+        }
+        if(file){
+          try{ await navigator.share({ files: [file], title: title, text: textMsg }); return; }catch(e1){}
+        }
+        await navigator.share({ title: title, text: textMsg + "\n" + it.filename });
+        return;
+      }
+    }catch(err){
+      if(err && err.name === "AbortError") return;
+      console.warn(err);
+    }
+    try{
+      var a = document.createElement("a");
+      a.href = it.url || URL.createObjectURL(it.blob);
+      a.download = it.filename;
+      a.click();
+      if(window.toast) toast("Saved — open from Downloads to share");
+    }catch(e){ if(window.toast) toast("Share not supported on this device"); }
+  }
+  function openItem(id){
+    var it = findItem(id);
+    if(!it) return;
+    var url = it.url || URL.createObjectURL(it.blob);
+    window.open(url, "_blank");
+  }
+  function saveItem(id){
+    var it = findItem(id);
+    if(!it) return;
+    var a = document.createElement("a");
+    a.href = it.url || URL.createObjectURL(it.blob);
+    a.download = it.filename;
+    a.click();
+  }
+  function delItem(id){
+    var arr = window.__orbitDownloads || [];
+    var i = arr.findIndex(function(x){ return x.id === id; });
+    if(i < 0) return;
+    try{ if(arr[i].url) URL.revokeObjectURL(arr[i].url); }catch(e){}
+    arr.splice(i, 1);
+    renderDownloads();
+  }
+  function openDownloads(){
+    try{ if(window.__orbitCloseMobileMenu) window.__orbitCloseMobileMenu(); }catch(e){}
+    renderDownloads();
+    if(typeof openModal === "function") openModal("downloadsModal");
+    else {
+      var m = $("downloadsModal");
+      if(m) m.classList.add("open");
+    }
+  }
+  window.__orbitRenderDownloads = renderDownloads;
+  window.__orbitOpenDownloads = openDownloads;
+
+  function bind(){
+    var btn = $("mmDownloadsBtn");
+    if(btn && !btn.dataset.bound){
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", function(){ openDownloads(); });
+    }
+    var list = $("downloadsList");
+    if(list && !list.dataset.bound){
+      list.dataset.bound = "1";
+      list.addEventListener("click", function(e){
+        var t = e.target;
+        if(!t || !t.getAttribute) return;
+        var sid = t.getAttribute("data-dl-share");
+        var oid = t.getAttribute("data-dl-open");
+        var sav = t.getAttribute("data-dl-save");
+        var del = t.getAttribute("data-dl-del");
+        if(sid){ e.preventDefault(); shareItem(sid); }
+        if(oid){ e.preventDefault(); openItem(oid); }
+        if(sav){ e.preventDefault(); saveItem(sav); }
+        if(del){ e.preventDefault(); delItem(del); }
+      });
+    }
+    var clr = $("btnClearDownloads");
+    if(clr && !clr.dataset.bound){
+      clr.dataset.bound = "1";
+      clr.addEventListener("click", function(){
+        (window.__orbitDownloads || []).forEach(function(it){
+          try{ if(it.url) URL.revokeObjectURL(it.url); }catch(e){}
+        });
+        window.__orbitDownloads = [];
+        renderDownloads();
+      });
+    }
+    document.querySelectorAll('[data-close="downloadsModal"]').forEach(function(b){
+      if(b.dataset.dlClose) return;
+      b.dataset.dlClose = "1";
+      b.addEventListener("click", function(){
+        if(typeof closeModal === "function") closeModal("downloadsModal");
+        else { var m=$("downloadsModal"); if(m) m.classList.remove("open"); }
+      });
+    });
+  }
+  try{ bind(); }catch(e){}
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  window.addEventListener("load", bind);
+  setTimeout(bind, 400);
 })();
 </script>
 
