@@ -306,6 +306,10 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   .m-cart-bar .btn.mcb-dl{
     background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35)
   }
+  .m-cart-bar .btn.mcb-clear{
+    background:transparent;color:#fecaca;border:1px solid rgba(254,202,202,.45);
+    min-height:36px;padding:6px 10px;font-size:12px;font-weight:600
+  }
   body.m-cart-open .m-cart-bar{display:none!important}
 
   /* Cart form fields more touchable */
@@ -409,6 +413,26 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   background:#fff;font-size:20px;cursor:pointer;color:var(--muted)
 }
 
+
+/* Cart Selected / Sale tabs */
+.cart-top-tabs{
+  display:flex;align-items:center;gap:6px;margin-bottom:10px;
+  position:sticky;top:0;background:var(--card);z-index:3;padding:2px 0 8px
+}
+.cart-top-tab{
+  flex:1;min-height:40px;border:1px solid var(--line);border-radius:10px;
+  background:#f8fafc;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer
+}
+.cart-top-tab.active{
+  background:var(--brand);color:#fff;border-color:var(--brand)
+}
+.cart-top-tabs .m-cart-close{flex:0 0 auto;margin-left:4px}
+.cart-panel{min-height:0}
+@media(min-width:769px){
+  /* Desktop: show both sections stacked — tabs still work */
+  .cart-top-tabs{margin-bottom:8px}
+}
+
 @media print{
   body *{visibility:hidden!important}
   #printRoot,#printRoot *{visibility:visible!important}
@@ -502,8 +526,20 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 </section>
 <aside class="cart-side" id="cartSide">
   <div class="cart-toggle" id="cartToggle"><span>Sale <span id="cartToggleSummary" style="color:var(--muted);font-weight:600"></span></span><span class="chev">▲</span></div>
-  <h3>Sale <button type="button" class="m-cart-close" id="mCartClose" aria-label="Close cart"
-      onclick="window.__orbitCloseMobileCart&&window.__orbitCloseMobileCart();return false;">×</button></h3>
+  <div class="cart-top-tabs" id="cartTopTabs">
+    <button type="button" class="cart-top-tab active" id="cartTabSelected" data-cart-panel="selected">Selected</button>
+    <button type="button" class="cart-top-tab" id="cartTabSale" data-cart-panel="sale">Sale</button>
+    <button type="button" class="m-cart-close" id="mCartClose" aria-label="Close cart"
+      onclick="window.__orbitCloseMobileCart&&window.__orbitCloseMobileCart();return false;">×</button>
+  </div>
+  <div class="cart-panel" id="cartPanelSelected">
+  <div class="cart-items" id="cartItems"><div class="cart-empty">Cart empty</div></div>
+  <div style="display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" id="clearCartBtn" type="button">Clear cart</button>
+    <button class="btn btn-primary btn-sm" id="btnGoSaleTab" type="button">Continue to Sale →</button>
+  </div>
+  </div>
+  <div class="cart-panel" id="cartPanelSale" style="display:none">
   <div class="form-field"><label>Client</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="clientSelect" style="flex:1"><option value="">Walk-in</option></select>
@@ -513,7 +549,6 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     </div>
     <div class="credit-hint" id="clientCreditHint"></div>
   </div>
-  <div class="cart-items" id="cartItems"><div class="cart-empty">Cart empty</div></div>
   <div class="form-field"><label>Coupon</label>
     <div style="display:flex;gap:6px">
       <input id="couponInput" placeholder="CODE" style="flex:1;text-transform:uppercase">
@@ -574,9 +609,10 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <button class="btn btn-ghost btn-sm" id="btnHold2" type="button">Hold</button>
     <button class="btn btn-ghost btn-sm" id="btnReturn" type="button">Return</button>
     <button class="btn btn-ghost btn-sm" id="btnShift" type="button">Shift</button>
-    <button class="btn btn-ghost btn-sm" id="clearCartBtn" type="button">Clear</button>
+    
   </div>
   <div class="msg" id="invoiceMsg"></div>
+</div><!-- /cartPanelSale -->
 </aside>
 </div>
 
@@ -1300,18 +1336,21 @@ async function downloadExport(kind){
         const res = await fetch(pngUrl);
         blob = await res.blob();
       }
-      downloadBlob(new Blob([blob], { type: "image/png" }), `invoice-${invNo}.png`, Object.assign({kind:"png", mime:"image/png"}, metaBase));
-      if (msg) { msg.textContent = "PNG ready · Share / Save to Gallery from Downloads"; msg.className = "msg ok"; }
-      setTimeout(function(){ try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){} }, 120);
+      const pngBlob = blob instanceof Blob ? blob : new Blob([blob], { type: "image/png" });
+      const pngFinal = pngBlob.type === "image/png" ? pngBlob : new Blob([pngBlob], { type: "image/png" });
+      downloadBlob(pngFinal, `invoice-${invNo}.png`, Object.assign({kind:"png", mime:"image/png"}, metaBase));
+      if (msg) { msg.textContent = "PNG saved to Downloads (" + ((window.__orbitDownloads||[]).length) + ")"; msg.className = "msg ok"; }
+      setTimeout(function(){ try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){} }, 150);
       return;
     }
     if (kind === "pdf") {
       // True offline PDF download using the same raster as PNG (identical layout)
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
       const blob = canvasToSimplePdf(canvas, paper);
-      downloadBlob(new Blob([blob], { type: "application/pdf" }), `invoice-${invNo}.pdf`, Object.assign({kind:"pdf", mime:"application/pdf"}, metaBase));
-      if (msg) { msg.textContent = "PDF ready · Share from Downloads · " + paper.label; msg.className = "msg ok"; }
-      try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){}
+      const pdfBlob = blob instanceof Blob ? new Blob([blob], { type: "application/pdf" }) : new Blob([blob], { type: "application/pdf" });
+      downloadBlob(pdfBlob, `invoice-${invNo}.pdf`, Object.assign({kind:"pdf", mime:"application/pdf"}, metaBase));
+      if (msg) { msg.textContent = "PDF saved to Downloads (" + ((window.__orbitDownloads||[]).length) + ") · " + paper.label; msg.className = "msg ok"; }
+      setTimeout(function(){ try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){} }, 150);
       return;
     }
     if (msg) { msg.textContent = "Unknown export type"; msg.className = "msg err"; }
@@ -1875,13 +1914,19 @@ function renderCart(){
   try{ if(window.__orbitRefreshMobileCartBar) window.__orbitRefreshMobileCartBar(); }catch(e){} return; }
   el.innerHTML=cart.map((it,i)=>{
     const qtyLabel=isWeightUnit(it.unit)?`${Number(it.qty).toFixed(3)} ${esc(it.unit||"")}`:String(it.qty);
-    return `<div class="cart-item"><div>
-    <div style="font-weight:600">${esc(it.name)}${it.overridden?' <span class="pill low">ovr</span>':''}${it.variantId?' <span class="pill sync">var</span>':''}</div>
-    <div style="font-size:11px;color:var(--muted)">${it.price.toFixed(2)} × ${qtyLabel}
-      <button class="btn btn-ghost btn-sm" type="button" style="padding:0 4px" onclick="openOverride(${i})">Edit</button></div></div>
-    <div class="qty-control"><button type="button" onclick="changeQty(${i},-1)">−</button><span>${isWeightUnit(it.unit)?Number(it.qty).toFixed(2):it.qty}</span>
-    <button type="button" onclick="changeQty(${i},1)">+</button>
-    <button type="button" onclick="removeItem(${i})" style="color:var(--bad);border-color:transparent;background:transparent">×</button></div></div>`;
+    const lineTotal=(Number(it.price)*Number(it.qty)).toFixed(2);
+    return `<div class="cart-item" style="align-items:flex-start"><div style="flex:1;min-width:0">
+    <div style="font-weight:600">${esc(it.name)}${it.overridden?' <span class="pill low">ovr</span>':''}${it.variantId?' <span class="pill sync">var</span>':''}${it.custom?' <span class="pill">custom</span>':''}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">₹${Number(it.price).toFixed(2)} × ${qtyLabel} = <strong style="color:var(--ink)">₹${lineTotal}</strong></div>
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="openOverride(${i})">Edit price</button>
+      <button class="btn btn-danger btn-sm" type="button" onclick="removeItem(${i})">Remove</button>
+    </div></div>
+    <div class="qty-control" style="flex-direction:column;gap:4px">
+      <button type="button" onclick="changeQty(${i},1)" style="min-width:40px;min-height:36px">+</button>
+      <span style="text-align:center;font-weight:700">${isWeightUnit(it.unit)?Number(it.qty).toFixed(2):it.qty}</span>
+      <button type="button" onclick="changeQty(${i},-1)" style="min-width:40px;min-height:36px">−</button>
+    </div></div>`;
   }).join("");
   updateTotals();
 }
@@ -2785,9 +2830,11 @@ window.__calcOpen = false;
 <div class="m-cart-bar" id="mCartBar" role="button" tabindex="0" aria-label="Open cart"
   onclick="window.__orbitOpenMobileCart&&window.__orbitOpenMobileCart();">
   <div class="mcb-info">
-    <div class="mcb-label"><span id="mCartCount">0</span> items in cart</div>
+    <div class="mcb-label"><span id="mCartCount">0</span> items</div>
     <div class="mcb-amt" id="mCartTotal">₹0.00</div>
   </div>
+  <button type="button" class="btn mcb-clear" id="mCartClearBtn" title="Clear cart"
+    onclick="event.stopPropagation();var b=document.getElementById('clearCartBtn'); if(b) b.click();">Clear</button>
   <button type="button" class="btn mcb-dl" id="mCartDlBtn"
     onclick="event.stopPropagation();window.__orbitOpenDownloads&&window.__orbitOpenDownloads();" title="Downloads">Files</button>
   <button type="button" class="btn" id="mCartOpenBtn"
@@ -3035,6 +3082,7 @@ window.__calcOpen = false;
       if(cs) cs.scrollTop = 0;
     }catch(e){}
     try{ if(typeof renderCart === "function") renderCart(); }catch(e){}
+    try{ if(window.__orbitShowCartPanel) window.__orbitShowCartPanel("selected"); }catch(e){}
   }
   function closeCart(){
     document.body.classList.remove("m-cart-open");
@@ -3558,6 +3606,53 @@ window.__calcOpen = false;
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
   window.addEventListener("load", bind);
   setTimeout(bind, 400);
+})();
+</script>
+
+
+<script>
+/* Cart tabs: Selected products (CRUD) ↔ Sale (checkout) */
+(function(){
+  function showCartPanel(which){
+    var sel = document.getElementById("cartPanelSelected");
+    var sale = document.getElementById("cartPanelSale");
+    var tSel = document.getElementById("cartTabSelected");
+    var tSale = document.getElementById("cartTabSale");
+    if(!sel || !sale) return;
+    var isSel = which === "selected";
+    sel.style.display = isSel ? "block" : "none";
+    sale.style.display = isSel ? "none" : "block";
+    if(tSel) tSel.classList.toggle("active", isSel);
+    if(tSale) tSale.classList.toggle("active", !isSel);
+    try{
+      var cs = document.getElementById("cartSide");
+      if(cs) cs.scrollTop = 0;
+    }catch(e){}
+  }
+  window.__orbitShowCartPanel = showCartPanel;
+  function bind(){
+    var tSel = document.getElementById("cartTabSelected");
+    var tSale = document.getElementById("cartTabSale");
+    if(tSel && !tSel.dataset.bound){
+      tSel.dataset.bound = "1";
+      tSel.addEventListener("click", function(){ showCartPanel("selected"); });
+    }
+    if(tSale && !tSale.dataset.bound){
+      tSale.dataset.bound = "1";
+      tSale.addEventListener("click", function(){ showCartPanel("sale"); });
+    }
+    var go = document.getElementById("btnGoSaleTab");
+    if(go && !go.dataset.bound){
+      go.dataset.bound = "1";
+      go.addEventListener("click", function(){ showCartPanel("sale"); });
+    }
+    // Default: Selected products
+    showCartPanel("selected");
+  }
+  try{ bind(); }catch(e){}
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  window.addEventListener("load", bind);
+  setTimeout(bind, 300);
 })();
 </script>
 
