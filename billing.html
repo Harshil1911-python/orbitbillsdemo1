@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0b3d91">
+<meta name="color-scheme" content="light">
 <title>Billing · OrbitBills</title>
 <link rel="icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +20,7 @@
   --font:"Inter",system-ui,sans-serif;--display:"Space Grotesk",var(--font);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.45;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.45;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
 h1,h2,h3,.brand{font-family:var(--display);letter-spacing:-.02em}
 button,input,select,textarea{font:inherit}
 header.app-bar{background:var(--card);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
@@ -396,6 +402,140 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   body.m-cart-open .cart-side{transform:none!important;position:static!important;max-height:none!important}
 }
 
+
+
+/* ========== Native app shell (Capacitor / phone) ========== */
+html{
+  height:100%;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+html,body{
+  overscroll-behavior:none;
+  overscroll-behavior-y:none;
+  -webkit-overflow-scrolling:touch;
+}
+body{
+  min-height:100%;
+  min-height:100dvh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  /* Kill long-press text selection / callout (native feel) */
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+/* Allow selection only where typing is needed */
+input,textarea,[contenteditable="true"],.allow-select{
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  -webkit-touch-callout:default;
+}
+/* No blue flash / focus rings that look like a website */
+button,a,label,[role="button"],.panel-tab,.text-row,.photo-tile,.btn,.cart-item{
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  outline:none;
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid rgba(11,61,145,.35);
+  outline-offset:2px;
+}
+/* Images: no save/callout menu on long-press */
+img,svg{
+  -webkit-user-drag:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  pointer-events:auto;
+}
+a{text-decoration:none;color:inherit}
+/* Scroll containers feel native */
+.text-list,.cart-side,.photo-grid,.modal,.mobile-menu-panel,#downloadsList{
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+/* Inputs: 16px prevents iOS zoom */
+input,select,textarea{
+  font-size:16px;
+  border-radius:10px;
+}
+@media (max-width:768px){
+  body{
+    background:#f4f6fa;
+  }
+  /* App chrome */
+  header.app-bar{
+    background:rgba(255,255,255,.92);
+    -webkit-backdrop-filter:saturate(180%) blur(16px);
+    backdrop-filter:saturate(180%) blur(16px);
+    border-bottom:1px solid rgba(226,232,240,.9);
+    box-shadow:0 1px 0 rgba(15,23,42,.04);
+  }
+  .brand{font-size:16px;font-weight:700;letter-spacing:-.03em}
+  /* Cards more app-like */
+  .text-row,.cart-item,.dl-card{
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+  }
+  .text-row:active,.photo-tile:active,.btn:active,.panel-tab:active,.cart-top-tab:active{
+    opacity:.92;
+    transform:scale(.985);
+    transition:transform .08s ease,opacity .08s ease;
+  }
+  .btn,.panel-tab,.cart-top-tab,.photo-tile,.text-row button{
+    transition:background .12s ease,opacity .08s ease,transform .08s ease;
+  }
+  /* Bottom bar = native tab bar feel */
+  .m-cart-bar{
+    background:linear-gradient(180deg,#0c4299 0%,#0b3d91 100%);
+    border-top:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(12px);
+  }
+  /* Sheets */
+  .cart-side{
+    border-radius:20px 20px 0 0!important;
+    box-shadow:0 -12px 40px rgba(15,23,42,.2)!important;
+  }
+  .modal{
+    box-shadow:0 -8px 40px rgba(15,23,42,.18);
+  }
+  .mobile-menu-panel{
+    box-shadow:-12px 0 40px rgba(15,23,42,.18);
+  }
+  /* Hide scrollbars where possible (still scrollable) */
+  .text-list,.panel-tabs,.cart-side,.mobile-menu-panel,.modal{
+    scrollbar-width:none;
+  }
+  .text-list::-webkit-scrollbar,
+  .panel-tabs::-webkit-scrollbar,
+  .cart-side::-webkit-scrollbar,
+  .mobile-menu-panel::-webkit-scrollbar,
+  .modal::-webkit-scrollbar{display:none;width:0;height:0}
+  /* Status / form polish */
+  .form-field label{
+    font-size:12px;font-weight:600;color:var(--muted);
+    letter-spacing:.02em;text-transform:none;
+  }
+  .search-bar input{
+    border-radius:14px;
+    border:1px solid #e2e8f0;
+    background:#fff;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+  }
+  /* Prevent accidental double-tap zoom on controls */
+  .btn,.panel-tab,.qty-control button,.mobile-menu-btn{
+    touch-action:manipulation;
+  }
+}
+/* Desktop keeps normal text selection for power users */
+@media (min-width:769px){
+  body{
+    -webkit-user-select:text;
+    user-select:text;
+    -webkit-touch-callout:default;
+  }
+}
 
 /* Modal / drawer close (X) */
 .modal{position:relative}
@@ -3653,6 +3793,44 @@ window.__calcOpen = false;
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
   window.addEventListener("load", bind);
   setTimeout(bind, 300);
+})();
+</script>
+
+
+<script>
+/* Native shell behavior — no web long-press selection / context menus */
+(function(){
+  function isEditable(el){
+    if(!el) return false;
+    var t = (el.tagName || "").toLowerCase();
+    if(t === "input" || t === "textarea" || t === "select") return true;
+    if(el.isContentEditable) return true;
+    if(el.closest && el.closest("input,textarea,select,[contenteditable=true],.allow-select")) return true;
+    return false;
+  }
+  document.addEventListener("contextmenu", function(e){
+    if(isEditable(e.target)) return;
+    e.preventDefault();
+  }, { capture: true });
+  // Stop iOS callout / selection drag on non-fields
+  document.addEventListener("selectstart", function(e){
+    if(isEditable(e.target)) return;
+    e.preventDefault();
+  }, { capture: true });
+  // Reduce pull-to-refresh / overscroll bounce where supported
+  try{
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overscrollBehavior = "none";
+  }catch(e){}
+  // Capacitor: optional status bar style if plugin present
+  try{
+    var Cap = window.Capacitor;
+    var SB = Cap && Cap.Plugins && Cap.Plugins.StatusBar;
+    if(SB && SB.setStyle){
+      SB.setStyle({ style: "LIGHT" });
+      if(SB.setBackgroundColor) SB.setBackgroundColor({ color: "#0b3d91" });
+    }
+  }catch(e){}
 })();
 </script>
 
