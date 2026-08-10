@@ -135,8 +135,6 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .m-only{display:none}
 .d-only{display:initial}
 .mobile-menu-btn,.mobile-menu,.m-cart-bar,.m-cart-sheet,.m-cart-backdrop{display:none}
-#btnScanPrimary{display:none}
-#btnShowMoreProducts{display:none}
 
 @media (max-width:768px){
   .m-only{display:flex}
@@ -280,92 +278,28 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   }
   .text-row{
     background:#fff;border:1px solid var(--line);border-radius:12px;
-    margin-bottom:8px;padding:12px;gap:10px;align-items:center;
-    cursor:pointer;-webkit-tap-highlight-color:transparent;
-    min-height:56px;
+    margin-bottom:8px;padding:12px;gap:10px;align-items:flex-start
   }
-  .text-row:active{background:var(--tint)}
   .text-row .name{font-size:14.5px}
   .text-row .meta{font-size:12px}
   .text-row .price{font-size:16px;font-weight:700}
-  .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px;pointer-events:none}
-  /* Out of stock — greyed; still tappable with confirm */
-  .text-row.oos{
-    opacity:.55;background:#f8fafc;filter:grayscale(.35);
-  }
-  .text-row.oos .price{color:var(--muted)}
-  .text-row.oos .btn{background:#94a3b8;border-color:#94a3b8}
+  .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px}
 
   .photo-grid{
     max-height:none!important;
     overflow:visible!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important
   }
-  .photo-tile{min-height:120px;position:relative}
-  .photo-tile .stock-badge{
-    position:absolute;top:8px;right:8px;z-index:2;
-    background:rgba(15,23,42,.78);color:#fff;font-size:10px;font-weight:700;
-    padding:3px 7px;border-radius:999px;line-height:1.2;pointer-events:none;
-  }
-  .photo-tile .stock-badge.low{background:#b91c1c}
-  .photo-tile .stock-badge.ok{background:#15803d}
-  .photo-tile.oos{
-    opacity:.5;filter:grayscale(.4);
-  }
-  .photo-tile.oos .stock-badge{background:#64748b}
+  .photo-tile{min-height:120px}
 
   .hint{display:none}
   #stockSummary{margin-top:8px}
   #stockSummary > div{border-radius:12px}
 
-  /* Sticky tabs + search under header */
-  .m-sticky-tools{
-    position:sticky;top:44px;z-index:40;
-    background:var(--bg);padding:6px 0 8px;
-    margin:0 -12px;padding-left:12px;padding-right:12px;
-    border-bottom:1px solid var(--line);
-  }
-  .m-sticky-tools .panel-tabs{margin-bottom:8px}
-  .m-sticky-tools .search-bar{margin-bottom:0}
-  /* Scan primary on mobile */
-  .search-bar #scanField{
-    max-width:none!important;flex:0 0 auto;min-width:0;
-    order:3;display:none!important; /* hidden; use Scan button */
-  }
-  .search-bar #btnScanPrimary{
-    display:inline-flex!important;align-items:center;justify-content:center;
-    min-height:46px;padding:10px 14px;border-radius:12px;
-    background:var(--brand);color:#fff;border:0;font-weight:700;font-size:14px;
-    flex:0 0 auto;white-space:nowrap;
-  }
-  .search-bar #productSearch{order:1;flex:1}
-  .search-bar #categoryFilter{order:2}
-  /* Dismissible low banner */
-  .low-banner{
-    display:none;position:relative;padding-right:36px;
-  }
-  .low-banner .lb-dismiss{
-    position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    border:0;background:transparent;color:inherit;font-size:18px;
-    width:32px;height:32px;border-radius:8px;cursor:pointer;line-height:1;
-    opacity:.8;
-  }
-  /* Cart count on menu button */
-  .mobile-menu-btn .m-cart-badge{
-    position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;
-    padding:0 5px;border-radius:999px;background:#b91c1c;color:#fff;
-    font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;
-    line-height:1;border:2px solid #fff;pointer-events:none;
-  }
-  .mobile-menu-btn .m-cart-badge.show{display:inline-flex}
-  #btnShowMoreProducts{
-    display:block;width:100%;margin:10px 0 4px;min-height:44px;
-  }
-
   /* Low banners compact */
   .low-banner{font-size:12.5px;padding:8px 10px;border-radius:10px;margin-bottom:8px}
 
-  /* Sticky cart bar */
+  /* Sticky cart bar — brand blue extends into system nav inset */
   .m-cart-bar{
     display:flex!important;position:fixed;left:0;right:0;bottom:0;z-index:100;
     align-items:center;gap:10px;
@@ -373,6 +307,11 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     background:#0b3d91;color:#fff;
     box-shadow:0 -6px 24px rgba(11,61,145,.25);
     cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  #orbitNavFill,.orbit-nav-fill{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+    height:max(env(safe-area-inset-bottom,0px),24px)!important;
+    background:#0b3d91!important;z-index:99!important;pointer-events:none!important;
   }
   .m-cart-bar .mcb-info{flex:1;min-width:0}
   .m-cart-bar .mcb-label{font-size:12px;opacity:.9;font-weight:500}
@@ -738,7 +677,6 @@ input,select,textarea{
     <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" title="Menu"
       onclick="window.__orbitToggleMobileMenu&&window.__orbitToggleMobileMenu();return false;">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <span class="m-cart-badge" id="mMenuCartBadge" aria-hidden="true">0</span>
     </button>
   </div>
 </header>
@@ -765,9 +703,8 @@ input,select,textarea{
 
 <div class="layout">
 <section class="sales-side">
-  <div class="low-banner" id="lowBanner"><span id="lowBannerText"></span><button type="button" class="lb-dismiss" id="lowBannerDismiss" aria-label="Dismiss">×</button></div>
+  <div class="low-banner" id="lowBanner"></div>
   <div class="low-banner" id="dueBanner" style="background:#fef3c7;color:var(--warn);display:none"></div>
-  <div class="m-sticky-tools" id="mStickyTools">
   <div class="panel-tabs">
     <button class="panel-tab active" data-panel="textPanel" type="button">Products</button>
     <button class="panel-tab" data-panel="photoPanel" type="button">Photos</button>
@@ -779,12 +716,10 @@ input,select,textarea{
     <select id="categoryFilter" title="Filter by category" style="max-width:140px;min-width:110px">
       <option value="">All categories</option>
     </select>
-    <button type="button" class="btn btn-primary" id="btnScanPrimary" title="Scan barcode">Scan</button>
     <input id="scanField" placeholder="Barcode" style="max-width:120px" autocomplete="off">
   </div>
-  </div>
-  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty">Type to search products by name, SKU or barcode</div><button type="button" class="btn btn-ghost btn-block" id="btnShowMoreProducts" style="display:none">Show more products</button></div>
-  <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div><button type="button" class="btn btn-ghost btn-block" id="btnShowMorePhotos" style="display:none;margin-top:8px">Show more</button></div>
+  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty">Type to search products by name, SKU or barcode</div></div>
+  <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div></div>
   <div class="sales-panel" id="heldPanel"><div class="toolbar"><button class="btn btn-primary btn-sm" id="btnHold" type="button">Hold cart</button></div><div id="heldList"></div></div>
   <div class="sales-panel" id="recentPanel"><div id="recentList"></div></div>
   <div id="stockSummary" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 6px">
@@ -1767,24 +1702,6 @@ function refreshCategoryFilterOptions(){
   el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
   if(prev && cats.includes(prev)) el.value=prev;
 }
-/* Mobile product list page size (speed) — desktop still shows full filtered set */
-let productListPageSize = 80;
-let productListShown = 80;
-let lastMatchedProducts = [];
-function isMobilePos(){
-  try{
-    if(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return true;
-  }catch(e){}
-  return window.matchMedia && window.matchMedia("(max-width:768px)").matches;
-}
-function productIsOos(p){
-  if(!p) return false;
-  if(isWeightUnit(p.unit) || p.sell_by_weight) return false; // weight sold by amount
-  const stock = Number(p.stock);
-  if(!isFinite(stock)) return false;
-  // Variants: parent stock may be aggregate; still treat 0 as OOS for discrete
-  return stock <= 0;
-}
 function renderProductLists(filter){
   const term=(filter!=null?filter:(document.getElementById("productSearch")||{}).value||"").toLowerCase().trim();
   const cat=getSelectedCategory().toLowerCase();
@@ -1795,109 +1712,43 @@ function renderProductLists(filter){
   if(term){
     matched=matched.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term));
   }
+  // Hotkeys / shared: matched results when searching, else full list
   visibleProducts=matched;
-  lastMatchedProducts=matched;
   const defL=parseInt(branding.default_low_stock_limit)||5;
-  const mobile=isMobilePos();
-  const limit = mobile ? productListShown : matched.length;
   // TEXT POS: show after search OR when a category is selected
   const textProducts=(term||cat)?matched:[];
-  const textSlice = mobile ? textProducts.slice(0, limit) : textProducts;
-  document.getElementById("textList").innerHTML=textSlice.map((p,idx)=>{
+  document.getElementById("textList").innerHTML=textProducts.map((p,idx)=>{
     const low=(p.stock||0)<=(p.low_stock_limit!=null?p.low_stock_limit:defL);
-    const oos=productIsOos(p);
     const hot=idx<9?`<span class="kbd">${idx+1}</span> `:"";
     const vCount=p.variant_count||(variantsByProduct[p.id]||[]).length;
     const tags=[];
     if(vCount) tags.push(`${vCount} variant${vCount>1?"s":""}`);
     if(isWeightUnit(p.unit)||p.sell_by_weight) tags.push("by "+(p.unit||"wt"));
-    if(oos) tags.push("out of stock");
     const tagStr=tags.length?` · ${tags.join(" · ")}`:"";
-    return `<div class="text-row${oos?" oos":""}" data-pid="${p.id}" role="button" tabindex="0">
-      <div><div class="name">${hot}${esc(p.name)}</div>
-      <div class="meta">Stock <span class="${low||oos?"pill low":""}">${p.stock??0}</span> · Tax ${taxFor(p)}%${tagStr}</div></div>
+    return `<div class="text-row"><div><div class="name">${hot}${esc(p.name)}</div>
+      <div class="meta">Stock <span class="${low?"pill low":""}">${p.stock??0}</span> · Tax ${taxFor(p)}%${tagStr}</div></div>
       <div style="display:flex;align-items:center"><span class="price">${priceFor(p).toFixed(2)}${isWeightUnit(p.unit)?"/"+esc(p.unit||"u"):""}</span>
-      <button class="btn btn-primary btn-sm" type="button" data-add-pid="${p.id}">${oos?"Sell":"Add"}</button></div></div>`;
+      <button class="btn btn-primary btn-sm" type="button" onclick="addToCart(${p.id})">Add</button></div></div>`;
   }).join("");
   const textEmpty=document.getElementById("textEmpty");
   if(textEmpty){
     textEmpty.style.display=textProducts.length?"none":"block";
     textEmpty.textContent=term?"No products match your search":"Type to search products by name, SKU or barcode";
   }
-  const btnMoreT=document.getElementById("btnShowMoreProducts");
-  if(btnMoreT){
-    const needMore = mobile && textProducts.length > textSlice.length;
-    btnMoreT.style.display = needMore ? "block" : "none";
-    btnMoreT.textContent = "Show more (" + (textProducts.length - textSlice.length) + " left)";
-  }
-  // PHOTO POS
-  const photoSlice = mobile ? matched.slice(0, limit) : matched;
-  document.getElementById("photoGrid").innerHTML=photoSlice.map(p=>{
-    const oos=productIsOos(p);
-    const stock=Number(p.stock)||0;
-    const low=(stock)<=(p.low_stock_limit!=null?p.low_stock_limit:defL);
-    const badgeCls = oos ? "low" : (low ? "low" : "ok");
-    const badgeLabel = oos ? "0 left" : (stock + " left");
+  // PHOTO POS: always show full catalog (or filtered if user typed search)
+  document.getElementById("photoGrid").innerHTML=matched.map(p=>{
     const sw=p.photo_path?`<div class="swatch"><img src="${esc(p.photo_path)}" alt=""></div>`:`<div class="swatch">${esc((p.name||"P")[0])}</div>`;
-    return `<button class="photo-tile${oos?" oos":""}" type="button" data-pid="${p.id}">
-      <span class="stock-badge ${badgeCls}">${esc(badgeLabel)}</span>
-      ${sw}<div class="tile-name" title="${esc(p.name)}">${esc(p.name)}</div>
-      <div class="tile-price">${priceFor(p).toFixed(2)}</div></button>`;
+    return `<button class="photo-tile" type="button" onclick="addToCart(${p.id})">${sw}<div class="tile-name" title="${esc(p.name)}">${esc(p.name)}</div><div class="tile-price">${priceFor(p).toFixed(2)}</div></button>`;
   }).join("");
   const photoEmpty=document.getElementById("photoEmpty");
   if(photoEmpty) photoEmpty.style.display=matched.length?"none":"block";
-  const btnMoreP=document.getElementById("btnShowMorePhotos");
-  if(btnMoreP){
-    const needMore = mobile && matched.length > photoSlice.length;
-    btnMoreP.style.display = needMore ? "block" : "none";
-    btnMoreP.textContent = "Show more (" + (matched.length - photoSlice.length) + " left)";
-  }
 }
-/* Debounced search (mobile + desktop) */
-let _searchDebounceTimer=null;
-document.getElementById("productSearch").addEventListener("input",e=>{
-  const v=e.target.value;
-  clearTimeout(_searchDebounceTimer);
-  _searchDebounceTimer=setTimeout(()=>{
-    productListShown = productListPageSize;
-    renderProductLists(v);
-  }, 180);
-});
-document.getElementById("categoryFilter")?.addEventListener("change",()=>{
-  productListShown = productListPageSize;
-  renderProductLists(document.getElementById("productSearch").value);
-});
-document.getElementById("btnShowMoreProducts")?.addEventListener("click",()=>{
-  productListShown += productListPageSize;
-  renderProductLists(document.getElementById("productSearch").value);
-});
-document.getElementById("btnShowMorePhotos")?.addEventListener("click",()=>{
-  productListShown += productListPageSize;
-  renderProductLists(document.getElementById("productSearch").value);
-});
-/* Whole-row / tile taps (event delegation) */
-document.getElementById("textList")?.addEventListener("click",e=>{
-  const row=e.target.closest(".text-row[data-pid]");
-  if(!row) return;
-  const pid=parseInt(row.getAttribute("data-pid"),10);
-  if(pid) addToCart(pid);
-});
-document.getElementById("textList")?.addEventListener("keydown",e=>{
-  if(e.key!=="Enter" && e.key!==" ") return;
-  const row=e.target.closest(".text-row[data-pid]");
-  if(!row) return;
-  e.preventDefault();
-  const pid=parseInt(row.getAttribute("data-pid"),10);
-  if(pid) addToCart(pid);
-});
-document.getElementById("photoGrid")?.addEventListener("click",e=>{
-  const tile=e.target.closest(".photo-tile[data-pid]");
-  if(!tile) return;
-  const pid=parseInt(tile.getAttribute("data-pid"),10);
-  if(pid) addToCart(pid);
-});
-function processScanCode(code){
-  code=String(code||"").trim(); if(!code)return;
+document.getElementById("productSearch").addEventListener("input",e=>renderProductLists(e.target.value));
+document.getElementById("categoryFilter")?.addEventListener("change",()=>renderProductLists(document.getElementById("productSearch").value));
+document.getElementById("scanField").addEventListener("keydown",e=>{
+  if(e.key!=="Enter")return; e.preventDefault();
+  const code=e.target.value.trim(); e.target.value=""; if(!code)return;
+  // Prefer variant barcode match, then product
   const v=allVariants.find(x=>(x.barcode&&String(x.barcode)===code)||(x.sku&&String(x.sku)===code));
   if(v){
     const parent=allProducts.find(p=>p.id===v.product_id);
@@ -1911,20 +1762,6 @@ function processScanCode(code){
   }
   const p=allProducts.find(x=>(x.barcode&&String(x.barcode)===code)||(x.sku&&String(x.sku)===code)||String(x.id)===code);
   if(p){ addToCart(p.id); } else toast("Not found");
-}
-document.getElementById("scanField").addEventListener("keydown",e=>{
-  if(e.key!=="Enter")return; e.preventDefault();
-  const code=e.target.value.trim(); e.target.value="";
-  processScanCode(code);
-});
-document.getElementById("btnScanPrimary")?.addEventListener("click",()=>{
-  const field=document.getElementById("scanField");
-  if(!field) return;
-  // On mobile: prompt then process (camera scanners often paste into focused field)
-  const code=prompt("Scan or type barcode / SKU");
-  if(code==null) return;
-  processScanCode(code);
-  try{ if(window.__orbitHaptic) window.__orbitHaptic("light"); }catch(e){}
 });
 
 function applyClients(list){
@@ -2276,13 +2113,6 @@ document.getElementById("weightConfirmBtn").addEventListener("click", ()=>{
 
 function addToCart(productId){
   const p=allProducts.find(x=>x.id===productId); if(!p)return;
-  // Out-of-stock: confirm override (mobile + desktop) — stock still comes from IndexedDB via pos-sync
-  if(productIsOos(p) && !(variantsByProduct[p.id]||[]).length && !p.has_variants){
-    if(!confirm(`"${p.name}" is out of stock (0 on hand).\n\nSell anyway? Stock will not go further negative.`)){
-      try{ if(window.__orbitHaptic) window.__orbitHaptic("error"); else if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
-      return;
-    }
-  }
   const variants=variantsByProduct[p.id]||[];
   // 1) Product has variants → always show picker
   if(variants.length||p.has_variants){
@@ -2495,8 +2325,6 @@ async function finalizeSale(payload, doPrint){
   document.getElementById("payStatus").value="paid"; document.getElementById("cashTendered").value=""; document.getElementById("partialAmount").value=0;
   renderCart(); runPosSync(true);
   updateWhatsAppBtn();
-  try{ if(window.__orbitHaptic) window.__orbitHaptic("success"); else if(navigator.vibrate) navigator.vibrate([12,40,12]); }catch(e){}
-  try{ if(typeof window.__orbitUpdateWakeLock==="function") window.__orbitUpdateWakeLock(); }catch(e){}
   if(doPrint) printLast(); else openModal("exportModal");
   return data;
 }
@@ -2895,23 +2723,8 @@ async function runPosSync(force){
     document.getElementById("heldCount").textContent=d.heldCount?`(${d.heldCount})`:"";
     // NO sales amount on billing header (user request)
     const low=d.lowStock||[]; const banner=document.getElementById("lowBanner");
-    const lowText=document.getElementById("lowBannerText");
-    if(low.length && !window.__orbitLowBannerDismissed){
-      banner.style.display="block";
-      if(lowText) lowText.textContent="Low stock: "+low.slice(0,4).map(p=>p.name).join(", ");
-      else banner.textContent="Low stock: "+low.slice(0,4).map(p=>p.name).join(", ");
-      // Auto-collapse after 3s on mobile only
-      if(isMobilePos()){
-        clearTimeout(window.__orbitLowBannerTimer);
-        window.__orbitLowBannerTimer=setTimeout(()=>{
-          if(banner) banner.style.display="none";
-        }, 3000);
-      }
-    } else if(banner){
-      banner.style.display="none";
-    }
+    if(low.length){ banner.style.display="block"; banner.textContent="Low stock: "+low.slice(0,4).map(p=>p.name).join(", "); } else banner.style.display="none";
     refreshShiftPill(); renderProductLists(document.getElementById("productSearch").value);
-    try{ if(typeof window.__orbitUpdateWakeLock==="function") window.__orbitUpdateWakeLock(); }catch(e){}
     if(document.getElementById("recentPanel").classList.contains("active")) renderRecentList();
     pill.textContent=changed?"Updated":"Live";
   }catch(e){ pill.textContent="Offline"; }
@@ -3588,17 +3401,16 @@ window.__calcOpen = false;
     }catch(e){}
     try{ if(typeof renderCart === "function") renderCart(); }catch(e){}
     try{ if(window.__orbitShowCartPanel) window.__orbitShowCartPanel("selected"); }catch(e){}
-    try{ if(window.__orbitUpdateWakeLock) window.__orbitUpdateWakeLock(); }catch(e){}
   }
   function closeCart(){
     document.body.classList.remove("m-cart-open");
     if(!$("mobileMenu") || !$("mobileMenu").classList.contains("open"))
       document.body.style.overflow = "";
-    try{ if(window.__orbitUpdateWakeLock) window.__orbitUpdateWakeLock(); }catch(e){}
   }
 
   function refreshMobileCartBar(){
     var countEl = $("mCartCount"), totalEl = $("mCartTotal");
+    if(!countEl && !totalEl) return;
     var n = 0;
     try{
       if(typeof cart !== "undefined" && Array.isArray(cart)){
@@ -3618,19 +3430,6 @@ window.__calcOpen = false;
       }
     }catch(e){}
     if(totalEl) totalEl.textContent = totalText;
-    // Badge on ☰ menu button
-    var badge = $("mMenuCartBadge");
-    if(badge){
-      var lines = 0;
-      try{ if(typeof cart !== "undefined" && Array.isArray(cart)) lines = cart.length; }catch(e){}
-      if(lines > 0){
-        badge.textContent = lines > 99 ? "99+" : String(lines);
-        badge.classList.add("show");
-      } else {
-        badge.classList.remove("show");
-      }
-    }
-    try{ if(window.__orbitUpdateWakeLock) window.__orbitUpdateWakeLock(); }catch(e){}
   }
 
   window.__orbitRefreshMobileCartBar = refreshMobileCartBar;
@@ -4243,45 +4042,6 @@ window.__calcOpen = false;
 })();
 </script>
 
-<script>
-/* Mobile polish: low-banner dismiss, smart wake lock (cart or open shift) */
-(function(){
-  document.getElementById("lowBannerDismiss")?.addEventListener("click", function(e){
-    e.preventDefault(); e.stopPropagation();
-    window.__orbitLowBannerDismissed = true;
-    clearTimeout(window.__orbitLowBannerTimer);
-    var b = document.getElementById("lowBanner");
-    if(b) b.style.display = "none";
-  });
-
-  var wakeSentinel = null;
-  async function updateWakeLock(){
-    try{
-      var want = false;
-      try{
-        if(document.body && document.body.classList.contains("m-cart-open")) want = true;
-        if(typeof openShift !== "undefined" && openShift && openShift.status === "open") want = true;
-        if(typeof cart !== "undefined" && Array.isArray(cart) && cart.length > 0 && window.matchMedia && window.matchMedia("(max-width:768px)").matches) want = true;
-      }catch(e){}
-      if(!want){
-        if(wakeSentinel){ try{ await wakeSentinel.release(); }catch(e){} wakeSentinel = null; }
-        if(window.__orbitWake){ try{ await window.__orbitWake.release(); }catch(e){} window.__orbitWake = null; }
-        return;
-      }
-      if(!("wakeLock" in navigator)) return;
-      if(wakeSentinel) return;
-      wakeSentinel = await navigator.wakeLock.request("screen");
-      window.__orbitWake = wakeSentinel;
-      wakeSentinel.addEventListener("release", function(){ wakeSentinel = null; });
-    }catch(e){}
-  }
-  window.__orbitUpdateWakeLock = updateWakeLock;
-  document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "visible") updateWakeLock();
-  });
-  setTimeout(updateWakeLock, 800);
-})();
-</script>
 <script src="/orbit-native.js"></script>
 </body>
 </html>

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d91">
 <title>Sign in · OrbitBills</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +37,46 @@
   .back-link a{color:var(--blue-deep);font-weight:600;}
   .hint-box{margin-top:20px;padding:12px 14px;background:var(--blue-tint-2);border:1px dashed var(--border);border-radius:10px;font-size:12px;color:var(--slate);line-height:1.55;}
   .hint-box strong{color:var(--ink);}
+
+  /* ---- Branded loading screen (after sign-in) ---- */
+  #orbitBoot{
+    display:none;position:fixed;inset:0;z-index:999999;
+    background:linear-gradient(165deg,#0b3d91 0%,#0a3278 45%,#092a63 100%);
+    color:#fff;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(24px + env(safe-area-inset-top,0px));
+  }
+  #orbitBoot.show{display:flex;}
+  #orbitBoot .boot-logo-wrap{
+    width:88px;height:88px;border-radius:22px;background:rgba(255,255,255,.12);
+    display:flex;align-items:center;justify-content:center;margin-bottom:22px;
+    box-shadow:0 12px 40px rgba(0,0,0,.22);
+    animation:bootPulse 1.4s ease-in-out infinite;
+  }
+  #orbitBoot .boot-logo-wrap img{width:56px;height:56px;object-fit:contain;border-radius:12px;}
+  #orbitBoot .boot-title{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.02em;
+    margin-bottom:6px;
+  }
+  #orbitBoot .boot-title span{opacity:.85;font-weight:600}
+  #orbitBoot .boot-sub{font-size:14px;opacity:.8;margin-bottom:28px;text-align:center;max-width:260px}
+  #orbitBoot .boot-bar{
+    width:min(220px,70vw);height:4px;border-radius:999px;background:rgba(255,255,255,.18);
+    overflow:hidden;
+  }
+  #orbitBoot .boot-bar > i{
+    display:block;height:100%;width:40%;border-radius:999px;background:#fff;
+    animation:bootSlide 1.1s ease-in-out infinite;
+  }
+  #orbitBoot .boot-foot{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));font-size:12px;opacity:.65;font-weight:600;letter-spacing:.04em}
+  @keyframes bootPulse{
+    0%,100%{transform:scale(1);box-shadow:0 12px 40px rgba(0,0,0,.22)}
+    50%{transform:scale(1.05);box-shadow:0 16px 48px rgba(0,0,0,.28)}
+  }
+  @keyframes bootSlide{
+    0%{transform:translateX(-120%)}
+    100%{transform:translateX(320%)}
+  }
 </style>
 </head>
 <body>
@@ -56,6 +97,17 @@
     <div class="form-msg" id="loginMsg"></div>
     <div class="back-link"><a href="index.html">Back to home</a></div>
   </div>
+
+  <div id="orbitBoot" aria-live="polite" aria-busy="true">
+    <div class="boot-logo-wrap">
+      <img src="logo.png" alt="TechSerenia" onerror="this.parentElement.innerHTML='<span style=font-size:32px;font-weight:800>TS</span>'">
+    </div>
+    <div class="boot-title">Orbit<span>Bills</span></div>
+    <div class="boot-sub" id="bootSub">Loading your shop data…</div>
+    <div class="boot-bar"><i></i></div>
+    <div class="boot-foot">TECHSERENIA</div>
+  </div>
+
 <script src="Db.js"></script>
 <script>
   document.getElementById("togglePassword")?.addEventListener("click", function(){
@@ -70,6 +122,14 @@
       if(btn){ btn.textContent = "Show"; btn.setAttribute("aria-label","Show password"); btn.title = "Show password"; }
     }
   });
+
+  function showBoot(message){
+    var el = document.getElementById("orbitBoot");
+    var sub = document.getElementById("bootSub");
+    if(sub && message) sub.textContent = message;
+    if(el) el.classList.add("show");
+  }
+
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const msg = document.getElementById("loginMsg");
@@ -79,11 +139,40 @@
     const password = document.getElementById("loginPassword").value;
     try {
       const data = await tsLogin(email, password);
-      if (!data.ok) { msg.textContent = data.error || "Could not sign in."; msg.className = "form-msg error"; submitBtn.disabled = false; return; }
-      msg.textContent = "Signed in. Redirecting…"; msg.className = "form-msg success";
-      window.location.href = data.redirect;
+      if (!data.ok) {
+        msg.textContent = data.error || "Could not sign in.";
+        msg.className = "form-msg error";
+        submitBtn.disabled = false;
+        return;
+      }
+      // Branded load screen ~2s while IndexedDB seeds / warms
+      showBoot("Loading products, clients & settings…");
+      const redirect = data.redirect || "/billing.html";
+      const started = Date.now();
+      try {
+        if (typeof tsSeedDefaults === "function") await tsSeedDefaults();
+        // Warm common stores so the next screen opens faster
+        if (typeof tsGetAllSafe === "function") {
+          await Promise.all([
+            tsGetAllSafe("products"),
+            tsGetAllSafe("clients"),
+            tsGetAllSafe("settings"),
+            tsGetAllSafe("tax_slabs"),
+          ]);
+        } else if (typeof tsLocalApi === "function") {
+          await tsLocalApi("/pos-sync").catch(function(){});
+        }
+      } catch (warmErr) { /* still continue */ }
+      const elapsed = Date.now() - started;
+      const wait = Math.max(0, 2000 - elapsed);
+      await new Promise(function(r){ setTimeout(r, wait); });
+      window.location.href = redirect;
     } catch (err) {
-      msg.textContent = "Something went wrong. Please try again."; msg.className = "form-msg error"; submitBtn.disabled = false;
+      msg.textContent = "Something went wrong. Please try again.";
+      msg.className = "form-msg error";
+      submitBtn.disabled = false;
+      var boot = document.getElementById("orbitBoot");
+      if(boot) boot.classList.remove("show");
     }
   });
   (async function () { await tsSeedDefaults().catch(() => {}); })();
