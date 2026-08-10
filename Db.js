@@ -160,30 +160,8 @@ async function tsVerifyUserLocally(email, password) {
 }
 async function tsSeedDefaultAdmin() {
   for (const user of TS_DEFAULT_USERS) {
-    const email = (user.email || "").trim().toLowerCase();
-    const existing = await tsGetUserByEmail(email);
-    if (!existing) {
-      await tsPutUser({ name: user.name, email: email, role: user.role, password: user.password, createdAt: "seed" });
-      continue;
-    }
-    // Repair missing / broken password hashes for built-in accounts
-    let needsRepair = !existing.passwordHash || !existing.salt;
-    if (!needsRepair) {
-      try {
-        const check = await tsVerifyUserLocally(email, user.password);
-        if (!check) needsRepair = true;
-      } catch (e) { needsRepair = true; }
-    }
-    if (needsRepair) {
-      await tsPutUser({
-        id: existing.id,
-        name: user.name || existing.name,
-        email: email,
-        role: user.role || existing.role,
-        password: user.password,
-        createdAt: existing.createdAt || "seed"
-      });
-    }
+    if (await tsGetUserByEmail(user.email)) continue;
+    await tsPutUser({ name: user.name, email: user.email, role: user.role, password: user.password, createdAt: "seed" });
   }
 }
 
@@ -262,22 +240,8 @@ function tsGetSession() {
 }
 function tsClearSession() { localStorage.removeItem("ts_session"); }
 async function tsLogin(email, password) {
-  email = String(email || "").trim().toLowerCase();
-  password = String(password || "");
-  // Always ensure built-in accounts exist with known passwords (repairs mobile / partial seeds)
-  try { await tsSeedDefaultAdmin(); } catch (e) { console.warn("seed admin", e); }
-  try { await tsSeedDefaults(); } catch (e) { console.warn("seed defaults", e); }
-  let user = await tsVerifyUserLocally(email, password);
-  // One more repair pass if this is a known default email
-  if (!user) {
-    const def = (TS_DEFAULT_USERS || []).find(u => (u.email || "").toLowerCase() === email);
-    if (def && password === def.password) {
-      try {
-        await tsPutUser({ name: def.name, email: def.email, role: def.role, password: def.password, createdAt: "seed-repair" });
-        user = await tsVerifyUserLocally(email, password);
-      } catch (e) { console.warn("login repair", e); }
-    }
-  }
+  await tsSeedDefaults();
+  const user = await tsVerifyUserLocally(email, password);
   if (!user) return { ok: false, error: "Incorrect email or password." };
   const session = tsSaveSession(user);
   // Write session log into IndexedDB (local-first session history)

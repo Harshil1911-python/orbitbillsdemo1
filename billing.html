@@ -271,8 +271,11 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
   /* Product list — card style, full height scroll */
   .text-list{
-    max-height:none!important;
-    border:0;box-shadow:none;background:transparent;border-radius:0
+    max-height:calc(100dvh - 240px - env(safe-area-inset-bottom,0px))!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    border:0;box-shadow:none;background:transparent;border-radius:0;
+    overscroll-behavior:contain;
   }
   .text-row{
     background:#fff;border:1px solid var(--line);border-radius:12px;
@@ -283,7 +286,13 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   .text-row .price{font-size:16px;font-weight:700}
   .text-row .btn{min-height:40px;min-width:64px;padding:8px 14px}
 
-  .photo-grid{max-height:none!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .photo-grid{
+    max-height:calc(100dvh - 240px - env(safe-area-inset-bottom,0px))!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important
+  }
   .photo-tile{min-height:120px}
 
   .hint{display:none}
@@ -403,6 +412,35 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 }
 
 
+
+
+/* POS list scroll — scroll only when content overflows */
+@media (max-width:768px){
+  html, body{
+    height:auto!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+  }
+  body.m-cart-open, body.m-menu-open{
+    overflow:hidden!important;
+  }
+  .sales-side{
+    overflow:visible!important;
+  }
+  .sales-panel{
+    min-height:0;
+  }
+  .search-bar{
+    display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  }
+  .search-bar input, .search-bar select{
+    min-height:44px;font-size:16px;
+  }
+  #categoryFilter{
+    flex:0 1 140px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;
+  }
+}
 
 /* ========== Native app shell (Capacitor / phone) ========== */
 html{
@@ -638,7 +676,10 @@ input,select,textarea{
   </div>
   <div class="search-bar">
     <input id="productSearch" placeholder="Search products" autocomplete="off">
-    <input id="scanField" placeholder="Barcode" style="max-width:140px" autocomplete="off">
+    <select id="categoryFilter" title="Filter by category" style="max-width:140px;min-width:110px">
+      <option value="">All categories</option>
+    </select>
+    <input id="scanField" placeholder="Barcode" style="max-width:120px" autocomplete="off">
   </div>
   <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty">Type to search products by name, SKU or barcode</div></div>
   <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div></div>
@@ -715,7 +756,7 @@ input,select,textarea{
       <select id="payMethod"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="other">Other</option></select>
     </div>
   </div>
-  <div class="form-field" id="partialWrap" style="display:none"><label>Paid now</label><input type="number" id="partialAmount" min="0" step="0.01" value="0"></div>
+  <div class="form-field" id="partialWrap" style="display:none"><label>Paid now</label><input type="number" id="partialAmount" min="0" step="0.01" value="0"><div class="credit-hint" id="partialRemainingHint" style="color:var(--warn)"></div></div>
   <div class="cash-box" id="cashBox" style="display:none">
     <div class="form-field" style="margin:0"><label>Cash tendered</label><input type="number" id="cashTendered" min="0" step="0.01"></div>
     <div class="totals-row" style="margin-top:6px"><span>Change</span><span id="changeDue">0.00</span></div>
@@ -1612,14 +1653,33 @@ document.querySelectorAll(".panel-tab").forEach(tab=>{
   });
 });
 
+function getSelectedCategory(){
+  const el=document.getElementById("categoryFilter");
+  return el ? String(el.value||"").trim() : "";
+}
+function refreshCategoryFilterOptions(){
+  const el=document.getElementById("categoryFilter");
+  if(!el) return;
+  const prev=el.value;
+  const cats=Array.from(new Set((allProducts||[]).map(p=>String(p.category||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+  el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  if(prev && cats.includes(prev)) el.value=prev;
+}
 function renderProductLists(filter){
-  const term=(filter||"").toLowerCase().trim();
-  const matched=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):allProducts.slice();
+  const term=(filter!=null?filter:(document.getElementById("productSearch")||{}).value||"").toLowerCase().trim();
+  const cat=getSelectedCategory().toLowerCase();
+  let matched=(allProducts||[]).slice();
+  if(cat){
+    matched=matched.filter(p=>String(p.category||"").trim().toLowerCase()===cat);
+  }
+  if(term){
+    matched=matched.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term));
+  }
   // Hotkeys / shared: matched results when searching, else full list
   visibleProducts=matched;
   const defL=parseInt(branding.default_low_stock_limit)||5;
-  // TEXT POS: only show products after the user types a search (Photo POS unchanged below)
-  const textProducts=term?matched:[];
+  // TEXT POS: show after search OR when a category is selected
+  const textProducts=(term||cat)?matched:[];
   document.getElementById("textList").innerHTML=textProducts.map((p,idx)=>{
     const low=(p.stock||0)<=(p.low_stock_limit!=null?p.low_stock_limit:defL);
     const hot=idx<9?`<span class="kbd">${idx+1}</span> `:"";
@@ -1647,6 +1707,7 @@ function renderProductLists(filter){
   if(photoEmpty) photoEmpty.style.display=matched.length?"none":"block";
 }
 document.getElementById("productSearch").addEventListener("input",e=>renderProductLists(e.target.value));
+document.getElementById("categoryFilter")?.addEventListener("change",()=>renderProductLists(document.getElementById("productSearch").value));
 document.getElementById("scanField").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return; e.preventDefault();
   const code=e.target.value.trim(); e.target.value=""; if(!code)return;
@@ -2112,7 +2173,21 @@ document.getElementById("cartToggle").addEventListener("click",()=>{
 ["discountInput","discountMode","creditInput","cashTendered"].forEach(id=>{
   const el=document.getElementById(id); el.addEventListener("input", updateTotals); el.addEventListener("change", updateTotals);
 });
-document.getElementById("payStatus").addEventListener("change",e=>{ document.getElementById("partialWrap").style.display=e.target.value==="partial"?"block":"none"; });
+document.getElementById("payStatus").addEventListener("change",e=>{ document.getElementById("partialWrap").style.display=e.target.value==="partial"?"block":"none"; updatePartialRemainingHint(); });
+document.getElementById("partialAmount")?.addEventListener("input", updatePartialRemainingHint);
+function updatePartialRemainingHint(){
+  const hint=document.getElementById("partialRemainingHint");
+  if(!hint) return;
+  const st=(document.getElementById("payStatus")||{}).value;
+  if(st!=="partial"){ hint.textContent=""; return; }
+  const t=calc();
+  let paid=parseFloat((document.getElementById("partialAmount")||{}).value)||0;
+  if(paid<0) paid=0;
+  if(paid>t.total) paid=t.total;
+  const rem=Math.max(0, t.total-paid);
+  hint.textContent = "Remaining (customer outstanding): "+money(rem);
+}
+
 document.getElementById("payMethod").addEventListener("change",e=>{ document.getElementById("cashBox").style.display=e.target.value==="cash"?"block":"none"; updateTotals(); });
 document.getElementById("clearCartBtn").addEventListener("click",()=>{ if(cart.length&&!confirm("Clear cart?"))return; cart=[]; couponDiscount=0; couponCode=""; document.getElementById("couponHint").textContent=""; document.getElementById("couponInput").value=""; renderCart(); });
 
@@ -2284,13 +2359,26 @@ function itemsTableHtml(inv){
 }
 function totalsHtml(inv){
   const accent=branding.accent_color||varBrand();
+  const total=Number(inv.total||0);
+  let paid=Number(inv.amountPaid!=null?inv.amountPaid:inv.amount_paid);
+  if(!Number.isFinite(paid)||paid<0) paid=0;
+  const st=String(inv.status||"").toLowerCase();
+  if(st==="paid" && paid<=0) paid=total;
+  const remaining=Math.max(0, total-paid);
+  const payLines = (st==="partial" || (paid>0 && remaining>0.001) || st==="unpaid")
+    ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #e2e8f0">
+         <div>Paid now <strong>${paid.toFixed(2)}</strong></div>
+         <div style="color:${remaining>0.001?"#b91c1c":"#15803d"}">Remaining <strong>${remaining.toFixed(2)}</strong></div>
+       </div>`
+    : `<div style="font-size:11px;color:#64748b;margin-top:4px">Paid in full · ${paid.toFixed(2)}</div>`;
   return `<div style="text-align:right;font-size:12px;line-height:1.5">
     <div>Subtotal ${Number(inv.subtotal||0).toFixed(2)}</div>
     <div>Discount −${Number(inv.discount||0).toFixed(2)}</div>
     <div>Tax ${Number(inv.taxAmount||0).toFixed(2)}</div>
     ${Number(inv.creditApplied||0)?`<div>Credit −${Number(inv.creditApplied).toFixed(2)}</div>`:""}
-    <div style="font-size:16px;font-weight:700;color:${accent};margin-top:4px">Total ${Number(inv.total||0).toFixed(2)}</div>
-    <div style="font-size:11px;color:#64748b">Status: ${esc(inv.status||"")} · Paid ${Number(inv.amountPaid||0).toFixed(2)}</div>
+    <div style="font-size:16px;font-weight:700;color:${accent};margin-top:4px">Total ${total.toFixed(2)}</div>
+    <div style="font-size:11px;color:#64748b">Status: ${esc(inv.status||"")}</div>
+    ${payLines}
   </div>`;
 }
 function varBrand(){ return branding.accent_color||"#0b3d91"; }
@@ -2312,7 +2400,13 @@ function blockContent(type, inv){
     case "invoice_meta": {
       const when = inv.createdAt || inv.created_at || "";
       const whenStr = when ? formatIndiaTime(when) : formatIndiaTime(new Date());
-      return `<div style="font-size:12px"><strong>${esc(inv.invoiceNumber||"")}</strong><br>${esc(whenStr)}<br>${esc(inv.status||"")}<br>Paid ${Number(inv.amountPaid||0).toFixed(2)}</div>`;
+      const total=Number(inv.total||0);
+      let paid=Number(inv.amountPaid!=null?inv.amountPaid:inv.amount_paid);
+      if(!Number.isFinite(paid)||paid<0) paid=0;
+      const st=String(inv.status||"").toLowerCase();
+      if(st==="paid" && paid<=0) paid=total;
+      const remaining=Math.max(0, total-paid);
+      return `<div style="font-size:12px"><strong>${esc(inv.invoiceNumber||"")}</strong><br>${esc(whenStr)}<br>${esc(inv.status||"")}<br>Paid now ${paid.toFixed(2)}<br>${remaining>0.001?(`Remaining ${remaining.toFixed(2)}`):"Paid in full"}</div>`;
     }
     case "bill_to": return `<div style="font-size:12px"><strong>Bill to</strong><br>${esc(inv.clientName||"Walk-in")}</div>`;
     case "items_table": return itemsTableHtml(inv);
@@ -2573,7 +2667,7 @@ async function runPosSync(force){
     const changed=syncFingerprint && d.fingerprint!==syncFingerprint;
     syncFingerprint=d.fingerprint;
     branding=d.branding||branding; if(d.layout) layout=d.layout; taxSlabs=d.taxSlabs||taxSlabs;
-    allProducts=d.products||allProducts; applyClients(d.clients||[]); recentInvoices=d.recentInvoices||[];
+    allProducts=d.products||allProducts; try{refreshCategoryFilterOptions();}catch(e){} applyClients(d.clients||[]); recentInvoices=d.recentInvoices||[];
     allVariants=d.variants||[];
     variantsByProduct=d.variantsByProduct||{};
     // Rebuild map if only flat list provided
@@ -2948,7 +3042,7 @@ function refreshStockSummary(){
 }
 // hook after product render
 const _rp = renderProductLists;
-renderProductLists = function(filter){ _rp(filter); refreshStockSummary(); };
+renderProductLists = function(filter){ try{ if(typeof refreshCategoryFilterOptions==="function" && document.getElementById("categoryFilter") && !document.getElementById("categoryFilter").dataset.filled){ refreshCategoryFilterOptions(); document.getElementById("categoryFilter").dataset.filled="1"; } }catch(e){} _rp(filter); refreshStockSummary(); };
 
 
 

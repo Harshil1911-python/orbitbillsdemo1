@@ -22,6 +22,10 @@
   .auth-card p.sub{font-size:14px;color:var(--slate);margin-bottom:24px;}
   .form-field{margin-bottom:18px;}
   .form-field label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .pw-wrap{position:relative;display:flex;align-items:center}
+  .pw-wrap input{padding-right:72px!important}
+  .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:#eaf1fc;color:var(--blue-deep);font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;cursor:pointer;font-family:inherit;min-height:36px}
+  .pw-eye:active{opacity:.85}
   .form-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--white);}
   .form-field input:focus{outline:2px solid var(--blue);outline-offset:1px;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;padding:12px 22px;border-radius:10px;border:1px solid transparent;cursor:pointer;background:var(--blue-deep);color:#fff;margin-top:6px;}
@@ -43,7 +47,10 @@
       <div class="form-field"><label for="loginEmail">Work email</label>
         <input type="email" id="loginEmail" name="email" placeholder="Enter your work email" required autocomplete="username"></div>
       <div class="form-field"><label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" name="password" placeholder="" required autocomplete="current-password"></div>
+        <div class="pw-wrap">
+          <input type="password" id="loginPassword" name="password" placeholder="" required autocomplete="current-password">
+          <button type="button" class="pw-eye" id="togglePassword" aria-label="Show password" title="Show password">Show</button>
+        </div></div>
       <button type="submit" class="btn" id="loginSubmit">Sign in</button>
     </form>
     <div class="form-msg" id="loginMsg"></div>
@@ -51,6 +58,18 @@
   </div>
 <script src="Db.js"></script>
 <script>
+  document.getElementById("togglePassword")?.addEventListener("click", function(){
+    var input = document.getElementById("loginPassword");
+    var btn = document.getElementById("togglePassword");
+    if(!input) return;
+    if(input.type === "password"){
+      input.type = "text";
+      if(btn){ btn.textContent = "Hide"; btn.setAttribute("aria-label","Hide password"); btn.title = "Hide password"; }
+    } else {
+      input.type = "password";
+      if(btn){ btn.textContent = "Show"; btn.setAttribute("aria-label","Show password"); btn.title = "Show password"; }
+    }
+  });
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const msg = document.getElementById("loginMsg");
