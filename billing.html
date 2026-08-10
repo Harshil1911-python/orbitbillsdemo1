@@ -144,19 +144,38 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
   html,body{max-width:100%;overflow-x:hidden}
   body{
-    padding-top:0;
+    /* Reserve space for fixed header so content never scrolls under logo/menu */
+    padding-top:calc(52px + env(safe-area-inset-top, 0px));
     background:var(--bg);
   }
 
-  /* Header sits under status bar with correct safe-area (logo not cut off, not too high) */
+  /* Permanent white strip behind status bar (battery / time) — never overscrolled */
+  body::before{
+    content:"";
+    position:fixed;
+    top:0;left:0;right:0;
+    height:env(safe-area-inset-top, 0px);
+    min-height:0;
+    background:#ffffff;
+    z-index:70;
+    pointer-events:none;
+  }
+
+  /* Fixed header: logo + ☰ stay put while page scrolls */
   header.app-bar{
-    position:sticky;top:0;z-index:60;
+    position:fixed!important;
+    top:0;left:0;right:0;
+    z-index:65;
     padding:8px 12px;
     padding-top:max(8px, env(safe-area-inset-top, 0px));
     min-height:calc(48px + env(safe-area-inset-top, 0px));
     flex-wrap:nowrap;gap:8px;
     align-items:center;
     box-sizing:border-box;
+    background:#ffffff!important;
+    border-bottom:1px solid var(--line);
+    /* solid white into status area so scrolled content cannot show through */
+    box-shadow:0 1px 0 #fff;
   }
   .brand{font-size:15px;gap:6px;min-width:0;line-height:1;align-items:center}
   .brand .brand-mark{height:30px!important;display:flex;align-items:center}
