@@ -199,6 +199,24 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:46px
   }
   .mobile-menu-panel button:active{background:var(--tint);color:var(--brand)}
+  .mm-brand-footer{
+    margin-top:auto;
+    padding:16px 4px 8px;
+    border-top:1px solid var(--line);
+    text-align:center;
+  }
+  .mm-brand-logo{
+    height:36px;width:auto;margin:0 auto 8px;display:block;object-fit:contain;
+  }
+  .mm-brand-name{
+    font-family:var(--display);font-weight:700;font-size:14px;color:var(--ink);margin-bottom:6px;
+  }
+  .mm-brand-about{
+    font-size:11.5px;line-height:1.45;color:var(--muted);margin:0 0 8px;text-align:left;
+  }
+  .mm-brand-link{
+    font-size:12px;font-weight:600;color:var(--brand);text-decoration:none;
+  }
   .mobile-menu-panel .mm-status{
     padding:8px 12px;font-size:13px;color:var(--muted);font-weight:500;
     background:#f8fafc;border-radius:10px;margin:2px 4px
@@ -756,6 +774,12 @@ input,select,textarea{
     <button type="button" data-mm="btnHelp">Keyboard shortcuts</button>
     <h4>Session</h4>
     <button type="button" data-mm="signOutBtn" style="color:var(--bad)">Sign out</button>
+    <div class="mm-brand-footer">
+      <img src="logo.png" alt="TechSerenia" class="mm-brand-logo" onerror="this.style.display='none'">
+      <div class="mm-brand-name">TechSerenia</div>
+      <p class="mm-brand-about">OrbitBills is built by TechSerenia — simple, offline-first billing for shops in India. Sell, track stock, and manage invoices on your phone without depending on the cloud.</p>
+      <a class="mm-brand-link" href="aboutus.html">About us</a>
+    </div>
   </div>
 </div>
 <div class="m-cart-backdrop" id="mCartBackdrop"></div>
