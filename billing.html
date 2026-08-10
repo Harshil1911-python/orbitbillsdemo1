@@ -1152,7 +1152,6 @@ function buildInvoiceExportDocument(inv, paper){
 
 
 
-<script src="/orbit-native.js"></script>
 </body></html>`;
 }
 
@@ -1305,7 +1304,10 @@ function canvasToSimplePdf(canvas, paper){
   add(`4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
   // 5: Image XObject
   const o5 = offsets[offsets.length-1];
-  const imgHeader = `5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n`;
+  const imgHeader = `5 0 obj
+<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>
+stream
+`;
   add(imgHeader);
   add(imgBytes);
   add("\nendstream\nendobj\n");
@@ -3835,5 +3837,6 @@ window.__calcOpen = false;
 })();
 </script>
 
+<script src="/orbit-native.js"></script>
 </body>
 </html>
