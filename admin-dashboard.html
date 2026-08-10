@@ -320,7 +320,7 @@
     .sidebar.mobile-open{
       display:flex!important;flex-direction:column;
       position:fixed!important;top:0;left:0;bottom:0;
-      width:min(300px,88vw)!important;z-index:90;height:100%!important;
+      width:min(300px,88vw)!important;z-index:520!important;height:100%!important;
       padding:12px 10px calc(16px + env(safe-area-inset-bottom,0px));
       padding-top:max(12px, env(safe-area-inset-top, 0px));
       box-shadow:8px 0 28px rgba(15,23,42,.15);
@@ -2059,8 +2059,20 @@ document.querySelectorAll(".nav-group-head").forEach(head => {
     if (!wasOpen) group.classList.add("open");
   });
 });
-function openMobileNav(){ document.getElementById("sidebar").classList.add("mobile-open"); document.getElementById("mobileScrim").classList.add("show"); }
-function closeMobileNav(){ document.getElementById("sidebar").classList.remove("mobile-open"); document.getElementById("mobileScrim").classList.remove("show"); }
+function openMobileNav(){
+  var side = document.getElementById("sidebar");
+  var scrim = document.getElementById("mobileScrim");
+  if(side){ side.classList.add("mobile-open"); side.style.display = "flex"; }
+  if(scrim){ scrim.classList.add("show"); }
+  try{ document.body.style.overflow = "hidden"; }catch(e){}
+}
+function closeMobileNav(){
+  var side = document.getElementById("sidebar");
+  var scrim = document.getElementById("mobileScrim");
+  if(side){ side.classList.remove("mobile-open"); side.style.display = ""; }
+  if(scrim){ scrim.classList.remove("show"); }
+  try{ document.body.style.overflow = ""; }catch(e){}
+}
 (function bindAdminHamburger(){
   function bind(){
     var btn = document.getElementById("hamburgerBtn");
@@ -5177,7 +5189,7 @@ async function priceListMore(id){
     { label: "Delete", danger: true, run: () => deletePriceList(id) },
   ]);
 }
-function openPriceListEditor(id){
+async function openPriceListEditor(id){
   const [listRes, prodRes, cliRes] = await Promise.all([
     api(`/price-lists/${id}`),
     api("/products"),
@@ -5644,7 +5656,7 @@ async function couponMore(id){
     { label: "Delete", danger: true, run: () => deleteCoupon(id) },
   ]);
 }
-function editCoupon(id){
+async function editCoupon(id){
   const d = await api("/coupons");
   const c = (d.coupons||[]).find(x => x.id === id);
   if (!c) return;
