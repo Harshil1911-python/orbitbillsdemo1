@@ -40,6 +40,7 @@ header.app-bar{background:var(--card);border-bottom:1px solid var(--line);paddin
 .text-row .name{font-weight:600;font-size:13.5px}.text-row .meta{font-size:11.5px;color:var(--muted)}
 .text-row .price{font-weight:700;color:var(--brand);margin-right:6px;font-variant-numeric:tabular-nums}
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:min(52vh,520px);overflow:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+@media(max-width:768px){.photo-grid{max-height:none!important;overflow:visible!important}}
 .photo-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;min-height:148px}
 .photo-tile .swatch{width:100%;aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;margin-bottom:6px;overflow:hidden;background:var(--brand);flex-shrink:0}
 .photo-tile .swatch img{width:100%;height:100%;object-fit:cover}
@@ -410,34 +411,52 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
 
 
-/* POS: whole page scrolls (Photo + Text) — not an inner panel only */
+/* POS: whole page scrolls — finger works anywhere (not one side only) */
 @media (max-width:768px){
   html, body{
     height:auto!important;
     min-height:100%!important;
+    max-height:none!important;
     overflow-x:hidden!important;
     overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:auto!important;
+    overscroll-behavior:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;
   }
   body.m-cart-open, body.m-menu-open{
     overflow:hidden!important;
   }
   .layout{
     min-height:auto!important;
-    /* tight bottom space for cart bar — fill gap, don't overfill */
     padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))!important;
-  }
-  .sales-side{
     overflow:visible!important;
+    touch-action:pan-y!important;
+  }
+  .sales-side, .sales-panel, #photoPanel, #textPanel{
+    overflow:visible!important;
+    max-height:none!important;
+    height:auto!important;
+    touch-action:pan-y!important;
     padding-bottom:4px!important;
   }
-  .sales-panel{
-    min-height:0;
-    overflow:visible!important;
-  }
-  .text-list, .photo-grid{
+  .text-list, .photo-grid, #textList, #photoGrid{
     max-height:none!important;
+    height:auto!important;
     overflow:visible!important;
+    overflow-y:visible!important;
+    touch-action:pan-y!important;
+  }
+  .photo-tile, .text-row{
+    touch-action:pan-y!important;
+  }
+  body:not(.m-cart-open) .cart-side{
+    pointer-events:none!important;
+    visibility:hidden!important;
+  }
+  body:not(.m-cart-open) .m-cart-backdrop{
+    display:none!important;
+    pointer-events:none!important;
   }
   #stockSummary{margin-bottom:6px!important}
   .search-bar{
@@ -449,7 +468,6 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   #categoryFilter{
     flex:0 1 140px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;
   }
-  /* Cart bar — sit flush, reduce empty strip above */
   .m-cart-bar{
     padding-top:8px!important;
     padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
@@ -464,8 +482,7 @@ html{
   text-size-adjust:100%;
 }
 html,body{
-  overscroll-behavior:none;
-  overscroll-behavior-y:none;
+  overscroll-behavior-y:auto;
   -webkit-overflow-scrolling:touch;
 }
 body{
@@ -3987,6 +4004,36 @@ window.__calcOpen = false;
       if(SB.setBackgroundColor) SB.setBackgroundColor({ color: "#0b3d91" });
     }
   }catch(e){}
+})();
+</script>
+
+
+<script>
+/* Ensure Photo/Text POS page scroll works from any finger position */
+(function(){
+  function unlockPageScroll(){
+    try{
+      if(document.body.classList.contains("m-cart-open") || document.body.classList.contains("m-menu-open")) return;
+      document.documentElement.style.overflowY = "auto";
+      document.body.style.overflowY = "auto";
+      document.documentElement.style.touchAction = "pan-y";
+      document.body.style.touchAction = "pan-y";
+      ["photoGrid","textList","photoPanel","textPanel"].forEach(function(id){
+        var el = document.getElementById(id);
+        if(!el) return;
+        el.style.maxHeight = "none";
+        el.style.overflow = "visible";
+        el.style.touchAction = "pan-y";
+      });
+    }catch(e){}
+  }
+  document.addEventListener("DOMContentLoaded", unlockPageScroll);
+  window.addEventListener("load", unlockPageScroll);
+  document.querySelectorAll(".panel-tab").forEach(function(tab){
+    tab.addEventListener("click", function(){ setTimeout(unlockPageScroll, 50); });
+  });
+  setTimeout(unlockPageScroll, 300);
+  setTimeout(unlockPageScroll, 1000);
 })();
 </script>
 
