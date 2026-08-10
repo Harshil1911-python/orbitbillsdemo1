@@ -390,6 +390,23 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   body.m-cart-open .cart-side{transform:none!important;position:static!important;max-height:none!important}
 }
 
+
+/* Modal / drawer close (X) */
+.modal{position:relative}
+.modal-x{
+  position:absolute;top:10px;right:10px;z-index:5;
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+  background:#fff;color:var(--muted);font-size:22px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent
+}
+.modal-x:active{background:var(--tint);color:var(--brand)}
+.modal h3{padding-right:40px}
+.mobile-menu-panel .modal-x-menu{
+  align-self:flex-end;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+  background:#fff;font-size:20px;cursor:pointer;color:var(--muted)
+}
+
 @media print{
   body *{visibility:hidden!important}
   #printRoot,#printRoot *{visibility:visible!important}
@@ -430,7 +447,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <div class="mm-status" id="mmShift">Shift —</div>
     <div class="mm-status" id="mmSync">Sync</div>
     <h4>Actions</h4>
-    <button type="button" id="mmDownloadsBtn">Downloads</button>
+    <button type="button" id="mmDownloadsBtn" onclick="window.__orbitOpenDownloads&&window.__orbitOpenDownloads();return false;">Downloads</button>
     <button type="button" data-mm="btnDayClose">Day close</button>
     <button type="button" data-mm="btnRecent">Recent bills</button>
     <button type="button" data-mm="btnRefreshSync">Sync</button>
@@ -455,7 +472,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <input id="productSearch" placeholder="Search products" autocomplete="off">
     <input id="scanField" placeholder="Barcode" style="max-width:140px" autocomplete="off">
   </div>
-  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty" style="display:none">No products</div></div>
+  <div class="sales-panel active" id="textPanel"><div class="text-list" id="textList"></div><div class="empty" id="textEmpty">Type to search products by name, SKU or barcode</div></div>
   <div class="sales-panel" id="photoPanel"><div class="photo-grid" id="photoGrid"></div></div>
   <div class="sales-panel" id="heldPanel"><div class="toolbar"><button class="btn btn-primary btn-sm" id="btnHold" type="button">Hold cart</button></div><div id="heldList"></div></div>
   <div class="sales-panel" id="recentPanel"><div id="recentList"></div></div>
@@ -1102,35 +1119,41 @@ window.__orbitDownloads = window.__orbitDownloads || [];
 
 function registerOrbitDownload(blob, filename, meta){
   try{
+    if(!blob){ console.warn("registerOrbitDownload: no blob"); return null; }
+    window.__orbitDownloads = window.__orbitDownloads || [];
     const url = URL.createObjectURL(blob);
     const item = {
       id: "dl_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
-      filename: filename,
+      filename: filename || ("file-" + Date.now()),
       blob: blob,
       url: url,
-      mime: blob.type || "application/octet-stream",
-      kind: (meta && meta.kind) || (filename.split(".").pop() || "").toLowerCase(),
+      mime: (blob.type || (meta && meta.mime) || "application/octet-stream"),
+      kind: (meta && meta.kind) || ((filename||"").split(".").pop() || "").toLowerCase(),
       invoiceNumber: (meta && meta.invoiceNumber) || "",
       total: (meta && meta.total) != null ? meta.total : null,
       createdAt: Date.now()
     };
     window.__orbitDownloads.unshift(item);
-    // Keep last 30
     while(window.__orbitDownloads.length > 30){
       const old = window.__orbitDownloads.pop();
       try{ if(old && old.url) URL.revokeObjectURL(old.url); }catch(e){}
     }
     try{ if(window.__orbitRenderDownloads) window.__orbitRenderDownloads(); }catch(e){}
+    try{ toast("Saved to Downloads (" + window.__orbitDownloads.length + ")"); }catch(e){}
     return item;
   }catch(e){ console.warn("registerOrbitDownload", e); return null; }
 }
 
 function downloadBlob(blob, filename, meta){
-  try{ registerOrbitDownload(blob, filename, meta || {}); }catch(e){}
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  try{ registerOrbitDownload(blob, filename, meta || {}); }catch(e){ console.warn(e); }
+  try{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{ document.body.removeChild(a); }catch(e){} URL.revokeObjectURL(url); }, 60000);
+  }catch(e){ console.warn("downloadBlob trigger", e); }
 }
 
 async function downloadExport(kind){
@@ -1152,17 +1175,18 @@ async function downloadExport(kind){
     }
     if (kind === "png") {
       const canvas = await invoiceHtmlToCanvas(lastInvoicePayload, 2);
-      const blob = await new Promise(function(resolve){ canvas.toBlob(function(b){ resolve(b); }, "image/png"); });
+      let blob = await new Promise(function(resolve){
+        try{ canvas.toBlob(function(b){ resolve(b); }, "image/png"); }
+        catch(e){ resolve(null); }
+      });
       if(!blob){
-        // fallback dataURL path
         const pngUrl = canvas.toDataURL("image/png");
-        const res = await fetch(pngUrl); const b2 = await res.blob();
-        downloadBlob(b2, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
-      } else {
-        downloadBlob(blob, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
+        const res = await fetch(pngUrl);
+        blob = await res.blob();
       }
+      downloadBlob(blob, `invoice-${invNo}.png`, Object.assign({kind:"png"}, metaBase));
       if (msg) { msg.textContent = "PNG saved · open ☰ Downloads to share"; msg.className = "msg ok"; }
-      try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){}
+      setTimeout(function(){ try{ if(window.__orbitOpenDownloads) window.__orbitOpenDownloads(); }catch(e){} }, 120);
       return;
     }
     if (kind === "pdf") {
@@ -1230,6 +1254,34 @@ function openModal(id){
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2200); }
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
+/* Add X close on every modal / drawer */
+(function ensureModalCloseButtons(){
+  function addX(){
+    document.querySelectorAll(".modal-bg").forEach(function(bg){
+      var modal = bg.querySelector(".modal");
+      if(!modal || modal.querySelector(".modal-x")) return;
+      var id = bg.id;
+      if(!id) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "modal-x";
+      btn.setAttribute("aria-label", "Close");
+      btn.innerHTML = "&times;";
+      btn.addEventListener("click", function(e){ e.preventDefault(); e.stopPropagation(); closeModal(id); });
+      modal.insertBefore(btn, modal.firstChild);
+    });
+    // Cart sheet already has mCartClose; ensure visible label is X
+    var cc = document.getElementById("mCartClose");
+    if(cc && !cc.dataset.xset){ cc.dataset.xset="1"; cc.innerHTML="&times;"; }
+    // Menu close as X
+    var mc = document.getElementById("mobileMenuClose");
+    if(mc && !mc.dataset.xset){ mc.dataset.xset="1"; mc.innerHTML="&times;"; mc.classList.add("modal-x-menu"); }
+  }
+  try{ addX(); }catch(e){}
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", addX);
+  window.addEventListener("load", addX);
+  setTimeout(addX, 200);
+})();
 function taxFor(p){
   if(!p) return 0;
   if(p.tax_percentage!=null && p.tax_percentage!=="") return Number(p.tax_percentage)||0;
@@ -1264,9 +1316,13 @@ document.querySelectorAll(".panel-tab").forEach(tab=>{
 
 function renderProductLists(filter){
   const term=(filter||"").toLowerCase().trim();
-  visibleProducts=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):allProducts.slice();
+  const matched=term?allProducts.filter(p=>[p.name,p.brand,p.category,p.sku,p.barcode].join(" ").toLowerCase().includes(term)):allProducts.slice();
+  // Hotkeys / shared: matched results when searching, else full list
+  visibleProducts=matched;
   const defL=parseInt(branding.default_low_stock_limit)||5;
-  document.getElementById("textList").innerHTML=visibleProducts.map((p,idx)=>{
+  // TEXT POS: only show products after the user types a search (Photo POS unchanged below)
+  const textProducts=term?matched:[];
+  document.getElementById("textList").innerHTML=textProducts.map((p,idx)=>{
     const low=(p.stock||0)<=(p.low_stock_limit!=null?p.low_stock_limit:defL);
     const hot=idx<9?`<span class="kbd">${idx+1}</span> `:"";
     const vCount=p.variant_count||(variantsByProduct[p.id]||[]).length;
@@ -1279,11 +1335,18 @@ function renderProductLists(filter){
       <div style="display:flex;align-items:center"><span class="price">${priceFor(p).toFixed(2)}${isWeightUnit(p.unit)?"/"+esc(p.unit||"u"):""}</span>
       <button class="btn btn-primary btn-sm" type="button" onclick="addToCart(${p.id})">Add</button></div></div>`;
   }).join("");
-  document.getElementById("textEmpty").style.display=visibleProducts.length?"none":"block";
-  document.getElementById("photoGrid").innerHTML=visibleProducts.map(p=>{
+  const textEmpty=document.getElementById("textEmpty");
+  if(textEmpty){
+    textEmpty.style.display=textProducts.length?"none":"block";
+    textEmpty.textContent=term?"No products match your search":"Type to search products by name, SKU or barcode";
+  }
+  // PHOTO POS: always show full catalog (or filtered if user typed search)
+  document.getElementById("photoGrid").innerHTML=matched.map(p=>{
     const sw=p.photo_path?`<div class="swatch"><img src="${esc(p.photo_path)}" alt=""></div>`:`<div class="swatch">${esc((p.name||"P")[0])}</div>`;
     return `<button class="photo-tile" type="button" onclick="addToCart(${p.id})">${sw}<div class="tile-name" title="${esc(p.name)}">${esc(p.name)}</div><div class="tile-price">${priceFor(p).toFixed(2)}</div></button>`;
   }).join("");
+  const photoEmpty=document.getElementById("photoEmpty");
+  if(photoEmpty) photoEmpty.style.display=matched.length?"none":"block";
 }
 document.getElementById("productSearch").addEventListener("input",e=>renderProductLists(e.target.value));
 document.getElementById("scanField").addEventListener("keydown",e=>{
@@ -2977,11 +3040,14 @@ window.__calcOpen = false;
   function renderDownloads(){
     var list = $("downloadsList");
     var empty = $("downloadsEmpty");
-    if(!list) return;
-    var items = window.__orbitDownloads || [];
+    if(!list){ console.warn("downloadsList missing"); return; }
+    window.__orbitDownloads = window.__orbitDownloads || [];
+    var items = window.__orbitDownloads;
+    var title = document.querySelector("#downloadsModal h3");
+    if(title) title.textContent = items.length ? ("Downloads (" + items.length + ")") : "Downloads";
     if(!items.length){
       list.innerHTML = "";
-      if(empty) empty.style.display = "block";
+      if(empty){ empty.style.display = "block"; empty.textContent = "No downloads yet. Export an invoice as PNG or PDF first."; }
       return;
     }
     if(empty) empty.style.display = "none";
@@ -3078,12 +3144,13 @@ window.__calcOpen = false;
   }
   function openDownloads(){
     try{ if(window.__orbitCloseMobileMenu) window.__orbitCloseMobileMenu(); }catch(e){}
-    renderDownloads();
+    try{ renderDownloads(); }catch(e){ console.warn(e); }
+    var m = $("downloadsModal");
     if(typeof openModal === "function") openModal("downloadsModal");
-    else {
-      var m = $("downloadsModal");
-      if(m) m.classList.add("open");
-    }
+    else if(m) m.classList.add("open");
+    // Re-render after modal is visible (some WebViews need this)
+    setTimeout(function(){ try{ renderDownloads(); }catch(e){} }, 50);
+    setTimeout(function(){ try{ renderDownloads(); }catch(e){} }, 200);
   }
   window.__orbitRenderDownloads = renderDownloads;
   window.__orbitOpenDownloads = openDownloads;
