@@ -4,20 +4,20 @@
   function hasCap(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
   function plugin(n){ try{ return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n]; }catch(e){ return null; } }
   async function setChromeColors(){
-    var brand = "#0b3d91";
+    var brand = "#ffffff";
     try{
       var StatusBar=plugin("StatusBar");
       if(StatusBar){
         if(StatusBar.setBackgroundColor) await StatusBar.setBackgroundColor({color:brand});
-        if(StatusBar.setStyle) await StatusBar.setStyle({style:"LIGHT"});
+        if(StatusBar.setStyle) await StatusBar.setStyle({style:"DARK"});
         if(StatusBar.setOverlaysWebView) await StatusBar.setOverlaysWebView({overlay:false});
       }
     }catch(e){}
-    // Android system navigation bar (Back / Home / Recents) — match cart bar blue
+    // Android system navigation bar (Back / Home / Recents) — pure white system chrome
     try{
       var Nav = plugin("NavigationBar") || plugin("EdgeToEdge") || plugin("AndroidNavigationBar");
       if(Nav){
-        if(Nav.setColor) await Nav.setColor({ color: brand, darkButtons: false });
+        if(Nav.setColor) await Nav.setColor({ color: brand, darkButtons: true });
         else if(Nav.setBackgroundColor) await Nav.setBackgroundColor({ color: brand });
         else if(Nav.setNavigationBarColor) await Nav.setNavigationBarColor({ color: brand });
       }
@@ -45,11 +45,11 @@
     var fill = document.createElement("div");
     fill.id = "orbitNavFill";
     fill.setAttribute("aria-hidden","true");
-    fill.style.cssText = "position:fixed;left:0;right:0;bottom:0;height:env(safe-area-inset-bottom,0px);min-height:0;background:"+(brand||"#0b3d91")+";z-index:99998;pointer-events:none;";
+    fill.style.cssText = "position:fixed;left:0;right:0;bottom:0;height:env(safe-area-inset-bottom,0px);min-height:0;background:"+(brand||"#ffffff")+";z-index:99998;pointer-events:none;";
     (document.body||document.documentElement).appendChild(fill);
   }
   async function ready(){
-    if(!hasCap()){ setupNetwork(); setupBackButton(); try{ ensureNavFill("#0b3d91"); }catch(e){} return false; }
+    if(!hasCap()){ setupNetwork(); setupBackButton(); try{ ensureNavFill("#ffffff"); }catch(e){} return false; }
     await setChromeColors();
     try{ var Splash=plugin("SplashScreen"); if(Splash&&Splash.hide) await Splash.hide({fadeOutDuration:250}); }catch(e){}
     try{ var Keyboard=plugin("Keyboard"); if(Keyboard&&Keyboard.setResizeMode) await Keyboard.setResizeMode({mode:"body"}); }catch(e){}

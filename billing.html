@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
-<meta name="theme-color" content="#0b3d91">
+<meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
 <title>Billing · OrbitBills</title>
 <link rel="icon" href="favicon.ico">
@@ -69,7 +69,7 @@ header.app-bar{background:var(--card);border-bottom:1px solid var(--line);paddin
 .pill.paid{background:#dcfce7;color:var(--ok)}.pill.unpaid{background:#fee2e2;color:var(--bad)}.pill.partial{background:#fef3c7;color:var(--warn)}
 .toolbar{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .hint{font-size:11px;color:var(--muted);background:var(--tint);border:1px dashed var(--line);border-radius:8px;padding:8px;margin-top:8px;line-height:1.5}
-.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.48);display:none;align-items:flex-end;justify-content:center;z-index:300;padding:0}
 .modal-bg.open{display:flex}
 .modal{background:var(--card);border-radius:16px 16px 0 0;padding:18px;width:100%;max-width:560px;max-height:92vh;overflow:auto;box-shadow:0 -8px 30px rgba(15,23,42,.15)}
 @media(min-width:640px){.modal-bg{align-items:center;padding:16px}.modal{border-radius:16px;max-width:640px}}
@@ -148,27 +148,28 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     background:var(--bg);
   }
 
-  /* Compact sticky header — logo + ☰ tight under status bar */
+  /* Header sits under status bar with correct safe-area (logo not cut off, not too high) */
   header.app-bar{
     position:sticky;top:0;z-index:60;
-    padding:4px 12px;
-    min-height:44px;
+    padding:8px 12px;
+    padding-top:max(8px, env(safe-area-inset-top, 0px));
+    min-height:calc(48px + env(safe-area-inset-top, 0px));
     flex-wrap:nowrap;gap:8px;
     align-items:center;
+    box-sizing:border-box;
   }
-  .brand{font-size:15px;gap:6px;min-width:0;line-height:1}
-  .brand .brand-mark{height:28px!important}
-  .brand .brand-mark img{height:28px!important;width:auto}
-  .brand span{display:none} /* hide "Billing" subtitle */
+  .brand{font-size:15px;gap:6px;min-width:0;line-height:1;align-items:center}
+  .brand .brand-mark{height:30px!important;display:flex;align-items:center}
+  .brand .brand-mark img{height:30px!important;width:auto;display:block}
+  .brand span{display:none}
   .header-actions{gap:6px;flex-wrap:nowrap;overflow:visible;width:auto;margin-left:auto;align-items:center}
-  /* Hide all desktop header chrome on phone — only ☰ remains */
   .header-actions > .btn,
   .header-actions > .pill,
   .header-actions > .badge{display:none!important}
   #indiaClock{display:none!important}
   .mobile-menu-btn{
     display:inline-flex!important;align-items:center;justify-content:center;
-    width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
+    width:42px;height:42px;border-radius:11px;border:1px solid var(--line);
     background:#fff;cursor:pointer;flex-shrink:0;padding:0;
     position:relative;z-index:61;-webkit-tap-highlight-color:transparent;
     box-shadow:0 1px 4px rgba(15,23,42,.08)
@@ -316,7 +317,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   #stockSummary > div{border-radius:12px}
 
   .m-sticky-tools{
-    position:sticky;top:44px;z-index:40;
+    position:sticky;top:0;z-index:40;
     background:var(--bg);padding:6px 0 8px;
     margin:0 -12px;padding-left:12px;padding-right:12px;
     border-bottom:1px solid var(--line);
@@ -365,7 +366,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   #orbitNavFill,.orbit-nav-fill{
     position:fixed!important;left:0!important;right:0!important;bottom:0!important;
     height:max(env(safe-area-inset-bottom,0px),0px)!important;
-    background:#0b3d91!important;z-index:99!important;pointer-events:none!important;
+    background:#ffffff!important;z-index:99!important;pointer-events:none!important;
   }
   .m-cart-bar .mcb-info{flex:1;min-width:0}
   .m-cart-bar .mcb-label{font-size:12px;opacity:.9;font-weight:500}
@@ -420,7 +421,7 @@ th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   /* Modals full-width friendly */
   .modal-bg{
     padding:env(safe-area-inset-top,8px) 0 env(safe-area-inset-bottom,0)!important;
-    align-items:flex-end!important;z-index:150!important
+    align-items:flex-end!important;z-index:300!important
   }
   .modal,.modal.wide{
     width:100%!important;max-width:100%!important;
@@ -1684,8 +1685,23 @@ function printLast(){
 function esc(s){ if(s==null)return""; return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 function money(n){ return currency+Number(n||0).toFixed(2); }
 function openModal(id){
-  if(id==="exportModal"){ setTimeout(function(){ try{window.__orbitScaleInvoicePreview&&window.__orbitScaleInvoicePreview();}catch(e){} }, 80); } document.getElementById(id).classList.add("open"); }
-function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+  try{
+    if(window.__orbitCloseMobileCart) window.__orbitCloseMobileCart();
+    else if(document.body) document.body.classList.remove("m-cart-open");
+  }catch(e){}
+  var el = document.getElementById(id);
+  if(!el){ console.warn("openModal: missing", id); return; }
+  el.classList.add("open");
+  if(id==="exportModal"){
+    setTimeout(function(){
+      try{ window.__orbitScaleInvoicePreview && window.__orbitScaleInvoicePreview(); }catch(e){}
+    }, 80);
+  }
+}
+function closeModal(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.remove("open");
+}
 function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2200); }
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
 /* Add X close on every modal / drawer */
@@ -2438,27 +2454,44 @@ function buildCheckoutPayload(extra={}){
 
 async function finalizeSale(payload, doPrint){
   const msg=document.getElementById("invoiceMsg");
-  // Client-side stock gate (server also enforces)
-  for (const it of (payload.items||[])) {
-    const qty = Number(it.qty)||0;
-    if (qty<=0) continue;
-    if (it.variantId) {
-      const v = (allVariants||[]).find(x => x.id === it.variantId);
-      const have = v ? (Number(v.stock)||0) : 0;
-      if (have + 1e-9 < qty) { msg.textContent = `Insufficient stock for ${it.name||"item"} (have ${have})`; msg.className="msg err"; toast(msg.textContent); return null; }
-    } else if (it.productId) {
-      const p = (allProducts||[]).find(x => x.id === it.productId);
-      const have = p ? (Number(p.stock)||0) : 0;
-      if (have + 1e-9 < qty) { msg.textContent = `Insufficient stock for ${it.name||"item"} (have ${have})`; msg.className="msg err"; toast(msg.textContent); return null; }
+  // Soft stock check — warn but do not block (OOS override already confirmed on add)
+  try{
+    const short = [];
+    for (const it of (payload.items||[])) {
+      const qty = Number(it.qty)||0;
+      if (qty<=0) continue;
+      let have = null, label = it.name||"item";
+      if (it.variantId) {
+        const v = (allVariants||[]).find(x => x.id === it.variantId);
+        if (v) have = Number(v.stock)||0;
+      } else if (it.productId) {
+        const p = (allProducts||[]).find(x => x.id === it.productId);
+        if (p) have = Number(p.stock)||0;
+      }
+      if (have != null && have + 1e-9 < qty) short.push(label + " (have " + have + ")");
     }
+    if (short.length) {
+      toast("Low/out of stock: " + short.slice(0,3).join(", "));
+    }
+  }catch(e){}
+  if(msg){ msg.textContent="Saving…"; msg.className="msg"; }
+  let data;
+  try{
+    data=await api("/invoices/checkout",{method:"POST",body:payload});
+    if(!data || !data.ok){
+      data=await api("/invoices",{method:"POST",body:payload});
+    }
+  }catch(err){
+    if(msg){ msg.textContent="Save failed — check connection / IndexedDB"; msg.className="msg err"; }
+    toast("Could not save invoice");
+    console.error(err);
+    return null;
   }
-  msg.textContent="Saving…"; msg.className="msg";
-  let data=await api("/invoices/checkout",{method:"POST",body:payload});
-  if(!data.ok){
-    // fallback to classic create
-    data=await api("/invoices",{method:"POST",body:payload});
+  if(!data || !data.ok){
+    if(msg){ msg.textContent=(data && data.error)||"Failed"; msg.className="msg err"; }
+    toast((data && data.error)||"Invoice failed");
+    return null;
   }
-  if(!data.ok){ msg.textContent=data.error||"Failed"; msg.className="msg err"; return null; }
   lastInvoiceId=data.id;
   lastInvoicePayload={
     invoiceNumber:data.invoiceNumber||payload.invoiceNumber, clientName:payload.clientName,
@@ -2466,28 +2499,58 @@ async function finalizeSale(payload, doPrint){
     taxAmount:data.taxAmount, creditApplied:payload.creditApplied, total:data.total, amountPaid:data.amountPaid??payload.amountPaid,
     items:payload.items, clientId: payload.clientId || null, notes: payload.notes || "",
   };
-  msg.textContent=`${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`; msg.className="msg ok";
-  document.getElementById("exportLabel").textContent=`${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`;
-  invoicePreviewLayout = layout; // snapshot active layout for this export only
-  document.getElementById("exportLayoutNote").textContent=layout?("Layout: "+(layout.name||layout.id)):"Classic layout";
-  showLayoutPreview("exportPreview"); document.getElementById("exportPreviewShell").style.display="block";
-  if(bc) bc.postMessage({type:"invoice_created", id:data.id});
-  cart=[]; couponDiscount=0; couponCode=""; document.getElementById("couponInput").value=""; document.getElementById("couponHint").textContent="";
-  document.getElementById("discountInput").value=0; document.getElementById("creditInput").value=0; document.getElementById("notesInput").value="";
-  document.getElementById("payStatus").value="paid"; document.getElementById("cashTendered").value=""; document.getElementById("partialAmount").value=0;
-  renderCart(); runPosSync(true);
-  updateWhatsAppBtn();
+  if(msg){
+    msg.textContent=`${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`;
+    msg.className="msg ok";
+  }
+  try{
+    const el=document.getElementById("exportLabel");
+    if(el) el.textContent=`${lastInvoicePayload.invoiceNumber} · ${money(lastInvoicePayload.total)} · ${lastInvoicePayload.status}`;
+    invoicePreviewLayout = layout;
+    const note=document.getElementById("exportLayoutNote");
+    if(note) note.textContent=layout?("Layout: "+(layout.name||layout.id)):"Classic layout";
+    showLayoutPreview("exportPreview");
+    const shell=document.getElementById("exportPreviewShell");
+    if(shell) shell.style.display="block";
+  }catch(e){ console.warn("preview", e); }
+  try{ if(bc) bc.postMessage({type:"invoice_created", id:data.id}); }catch(e){}
+  cart=[]; couponDiscount=0; couponCode="";
+  try{
+    const ci=document.getElementById("couponInput"); if(ci) ci.value="";
+    const ch=document.getElementById("couponHint"); if(ch) ch.textContent="";
+    const di=document.getElementById("discountInput"); if(di) di.value=0;
+    const cr=document.getElementById("creditInput"); if(cr) cr.value=0;
+    const ni=document.getElementById("notesInput"); if(ni) ni.value="";
+    const ps=document.getElementById("payStatus"); if(ps) ps.value="paid";
+    const ct=document.getElementById("cashTendered"); if(ct) ct.value="";
+    const pa=document.getElementById("partialAmount"); if(pa) pa.value=0;
+  }catch(e){}
+  try{ renderCart(); }catch(e){}
+  try{ runPosSync(true); }catch(e){}
+  try{ updateWhatsAppBtn(); }catch(e){}
   try{ if(window.__orbitHaptic) window.__orbitHaptic("success"); else if(navigator.vibrate) navigator.vibrate([12,40,12]); }catch(e){}
   try{ if(typeof window.__orbitUpdateWakeLock==="function") window.__orbitUpdateWakeLock(); }catch(e){}
-  if(doPrint) printLast(); else openModal("exportModal");
+  try{
+    if(doPrint) printLast();
+    else openModal("exportModal");
+  }catch(e){
+    console.error(e);
+    openModal("exportModal");
+  }
   return data;
 }
-async function createInvoice(){ if(!cart.length){ toast("Add items"); return; } await finalizeSale(buildCheckoutPayload(), false); }
+async function createInvoice(){
+  if(!cart.length){ toast("Add items"); return; }
+  try{ await finalizeSale(buildCheckoutPayload(), false); }
+  catch(e){ console.error(e); toast("Invoice error"); }
+}
 async function payAndPrint(){
   if(!cart.length){ toast("Add items"); return; }
-  document.getElementById("payStatus").value="paid";
-  const t=calc(); const method=document.getElementById("payMethod").value;
-  await finalizeSale(buildCheckoutPayload({ status:"paid", amountPaid:t.total, payments:[{method, amount:t.total}] }), true);
+  try{
+    const ps=document.getElementById("payStatus"); if(ps) ps.value="paid";
+    const t=calc(); const method=(document.getElementById("payMethod")||{}).value||"cash";
+    await finalizeSale(buildCheckoutPayload({ status:"paid", amountPaid:t.total, payments:[{method, amount:t.total}] }), true);
+  }catch(e){ console.error(e); toast("Pay error"); }
 }
 document.getElementById("createInvoiceBtn").addEventListener("click", createInvoice);
 document.getElementById("btnPayPrint").addEventListener("click", payAndPrint);
@@ -2660,7 +2723,19 @@ function buildLayoutSheetHtml(inv){
     ${branding.invoice_regulations?`<p style="font-size:10px;color:#64748b;margin-top:10px;white-space:pre-wrap;border-top:1px dashed #e2e8f0;padding-top:8px">${esc(branding.invoice_regulations)}</p>`:""}
     <p style="position:absolute;left:16px;bottom:12px;font-size:9px;color:#64748b;font-weight:600;margin:0">Powered By OrbitBills by TechSerenia</p></div>`;
 }
-function showLayoutPreview(id){ if(!lastInvoicePayload)return; const el=document.getElementById(id); if(el) el.innerHTML=buildLayoutSheetHtml(lastInvoicePayload); }
+function showLayoutPreview(id){
+  if(!lastInvoicePayload) return;
+  const el=document.getElementById(id);
+  if(!el) return;
+  try{
+    if(typeof buildLayoutSheetHtml === "function"){
+      el.innerHTML = buildLayoutSheetHtml(lastInvoicePayload);
+    } else {
+      el.innerHTML = "<div style=\"padding:12px;font-size:13px\"><strong>"+esc(lastInvoicePayload.invoiceNumber||"Invoice")+"</strong><br>"+
+        esc(lastInvoicePayload.clientName||"Walk-in")+" · "+money(lastInvoicePayload.total)+"</div>";
+    }
+  }catch(e){ console.warn("showLayoutPreview", e); el.textContent = (lastInvoicePayload.invoiceNumber||"Invoice")+" saved"; }
+}
 
 document.getElementById("btnPrintLayout").addEventListener("click", printLast);
 // Closing export modal restores active layout for next sale (does not keep a recent invoice layout)
