@@ -486,6 +486,46 @@
     margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;
   }
 
+
+/* ---- App entry skeletal loader ---- */
+#orbitBoot{
+  display:none;position:fixed;inset:0;z-index:999999;background:#f5f8fe;
+  flex-direction:column;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));
+  overflow:hidden;
+}
+#orbitBoot.show{display:flex;}
+#orbitBoot .sk-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+#orbitBoot .sk-logo{width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(15,23,42,.06);flex-shrink:0;}
+#orbitBoot .sk-logo img{width:28px;height:28px;object-fit:contain;}
+#orbitBoot .sk-line{height:14px;border-radius:8px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
+#orbitBoot .sk-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);}
+#orbitBoot .sk-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;}
+#orbitBoot .sk-avatar{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
+#orbitBoot .sk-block{flex:1;display:flex;flex-direction:column;gap:8px;}
+#orbitBoot .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+#orbitBoot .sk-tile{height:72px;border-radius:14px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
+#orbitBoot .sk-hint{text-align:center;font-size:12px;color:#5b6b82;margin-top:auto;padding-top:12px;font-weight:600;}
+@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+
+  /* Analytics charts — visible on mobile */
+  .chart-box{
+    position:relative;width:100%;max-width:100%;
+    height:220px;min-height:180px;
+  }
+  .chart-box.chart-box-lg{height:260px;}
+  .chart-box canvas{width:100%!important;height:100%!important;max-width:100%;display:block;}
+  #panel-analytics .split-2{
+    display:grid!important;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:900px){
+    #panel-analytics .split-2{grid-template-columns:1fr!important;}
+    .chart-box{height:240px;min-height:200px;}
+    .chart-box.chart-box-lg{height:220px;}
+  }
+
 </style>
 
 <style id="orbit-scroll-fix">
@@ -514,6 +554,30 @@
 </style>
 </head>
 <body>
+
+<div id="orbitBoot" class="show" aria-live="polite" aria-busy="true">
+  <div class="sk-top">
+    <div class="sk-logo"><img src="logo.png" alt="" onerror="this.style.display='none'"></div>
+    <div class="sk-block"><div class="sk-line" style="width:42%"></div><div class="sk-line" style="width:28%;height:10px"></div></div>
+  </div>
+  <div class="sk-grid">
+    <div class="sk-tile"></div><div class="sk-tile" style="animation-delay:.15s"></div>
+    <div class="sk-tile" style="animation-delay:.3s"></div><div class="sk-tile" style="animation-delay:.45s"></div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-row"><div class="sk-avatar"></div><div class="sk-block"><div class="sk-line" style="width:55%"></div><div class="sk-line" style="width:35%;height:10px"></div></div></div>
+    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.2s"></div><div class="sk-block"><div class="sk-line" style="width:48%"></div><div class="sk-line" style="width:30%;height:10px"></div></div></div>
+    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.4s"></div><div class="sk-block"><div class="sk-line" style="width:62%"></div><div class="sk-line" style="width:40%;height:10px"></div></div></div>
+  </div>
+  <div class="sk-card">
+    <div class="sk-line" style="width:70%;margin-bottom:12px"></div>
+    <div class="sk-line" style="width:100%;height:10px;margin-bottom:8px"></div>
+    <div class="sk-line" style="width:88%;height:10px;margin-bottom:8px"></div>
+    <div class="sk-line" style="width:55%;height:10px"></div>
+  </div>
+  <p class="sk-hint">Loading OrbitBills…</p>
+</div>
+
 
 <div class="mobile-bar">
   <div class="brand"><img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'"></div>
@@ -1047,16 +1111,16 @@
       </div>
       <div class="card">
         <h3>Revenue (last months)</h3>
-        <canvas id="revenueChart" height="120"></canvas>
+        <div class="chart-box chart-box-lg"><canvas id="revenueChart"></canvas></div>
       </div>
-      <div class="split-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="split-2">
         <div class="card">
           <h3>Top products by qty sold</h3>
-          <canvas id="productsChart" height="180"></canvas>
+          <div class="chart-box"><canvas id="productsChart"></canvas></div>
         </div>
         <div class="card">
           <h3>Top clients by revenue</h3>
-          <canvas id="clientsChart" height="180"></canvas>
+          <div class="chart-box"><canvas id="clientsChart"></canvas></div>
         </div>
       </div>
       <div class="card">
@@ -2236,6 +2300,22 @@ document.querySelectorAll(".nav-item[data-panel]").forEach(btn => {
       variantscreen: renderVariantScreen, cashdayend: renderCashbox,
     };
     if (loaders[btn.dataset.panel]) loaders[btn.dataset.panel]();
+    if (btn.dataset.panel === "analytics") {
+      setTimeout(function(){
+        try{
+          if (typeof revenueChartObj !== "undefined" && revenueChartObj) revenueChartObj.resize();
+          if (typeof productsChartObj !== "undefined" && productsChartObj) productsChartObj.resize();
+          if (typeof clientsChartObj !== "undefined" && clientsChartObj) clientsChartObj.resize();
+        }catch(e){}
+      }, 100);
+      setTimeout(function(){
+        try{
+          if (typeof revenueChartObj !== "undefined" && revenueChartObj) revenueChartObj.resize();
+          if (typeof productsChartObj !== "undefined" && productsChartObj) productsChartObj.resize();
+          if (typeof clientsChartObj !== "undefined" && clientsChartObj) clientsChartObj.resize();
+        }catch(e){}
+      }, 350);
+    }
   });
 });
 
@@ -4980,13 +5060,19 @@ async function renderAnalytics(){
   let revLabels = (data.revenue && data.revenue.labels) || (data.monthly || []).map(m => m.month) || [];
   let revPaid = (data.revenue && data.revenue.data) || (data.monthly || []).map(m => m.paid || m.total || 0) || [];
   const ctx1 = document.getElementById("revenueChart");
+  const chartOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400 },
+    plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } }
+  };
   if (ctx1 && window.Chart) {
     if (revenueChartObj) revenueChartObj.destroy();
     revenueChartObj = new Chart(ctx1, {
       type: "bar",
       data: { labels: revLabels.length ? revLabels : ["No sales yet"],
-        datasets: [{ label: "Revenue", data: revPaid.length ? revPaid : [0], backgroundColor: "#0b3d91" }] },
-      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        datasets: [{ label: "Revenue", data: revPaid.length ? revPaid : [0], backgroundColor: "#0b3d91", borderRadius: 6 }] },
+      options: { ...chartOpts, scales: { y: { beginAtZero: true }, x: { ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, font: { size: 10 } } } } }
     });
   }
   const topProducts = data.topProducts || [];
@@ -5000,7 +5086,7 @@ async function renderAnalytics(){
         datasets: [{ data: topProducts.map(p => p.revenue != null ? p.revenue : p.qty).concat(topProducts.length ? [] : [1]),
           backgroundColor: ["#0b3d91","#2f6feb","#158a53","#b8860b","#8e44ad","#c0392b","#5b6b82","#94a3b8"] }]
       },
-      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+      options: { ...chartOpts, plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } } }
     });
   }
   const topClients = data.topClients || [];
@@ -5011,11 +5097,26 @@ async function renderAnalytics(){
       type: "bar",
       data: {
         labels: topClients.map(c => c.name).concat(topClients.length ? [] : ["None"]),
-        datasets: [{ label: "Revenue", data: topClients.map(c => c.total != null ? c.total : c.revenue || 0).concat(topClients.length ? [] : [0]), backgroundColor: "#2f6feb" }]
+        datasets: [{ label: "Revenue", data: topClients.map(c => c.total != null ? c.total : c.revenue || 0).concat(topClients.length ? [] : [0]), backgroundColor: "#2f6feb", borderRadius: 6 }]
       },
-      options: { indexAxis: "y", responsive: true, scales: { x: { beginAtZero: true } } }
+      options: { ...chartOpts, indexAxis: "y", scales: { x: { beginAtZero: true } } }
     });
   }
+  // Charts built while panel was hidden often have 0 width — force resize after paint
+  requestAnimationFrame(function(){
+    try{
+      if(revenueChartObj) revenueChartObj.resize();
+      if(productsChartObj) productsChartObj.resize();
+      if(clientsChartObj) clientsChartObj.resize();
+    }catch(e){}
+  });
+  setTimeout(function(){
+    try{
+      if(revenueChartObj) revenueChartObj.resize();
+      if(productsChartObj) productsChartObj.resize();
+      if(clientsChartObj) clientsChartObj.resize();
+    }catch(e){}
+  }, 200);
   const mt = document.getElementById("marginsTableBody");
   if (mt) mt.innerHTML = (data.margins || topProducts).map(m => `
     <tr><td>${escapeHtml(m.name)}</td><td>${money(m.revenue)}</td><td>${money(m.cost || 0)}</td>
@@ -6566,5 +6667,23 @@ renderOverview();
 </script>
 
 <script src="orbit-native.js"></script>
+<script>
+(function orbitEntrySkeleton(){
+  function hide(){
+    var el = document.getElementById("orbitBoot");
+    if(el){ el.classList.remove("show"); el.style.display = "none"; }
+  }
+  var minMs = 600;
+  var started = Date.now();
+  function done(){
+    var left = Math.max(0, minMs - (Date.now() - started));
+    setTimeout(hide, left);
+  }
+  if(document.readyState === "complete") done();
+  else window.addEventListener("load", done);
+  // safety max 2.5s
+  setTimeout(hide, 2500);
+})();
+</script>
 </body>
 </html>
