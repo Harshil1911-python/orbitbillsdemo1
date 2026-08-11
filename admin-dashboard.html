@@ -487,25 +487,22 @@
   }
 
 
-/* ---- App entry skeletal loader ---- */
+
 #orbitBoot{
   display:none!important;position:fixed;inset:0;z-index:999999;background:#f5f8fe;
-  flex-direction:column;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));
-  overflow:hidden;
+  flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));
+  overflow:hidden;pointer-events:none;
 }
-#orbitBoot.show{display:flex!important;}
-#orbitBoot .sk-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-#orbitBoot .sk-logo{width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(15,23,42,.06);flex-shrink:0;}
-#orbitBoot .sk-logo img{width:28px;height:28px;object-fit:contain;}
-#orbitBoot .sk-line{height:14px;border-radius:8px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
+#orbitBoot.show{display:flex!important;pointer-events:auto;}
+#orbitBoot .sk-line{height:14px;border-radius:8px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.1s ease-in-out infinite;}
 #orbitBoot .sk-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);}
 #orbitBoot .sk-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;}
-#orbitBoot .sk-avatar{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
+#orbitBoot .sk-avatar{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.1s ease-in-out infinite;}
 #orbitBoot .sk-block{flex:1;display:flex;flex-direction:column;gap:8px;}
 #orbitBoot .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-#orbitBoot .sk-tile{height:72px;border-radius:14px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.2s ease-in-out infinite;}
-#orbitBoot .sk-hint{text-align:center;font-size:12px;color:#5b6b82;margin-top:auto;padding-top:12px;font-weight:600;}
+#orbitBoot .sk-tile{height:72px;border-radius:14px;background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;animation:skShimmer 1.1s ease-in-out infinite;}
 @keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+100%{background-position:-200% 0}}
 
 
   /* Analytics charts — visible on mobile */
@@ -525,6 +522,34 @@
     .chart-box{height:240px;min-height:200px;}
     .chart-box.chart-box-lg{height:220px;}
   }
+
+/* orbit-fixed-bar */
+
+@media (max-width:900px){
+  .mobile-bar{
+    position:fixed!important;top:0;left:0;right:0;z-index:500!important;
+    background:#ffffff!important;
+  }
+}
+
+
+  .panel-switch{position:relative;margin:8px 0 4px;padding:0 4px;}
+  .panel-switch-btn{
+    width:100%;text-align:left;padding:12px 12px;min-height:44px;border-radius:10px;
+    border:1px solid var(--border,#dfe7f5);background:#fff;font-size:14px;font-weight:600;
+    color:var(--blue-deep,#0b3d91);cursor:pointer;font-family:inherit;
+  }
+  .panel-switch-btn:active{background:var(--blue-tint,#eaf1fc);}
+  .panel-switch-menu{
+    margin-top:6px;border:1px solid var(--border,#dfe7f5);border-radius:12px;background:#fff;
+    overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,.1);
+  }
+  .panel-switch-item{
+    display:block;padding:14px 14px;font-size:14px;font-weight:600;color:var(--ink,#101a2b);
+    text-decoration:none;border-bottom:1px solid var(--border,#dfe7f5);
+  }
+  .panel-switch-item:last-child{border-bottom:0;}
+  .panel-switch-item:active,.panel-switch-item:hover{background:var(--blue-tint,#eaf1fc);color:var(--blue-deep,#0b3d91);}
 
 </style>
 
@@ -555,19 +580,15 @@
 </head>
 <body>
 
-<div id="orbitBoot" class="show" aria-live="polite" aria-busy="true">
-  <div class="sk-top">
-    <div class="sk-logo"><img src="logo.png" alt="" onerror="this.style.display='none'"></div>
-    <div class="sk-block"><div class="sk-line" style="width:42%"></div><div class="sk-line" style="width:28%;height:10px"></div></div>
-  </div>
+<div id="orbitBoot" class="show" aria-hidden="true">
   <div class="sk-grid">
-    <div class="sk-tile"></div><div class="sk-tile" style="animation-delay:.15s"></div>
-    <div class="sk-tile" style="animation-delay:.3s"></div><div class="sk-tile" style="animation-delay:.45s"></div>
+    <div class="sk-tile"></div><div class="sk-tile" style="animation-delay:.12s"></div>
+    <div class="sk-tile" style="animation-delay:.24s"></div><div class="sk-tile" style="animation-delay:.36s"></div>
   </div>
   <div class="sk-card">
     <div class="sk-row"><div class="sk-avatar"></div><div class="sk-block"><div class="sk-line" style="width:55%"></div><div class="sk-line" style="width:35%;height:10px"></div></div></div>
-    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.2s"></div><div class="sk-block"><div class="sk-line" style="width:48%"></div><div class="sk-line" style="width:30%;height:10px"></div></div></div>
-    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.4s"></div><div class="sk-block"><div class="sk-line" style="width:62%"></div><div class="sk-line" style="width:40%;height:10px"></div></div></div>
+    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.15s"></div><div class="sk-block"><div class="sk-line" style="width:48%"></div><div class="sk-line" style="width:30%;height:10px"></div></div></div>
+    <div class="sk-row"><div class="sk-avatar" style="animation-delay:.3s"></div><div class="sk-block"><div class="sk-line" style="width:62%"></div><div class="sk-line" style="width:40%;height:10px"></div></div></div>
   </div>
   <div class="sk-card">
     <div class="sk-line" style="width:70%;margin-bottom:12px"></div>
@@ -575,10 +596,7 @@
     <div class="sk-line" style="width:88%;height:10px;margin-bottom:8px"></div>
     <div class="sk-line" style="width:55%;height:10px"></div>
   </div>
-  <p class="sk-hint">Loading OrbitBills…</p>
 </div>
-
-
 <div class="mobile-bar">
   <div class="brand"><img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'"></div>
   <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">&#9776;</button>
@@ -651,6 +669,16 @@
     </div>
     <div class="sidebar-foot">
       <div id="adminIndiaClock" title="India Standard Time" style="font-size:12px;font-weight:600;color:var(--slate);padding:8px 12px 4px;font-variant-numeric:tabular-nums;line-height:1.35">—</div>
+      
+      <div class="panel-switch" id="panelSwitch">
+        <button type="button" class="panel-switch-btn" id="panelSwitchBtn" aria-expanded="false">Change panel ▾</button>
+        <div class="panel-switch-menu" id="panelSwitchMenu" hidden>
+          <a class="panel-switch-item" href="billing.html">Billing</a>
+          <a class="panel-switch-item" href="admin-dashboard.html">Admin</a>
+          <a class="panel-switch-item" href="accountant-dashboard.html">Accountant</a>
+        </div>
+      </div>
+
       <button type="button" id="signOutBtn" style="font-size:13px;font-weight:600;color:var(--red);display:flex;align-items:center;padding:10px 12px;min-height:44px;background:none;border:none;width:100%;text-align:left;cursor:pointer;">Sign out</button>
       <div class="mm-brand-footer">
         <img src="logo.png" alt="TechSerenia" class="mm-brand-logo" onerror="this.style.display='none'">
@@ -4787,9 +4815,17 @@ document.getElementById("invoiceToFilter")?.addEventListener("change", () => ren
 // Auth check on load
 (async function authBoot(){
   await tsSeedDefaults().catch(() => {});
+  try { if (window.__orbitHideBoot) window.__orbitHideBoot(); } catch (e0) {}
   const who = tsWhoami();
-  if (!who.ok || who.role !== "admin") {
-    window.location.href = "signin.html";
+  // Allow admin role OR uniform master account (roles list)
+  const canAdmin = who && who.ok && (
+    who.role === "admin" ||
+    who.uniform === true ||
+    (Array.isArray(who.roles) && who.roles.indexOf("admin") >= 0) ||
+    String(who.email || "").toLowerCase() === "orbitbills@techserenia.com"
+  );
+  if (!canAdmin) {
+    setTimeout(function(){ window.location.href = "signin.html"; }, 80);
     return;
   }
   try { renderOverview(); } catch (e) { console.warn(e); }
@@ -6675,37 +6711,54 @@ renderOverview();
       if(!el) return;
       el.classList.remove("show");
       el.style.setProperty("display","none","important");
-      el.setAttribute("aria-busy","false");
-      // remove from DOM so it can never block taps
-      if(el.parentNode) el.parentNode.removeChild(el);
+      el.style.setProperty("pointer-events","none","important");
+      el.setAttribute("aria-hidden","true");
+      if(el.parentNode) try{ el.parentNode.removeChild(el); }catch(e){}
     }catch(e){}
   }
   window.__orbitHideBoot = hideBoot;
-  var minMs = 400;
-  var maxMs = 1800;
   var t0 = Date.now();
   function finish(){
-    var wait = Math.max(0, minMs - (Date.now() - t0));
+    var wait = Math.max(0, 300 - (Date.now() - t0));
     setTimeout(hideBoot, wait);
   }
-  // Hide as soon as DOM is interactive + short data warm
   async function warm(){
     try{
-      if(typeof tsSeedDefaults === "function") await Promise.race([
-        tsSeedDefaults(),
-        new Promise(function(r){ setTimeout(r, 900); })
-      ]);
+      if(typeof tsSeedDefaults === "function"){
+        await Promise.race([tsSeedDefaults().catch(function(){}), new Promise(function(r){setTimeout(r,600);})]);
+      }
     }catch(e){}
     finish();
   }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", warm);
-  } else {
-    warm();
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", warm);
+  else warm();
+  window.addEventListener("load", function(){ setTimeout(hideBoot, 30); });
+  setTimeout(hideBoot, 1200); // hard max — never stuck
+})();
+</script>
+<script>
+(function orbitPanelSwitch(){
+  function bind(){
+    var btn = document.getElementById("panelSwitchBtn");
+    var menu = document.getElementById("panelSwitchMenu");
+    if(!btn || !menu || btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", function(e){
+      e.preventDefault(); e.stopPropagation();
+      var open = menu.hasAttribute("hidden");
+      if(open){ menu.removeAttribute("hidden"); btn.setAttribute("aria-expanded","true"); }
+      else { menu.setAttribute("hidden",""); btn.setAttribute("aria-expanded","false"); }
+    });
+    // Navigate without re-login — session stays in localStorage
+    menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
+      a.addEventListener("click", function(e){
+        // allow normal navigation; session already present
+        try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(err){}
+      });
+    });
   }
-  window.addEventListener("load", function(){ setTimeout(hideBoot, 50); });
-  // absolute safety — never stuck
-  setTimeout(hideBoot, maxMs);
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
 })();
 </script>
 </body>
