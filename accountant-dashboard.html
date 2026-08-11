@@ -470,7 +470,13 @@ document.getElementById("btnExportB2cCsv").addEventListener("click", () => {
 (async function init(){
   try { await tsSeedDefaults(); } catch (e) {}
   const who = typeof tsWhoami === "function" ? tsWhoami() : { ok: false };
-  if (!who.ok || (who.role !== "accountant" && who.role !== "admin")) {
+  // Any signed-in staff role can open Accountant via Change panel
+  const canOpen = who && who.ok && (
+    who.role === "accountant" || who.role === "admin" || who.role === "billing" ||
+    who.uniform === true ||
+    (Array.isArray(who.roles) && who.roles.length > 0)
+  );
+  if (!canOpen) {
     location.href = "signin.html";
     return;
   }

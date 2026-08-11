@@ -3665,9 +3665,11 @@ window.__calcOpen = false;
 (async function init(){
   await tsSeedDefaults().catch(()=>{});
   const who=tsWhoami();
+  // Any signed-in staff role can open Billing via Change panel
   const canBill = who && who.ok && (
-    who.role === "admin" || who.role === "billing" || who.uniform === true ||
-    (Array.isArray(who.roles) && (who.roles.indexOf("admin")>=0 || who.roles.indexOf("billing")>=0)) ||
+    who.role === "admin" || who.role === "billing" || who.role === "accountant" ||
+    who.uniform === true ||
+    (Array.isArray(who.roles) && who.roles.length > 0) ||
     String(who.email||"").toLowerCase() === "orbitbills@techserenia.com"
   );
   if(!canBill){

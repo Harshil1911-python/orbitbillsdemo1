@@ -4972,19 +4972,21 @@ document.getElementById("invoiceStatusFilter")?.addEventListener("change", () =>
 document.getElementById("invoiceFromFilter")?.addEventListener("change", () => renderInvoices());
 document.getElementById("invoiceToFilter")?.addEventListener("change", () => renderInvoices());
 
-// Auth check on load
+// Auth check on load — any signed-in role can open Admin (Change panel)
 (async function authBoot(){
   await tsSeedDefaults().catch(() => {});
   try { if (window.__orbitHideBoot) window.__orbitHideBoot(); } catch (e0) {}
   const who = tsWhoami();
-  // Allow admin role OR uniform master account (roles list)
-  const canAdmin = who && who.ok && (
+  const canOpen = who && who.ok && (
     who.role === "admin" ||
+    who.role === "billing" ||
+    who.role === "accountant" ||
     who.uniform === true ||
-    (Array.isArray(who.roles) && who.roles.indexOf("admin") >= 0) ||
-    String(who.email || "").toLowerCase() === "orbitbills@techserenia.com"
+    (Array.isArray(who.roles) && who.roles.length > 0) ||
+    String(who.email || "").toLowerCase() === "orbitbills@techserenia.com" ||
+    String(who.email || "").toLowerCase() === "admin@techserenia.com"
   );
-  if (!canAdmin) {
+  if (!canOpen) {
     try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){}
     setTimeout(function(){ window.location.replace("signin.html"); }, 80);
     return;
