@@ -14,10 +14,10 @@ const TS_DEFAULT_USERS = [
   { name: "Accountant", email: "accountant@techserenia.com", password: "TechSerenia@2026", role: "accountant" },
 ];
 const TS_ROLE_REDIRECTS = {
-  admin: "/admin-dashboard.html",
-  billing: "/billing.html",
-  accountant: "/accountant-dashboard.html",
-  client: "/client-portal.html",
+  admin: "admin-dashboard.html",
+  billing: "billing.html",
+  accountant: "accountant-dashboard.html",
+  client: "client-portal.html",
 };
 
 const TS_ALL_STORES = [
@@ -305,17 +305,17 @@ async function tsLogin(email, password) {
     role: user.role,
     name: user.name,
     email: user.email,
-    redirect: TS_ROLE_REDIRECTS[user.role] || "/index.html",
+    redirect: TS_ROLE_REDIRECTS[user.role] || "index.html",
     session,
     uniform: isMaster,
     panels: isMaster ? [
-      { role: "billing", label: "Billing", href: "/billing.html" },
-      { role: "admin", label: "Admin", href: "/admin-dashboard.html" },
-      { role: "accountant", label: "Accountant", href: "/accountant-dashboard.html" },
+      { role: "billing", label: "Billing", href: "billing.html" },
+      { role: "admin", label: "Admin", href: "admin-dashboard.html" },
+      { role: "accountant", label: "Accountant", href: "accountant-dashboard.html" },
     ] : null,
   };
 }
-function tsLogout() { tsClearSession(); return { ok: true, redirect: "/signin.html" }; }
+function tsLogout() { tsClearSession(); return { ok: true, redirect: "signin.html" }; }
 function tsWhoami() {
   const s = tsGetSession();
   if (!s || !s.email) return { ok: false };

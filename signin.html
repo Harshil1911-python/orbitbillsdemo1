@@ -91,9 +91,9 @@
     <div class="form-msg" id="loginMsg"></div>
     <div id="panelPicker" style="display:none;margin-top:18px">
       <p class="sub" style="margin-bottom:12px">Choose where to go</p>
-      <button type="button" class="btn" data-go="/billing.html" style="margin-bottom:8px;background:#0b3d91">Billing</button>
-      <button type="button" class="btn" data-go="/admin-dashboard.html" style="margin-bottom:8px;background:#2f6feb">Admin</button>
-      <button type="button" class="btn" data-go="/accountant-dashboard.html" style="margin-bottom:8px;background:#158a53">Accountant</button>
+      <button type="button" class="btn" data-go="billing.html" style="margin-bottom:8px;background:#0b3d91">Billing</button>
+      <button type="button" class="btn" data-go="admin-dashboard.html" style="margin-bottom:8px;background:#2f6feb">Admin</button>
+      <button type="button" class="btn" data-go="accountant-dashboard.html" style="margin-bottom:8px;background:#158a53">Accountant</button>
     </div>
     <p style="font-size:11px;color:var(--slate);margin-top:14px;text-align:center;line-height:1.4">Demo login<br><strong>orbitbills@techserenia.com</strong><br>TechSerenia@2026</p>
     <div class="back-link"><a href="index.html">Back to home</a></div>
@@ -120,44 +120,66 @@
 
 <script>
 (function orbitAutoResume(){
-  try{
+  try {
     var raw = localStorage.getItem("ts_session");
-    if(!raw) return;
-    var s = JSON.parse(raw);
-    if(!s || !s.email) return;
-    // Already signed in — skip login screen, go to last panel or picker
+    if (!raw) return;
+    var s = null;
+    try { s = JSON.parse(raw); } catch (e) { return; }
+    if (!s || !s.email) return;
+
     var last = "";
-    try{ last = localStorage.getItem("ts_last_panel") || ""; }catch(e){}
-    var email = String(s.email||"").toLowerCase();
-    var uniform = !!s.uniform || email === "orbitbills@techserenia.com";
-    var role = s.role || "";
-    function go(href){ window.location.replace(href); }
-    // Prefer last panel if set
-    if(last && /billing|admin-dashboard|accountant-dashboard/.test(last)){
-      go(last); return;
+    try { last = localStorage.getItem("ts_last_panel") || ""; } catch (e) {}
+    last = String(last || "").replace(/^\//, "");
+
+    function go(href) {
+      href = String(href || "billing.html").replace(/^\//, "");
+      try { localStorage.setItem("ts_last_panel", href); } catch (e) {}
+      window.location.replace(href);
     }
-    if(uniform){
-      // show picker instead of forcing login again
-      document.addEventListener("DOMContentLoaded", function(){
-        var form = document.getElementById("loginForm");
-        if(form) form.style.display = "none";
-        var picker = document.getElementById("panelPicker");
-        if(picker){
-          picker.style.display = "block";
-          var msg = document.getElementById("loginMsg");
-          if(msg){ msg.textContent = "Welcome back — pick a panel"; msg.className = "form-msg success"; }
-        } else {
-          go("/billing.html");
-        }
-      });
+
+    // Prefer last panel
+    if (last && (last.indexOf("billing") >= 0 || last.indexOf("admin-dashboard") >= 0 || last.indexOf("accountant-dashboard") >= 0)) {
+      go(last);
       return;
     }
-    if(role === "admin") go("/admin-dashboard.html");
-    else if(role === "accountant") go("/accountant-dashboard.html");
-    else go("/billing.html");
-  }catch(e){}
+
+    var email = String(s.email || "").toLowerCase();
+    var uniform = !!s.uniform || email === "orbitbills@techserenia.com";
+    var role = s.role || "";
+
+    if (uniform) {
+      // Stay on signin but show panel picker (no re-login)
+      function showPicker() {
+        var form = document.getElementById("loginForm");
+        if (form) form.style.display = "none";
+        var back = document.querySelector(".back-link");
+        if (back) back.style.display = "none";
+        var picker = document.getElementById("panelPicker");
+        if (picker) {
+          picker.style.display = "block";
+          var msg = document.getElementById("loginMsg");
+          if (msg) {
+            msg.textContent = "Welcome back — choose a panel";
+            msg.className = "form-msg success";
+          }
+        } else {
+          go("billing.html");
+        }
+      }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showPicker);
+      else showPicker();
+      return;
+    }
+
+    if (role === "admin") go("admin-dashboard.html");
+    else if (role === "accountant") go("accountant-dashboard.html");
+    else go("billing.html");
+  } catch (e) {}
 })();
 </script>
+
+
+
 
 <script>
   document.getElementById("togglePassword")?.addEventListener("click", function(){
@@ -256,7 +278,7 @@
           return;
         }
       }
-      window.location.href = data.redirect || "/billing.html";
+      window.location.replace((data.redirect || "billing.html").replace(/^\//,""));
     } catch (err) {
       msg.textContent = "Something went wrong. Please try again.";
       msg.className = "form-msg error";
