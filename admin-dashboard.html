@@ -557,6 +557,15 @@
   }
   .panel-switch-item:last-child{border-bottom:0;}
   .panel-switch-item:active,.panel-switch-item:hover{background:var(--blue-tint,#eaf1fc);color:var(--blue-deep,#0b3d91);}
+  .panel-close-x{
+    width:36px;height:36px;border-radius:10px;border:1px solid var(--border,#dfe7f5);
+    background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+    font-family:inherit;padding:0;
+  }
+  .panel-close-x:hover,.panel-close-x:active{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .page-head > div:first-child{flex:1;min-width:0;}
 
 </style>
 
@@ -774,6 +783,25 @@
           <div class="label">Other methods</div>
           <div class="value" id="statPayOther" style="color:var(--purple);">₹0</div>
           <div class="hint-line">All other payment methods</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
+        <div class="stat-card" style="border-color:#fecaca;background:linear-gradient(180deg,#fef2f2 0%,#fff 55%);">
+          <div class="label">Money to Pay</div>
+          <div class="value" id="statMoneyToPay" style="color:#b91c1c;">₹0</div>
+          <div class="hint-line">All purchases / supplier stock-in totals</div>
+        </div>
+        <div class="stat-card" style="border-color:#86efac;background:linear-gradient(180deg,#f0fdf4 0%,#fff 55%);">
+          <div class="label">Money to Receive</div>
+          <div class="value" id="statMoneyToReceive" style="color:#15803d;">₹0</div>
+          <div class="hint-line">Outstanding on unpaid invoices</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:1fr;margin-top:4px;">
+        <div class="stat-card" style="border-color:#93c5fd;background:linear-gradient(180deg,#eff6ff 0%,#fff 55%);">
+          <div class="label">Money Received (invoices)</div>
+          <div class="value" id="statMoneyReceived" style="color:#1d4ed8;">₹0</div>
+          <div class="hint-line">Total already collected from invoices</div>
         </div>
       </div>
       <div class="card">
@@ -2469,6 +2497,83 @@ function closeMobileNav(){
   else bind();
   setTimeout(bind, 300);
 })();
+/* Change Panel dropdown (3-dashes / sidebar) */
+(function bindPanelSwitch(){
+  function bind(){
+    var btn = document.getElementById("panelSwitchBtn");
+    var menu = document.getElementById("panelSwitchMenu");
+    if(!btn || !menu || btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    function closeMenu(){
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded","false");
+    }
+    function toggleMenu(e){
+      try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+      var open = menu.hidden;
+      menu.hidden = !open;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    btn.addEventListener("click", toggleMenu);
+    btn.addEventListener("touchend", function(e){ toggleMenu(e); }, {passive:false});
+    document.addEventListener("click", function(e){
+      if(!menu.hidden && !btn.contains(e.target) && !menu.contains(e.target)) closeMenu();
+    });
+    menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
+      a.addEventListener("click", function(){
+        try{
+          var href = a.getAttribute("href") || "";
+          if(typeof tsRememberPanel === "function") tsRememberPanel(href);
+          else localStorage.setItem("ts_last_panel", href);
+        }catch(err){}
+      });
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
+  setTimeout(bind, 300);
+})();
+/* X close on every admin screen → go back to Overview */
+(function bindPanelCloseX(){
+  function goOverview(){
+    var overviewBtn = document.querySelector('.nav-item[data-panel="overview"]');
+    if(overviewBtn) overviewBtn.click();
+    else {
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      var ov = document.getElementById("panel-overview");
+      if(ov) ov.classList.add("active");
+      document.querySelectorAll(".nav-item[data-panel]").forEach(function(b){ b.classList.remove("active"); });
+      if(overviewBtn) overviewBtn.classList.add("active");
+    }
+    try{ if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav(); }catch(e){}
+  }
+  function inject(){
+    document.querySelectorAll("section.panel").forEach(function(sec){
+      if(sec.id === "panel-overview") return;
+      if(sec.querySelector(".panel-close-x")) return;
+      var head = sec.querySelector(".page-head");
+      if(!head){
+        head = document.createElement("div");
+        head.className = "page-head";
+        sec.insertBefore(head, sec.firstChild);
+      }
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "panel-close-x";
+      x.setAttribute("aria-label","Close screen");
+      x.title = "Close";
+      x.textContent = "×";
+      x.addEventListener("click", function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+        goOverview();
+      });
+      head.appendChild(x);
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
+  else inject();
+  setTimeout(inject, 400);
+})();
 document.querySelectorAll(".nav-item[data-panel]").forEach(function(btn){
   btn.addEventListener("click", function(){
     if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav();
@@ -2510,6 +2615,12 @@ async function renderOverview(){
   const rt = document.getElementById("statReturnsTotal");
   if (rc) rc.textContent = data.stats.returnsCount || 0;
   if (rt) rt.textContent = money(data.stats.returnsTotal || 0);
+  const mtp = document.getElementById("statMoneyToPay");
+  const mtr = document.getElementById("statMoneyToReceive");
+  const mrcv = document.getElementById("statMoneyReceived");
+  if (mtp) mtp.textContent = money(data.stats.moneyToPay || 0);
+  if (mtr) mtr.textContent = money(data.stats.moneyToReceive || 0);
+  if (mrcv) mrcv.textContent = money(data.stats.moneyReceived || 0);
 
   const tbody = document.getElementById("lowStockTable").querySelector("tbody");
   tbody.innerHTML = data.lowStockProducts.map(p => `

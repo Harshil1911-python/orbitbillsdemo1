@@ -489,11 +489,23 @@ async function tsLocalApi(path, options) {
     const invoices = await tsGetAll("invoices");
     const payments = await tsGetAll("payments");
     const returns = await tsGetAllSafe("returns");
+    const purchases = await tsGetAllSafe("purchases");
     const defaultLimit = parseInt((await tsGetSetting("default_low_stock_limit", "5")) || "5", 10);
     const low = products.filter(p => (Number(p.stock) || 0) <= (p.low_stock_limit != null ? p.low_stock_limit : defaultLimit));
     const revenuePaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + (Number(i.total) || 0), 0);
     const revenueUnpaid = invoices.filter(i => i.status === "unpaid" || i.status === "partial")
       .reduce((s, i) => s + Math.max(0, (Number(i.total) || 0) - (Number(i.amount_paid) || 0)), 0);
+    // Money received = sum of amount_paid across invoices (actual cash in from invoices)
+    const moneyReceived = invoices.reduce((s, i) => {
+      const ap = Number(i.amount_paid);
+      if (!isNaN(ap) && ap > 0) return s + ap;
+      if (String(i.status || "").toLowerCase() === "paid") return s + (Number(i.total) || 0);
+      return s;
+    }, 0);
+    // Money to receive = outstanding on unpaid/partial invoices
+    const moneyToReceive = revenueUnpaid;
+    // Money to pay = total of all purchases (supplier / stock-in costs)
+    const moneyToPay = (purchases || []).reduce((s, p) => s + (Number(p.total) || 0), 0);
     // Payment method buckets: only REAL received payments (amount > 0) that belong
     // to an invoice which is paid/partial or has amount_paid > 0. Pure unpaid invoices
     // (no money taken) must not inflate Cash / Bank / Other boxes.
@@ -518,6 +530,9 @@ async function tsLocalApi(path, options) {
     const returnsTotal = (returns || []).reduce((s, r) => s + (Number(r.total) || 0), 0);
     return { ok: true, stats: { products: products.length, clients: clients.length, invoices: invoices.length, lowStock: low.length,
       totalClientCredits: clients.reduce((s, c) => s + (Number(c.credit_balance) || 0), 0), revenuePaid, revenueUnpaid,
+      moneyToPay: Math.round(moneyToPay * 100) / 100,
+      moneyToReceive: Math.round(moneyToReceive * 100) / 100,
+      moneyReceived: Math.round(moneyReceived * 100) / 100,
       paymentsCash: Math.round(payCash * 100) / 100,
       paymentsBank: Math.round(payBank * 100) / 100,
       paymentsOther: Math.round(payOther * 100) / 100,

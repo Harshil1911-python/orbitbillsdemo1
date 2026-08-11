@@ -187,6 +187,14 @@ td{padding:9px 10px;border-bottom:1px solid var(--border)}
     <button class="nav-item" data-panel="checklist">Filing checklist</button>
     <div class="sidebar-foot">
       <div id="whoLabel" style="font-size:12px;color:var(--slate);padding:0 8px 8px"></div>
+      <div class="panel-switch" id="panelSwitch">
+        <button type="button" class="panel-switch-btn" id="panelSwitchBtn" aria-expanded="false">Change panel ▾</button>
+        <div class="panel-switch-menu" id="panelSwitchMenu" hidden>
+          <a class="panel-switch-item" href="billing.html">Billing</a>
+          <a class="panel-switch-item" href="admin-dashboard.html">Admin</a>
+          <a class="panel-switch-item" href="accountant-dashboard.html">Accountant</a>
+        </div>
+      </div>
       <button class="nav-item" type="button" id="signOutBtn" style="color:var(--blue-deep)">PLACEHOLDER_SO</button>
     </div>
   </aside>
@@ -503,6 +511,44 @@ document.getElementById("btnExportB2cCsv").addEventListener("click", () => {
   try{ document.documentElement.classList.remove("orbit-booting"); }catch(e){}
   setTimeout(function(){ try{ document.documentElement.classList.remove("orbit-booting"); }catch(e){} }, 50);
   setTimeout(function(){ try{ document.documentElement.classList.remove("orbit-booting"); if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){} }, 1000);
+})();
+</script>
+<script>
+/* Change Panel dropdown */
+(function bindPanelSwitch(){
+  function bind(){
+    var btn = document.getElementById("panelSwitchBtn");
+    var menu = document.getElementById("panelSwitchMenu");
+    if(!btn || !menu || btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    function closeMenu(){
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded","false");
+    }
+    function toggleMenu(e){
+      try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+      var open = menu.hidden;
+      menu.hidden = !open;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    btn.addEventListener("click", toggleMenu);
+    btn.addEventListener("touchend", function(e){ toggleMenu(e); }, {passive:false});
+    document.addEventListener("click", function(e){
+      if(!menu.hidden && !btn.contains(e.target) && !menu.contains(e.target)) closeMenu();
+    });
+    menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
+      a.addEventListener("click", function(){
+        try{
+          var href = a.getAttribute("href") || "";
+          if(typeof tsRememberPanel === "function") tsRememberPanel(href);
+          else localStorage.setItem("ts_last_panel", href);
+        }catch(err){}
+      });
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
+  setTimeout(bind, 300);
 })();
 </script>
 </body>
