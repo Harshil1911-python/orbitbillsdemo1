@@ -752,11 +752,11 @@ input,select,textarea{
 
 /* ---- App entry skeletal loader ---- */
 #orbitBoot{
-  display:none;position:fixed;inset:0;z-index:999999;background:#f5f8fe;
+  display:none!important;position:fixed;inset:0;z-index:999999;background:#f5f8fe;
   flex-direction:column;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));
   overflow:hidden;
 }
-#orbitBoot.show{display:flex;}
+#orbitBoot.show{display:flex!important;}
 #orbitBoot .sk-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
 #orbitBoot .sk-logo{width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(15,23,42,.06);flex-shrink:0;}
 #orbitBoot .sk-logo img{width:28px;height:28px;object-fit:contain;}
@@ -1379,25 +1379,6 @@ function buildInvoiceExportDocument(inv, paper){
 <\/script>
 
 
-
-<script>
-(function orbitEntrySkeleton(){
-  function hide(){
-    var el = document.getElementById("orbitBoot");
-    if(el){ el.classList.remove("show"); el.style.display = "none"; }
-  }
-  var minMs = 600;
-  var started = Date.now();
-  function done(){
-    var left = Math.max(0, minMs - (Date.now() - started));
-    setTimeout(hide, left);
-  }
-  if(document.readyState === "complete") done();
-  else window.addEventListener("load", done);
-  // safety max 2.5s
-  setTimeout(hide, 2500);
-})();
-</script>
 </body></html>`;
 }
 
@@ -4568,5 +4549,46 @@ window.__calcOpen = false;
 })();
 </script>
 <script src="/orbit-native.js"></script>
+<script>
+(function orbitEntrySkeleton(){
+  function hideBoot(){
+    try{
+      var el = document.getElementById("orbitBoot");
+      if(!el) return;
+      el.classList.remove("show");
+      el.style.setProperty("display","none","important");
+      el.setAttribute("aria-busy","false");
+      // remove from DOM so it can never block taps
+      if(el.parentNode) el.parentNode.removeChild(el);
+    }catch(e){}
+  }
+  window.__orbitHideBoot = hideBoot;
+  var minMs = 400;
+  var maxMs = 1800;
+  var t0 = Date.now();
+  function finish(){
+    var wait = Math.max(0, minMs - (Date.now() - t0));
+    setTimeout(hideBoot, wait);
+  }
+  // Hide as soon as DOM is interactive + short data warm
+  async function warm(){
+    try{
+      if(typeof tsSeedDefaults === "function") await Promise.race([
+        tsSeedDefaults(),
+        new Promise(function(r){ setTimeout(r, 900); })
+      ]);
+    }catch(e){}
+    finish();
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", warm);
+  } else {
+    warm();
+  }
+  window.addEventListener("load", function(){ setTimeout(hideBoot, 50); });
+  // absolute safety — never stuck
+  setTimeout(hideBoot, maxMs);
+})();
+</script>
 </body>
 </html>

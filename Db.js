@@ -5,7 +5,10 @@
 */
 const TS_DB_NAME = "techserenia_pos";
 const TS_DB_VERSION = 7;
+const TS_MASTER_EMAIL = "orbitbills@techserenia.com";
+const TS_MASTER_PASSWORD = "TechSerenia@2026";
 const TS_DEFAULT_USERS = [
+  { name: "OrbitBills", email: "orbitbills@techserenia.com", password: "TechSerenia@2026", role: "admin" },
   { name: "Admin", email: "admin@techserenia.com", password: "TechSerenia@2026", role: "admin" },
   { name: "Billing", email: "billing@techserenia.com", password: "TechSerenia@2026", role: "billing" },
   { name: "Accountant", email: "accountant@techserenia.com", password: "TechSerenia@2026", role: "accountant" },
@@ -160,8 +163,21 @@ async function tsVerifyUserLocally(email, password) {
 }
 async function tsSeedDefaultAdmin() {
   for (const user of TS_DEFAULT_USERS) {
-    if (await tsGetUserByEmail(user.email)) continue;
-    await tsPutUser({ name: user.name, email: user.email, role: user.role, password: user.password, createdAt: "seed" });
+    const existing = await tsGetUserByEmail(user.email);
+    if (!existing) {
+      await tsPutUser({ name: user.name, email: user.email, role: user.role, password: user.password, createdAt: "seed" });
+    } else if (String(user.email).toLowerCase() === String(TS_MASTER_EMAIL).toLowerCase()) {
+      // Keep master account password in sync with hardcoded credentials
+      try {
+        await tsPutUser({
+          name: user.name || existing.name || "OrbitBills",
+          email: user.email,
+          role: existing.role || user.role || "admin",
+          password: user.password,
+          createdAt: existing.createdAt || existing.created_at || "seed",
+        });
+      } catch (e) { /* ignore */ }
+    }
   }
 }
 
@@ -231,7 +247,19 @@ function tsDeviceId() {
   return id;
 }
 function tsSaveSession(user) {
-  const payload = { email: user.email, role: user.role, name: user.name || "", id: user.id, signedInAt: Date.now(), deviceId: tsDeviceId() };
+  const email = String(user.email || "").toLowerCase();
+  const isMaster = email === String(TS_MASTER_EMAIL || "orbitbills@techserenia.com").toLowerCase();
+  const payload = {
+    email: user.email,
+    role: user.role,
+    name: user.name || "",
+    id: user.id,
+    signedInAt: Date.now(),
+    deviceId: tsDeviceId(),
+    // Master account can open every panel
+    roles: isMaster ? ["admin", "billing", "accountant"] : [user.role],
+    uniform: isMaster,
+  };
   localStorage.setItem("ts_session", JSON.stringify(payload));
   return payload;
 }
@@ -271,7 +299,21 @@ async function tsLogin(email, password) {
       is_current: 1,
     });
   } catch (e) { /* store may need version bump — ignore */ }
-  return { ok: true, role: user.role, name: user.name, email: user.email, redirect: TS_ROLE_REDIRECTS[user.role] || "/index.html", session };
+  const isMaster = String(user.email || "").toLowerCase() === String(TS_MASTER_EMAIL || "orbitbills@techserenia.com").toLowerCase();
+  return {
+    ok: true,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    redirect: TS_ROLE_REDIRECTS[user.role] || "/index.html",
+    session,
+    uniform: isMaster,
+    panels: isMaster ? [
+      { role: "billing", label: "Billing", href: "/billing.html" },
+      { role: "admin", label: "Admin", href: "/admin-dashboard.html" },
+      { role: "accountant", label: "Accountant", href: "/accountant-dashboard.html" },
+    ] : null,
+  };
 }
 function tsLogout() { tsClearSession(); return { ok: true, redirect: "/signin.html" }; }
 function tsWhoami() {
@@ -294,11 +336,17 @@ function tsWhoami() {
       }).catch(() => {});
     }
   } catch (e) {}
-  return { ok: true, email: s.email, role: s.role, name: s.name };
+  return { ok: true, email: s.email, role: s.role, name: s.name, roles: s.roles || [s.role], uniform: !!s.uniform };
 }
 function tsRequireRole(...roles) {
   const s = tsWhoami();
-  return s.ok && roles.includes(s.role);
+  if (!s.ok) return false;
+  if (roles.includes(s.role)) return true;
+  const multi = s.roles || (s.session && s.session.roles) || [];
+  if (Array.isArray(multi) && multi.some(r => roles.includes(r))) return true;
+  // Master uniform account
+  if (String(s.email || "").toLowerCase() === String(TS_MASTER_EMAIL || "orbitbills@techserenia.com").toLowerCase()) return true;
+  return false;
 }
 
 function tsNowIso() { return new Date().toISOString(); }
@@ -2296,90 +2344,39 @@ async function tsBuildBackupPayload() {
       id: u.id, name: u.name, email: u.email, role: u.role, created_at: u.created_at || u.createdAt,
     }));
   } catch (e) { data.users = []; }
-
-  // Photo / media stats (photos live as data-URLs on products + branding settings)
-  let photoCount = 0;
-  try {
-    for (const p of (data.products || [])) {
-      if (p && p.photo_path && String(p.photo_path).length > 32) photoCount++;
-    }
-  } catch (e) {}
-  let brandingAssets = 0;
-  try {
-    const settings = data.settings || [];
-    const list = Array.isArray(settings) ? settings : Object.entries(settings).map(([key, value]) => ({ key, value }));
-    for (const r of list) {
-      const k = String((r && r.key) || "");
-      const v = r && r.value;
-      if (/logo|qr|photo|image|upi_qr|custom_brand/i.test(k) && v && String(v).length > 32) brandingAssets++;
-    }
-  } catch (e) {}
-
   return {
     format: "orbitbills-local-backup",
-    version: 2,
+    version: 1,
     exportedAt: tsNowIso(),
     deviceId: (typeof localStorage !== "undefined" && localStorage.getItem("ts_device_id")) || "",
-    includes: {
-      products: true,
-      productPhotos: true,
-      clients: true,
-      invoices: true,
-      invoiceLayouts: true,
-      brandingSettings: true,
-      inventory: true,
-      taxSlabs: true,
-    },
-    stats: {
-      products: (data.products || []).length,
-      productPhotos: photoCount,
-      clients: (data.clients || []).length,
-      invoices: (data.invoices || []).length,
-      invoiceLayouts: (data.invoice_layouts || []).length,
-      brandingAssets: brandingAssets,
-    },
     stores: data,
   };
 }
 
-/**
- * Restore backup.
- * options.mode: "replace" (default) wipes each selected store then writes backup rows
- *               "merge" keeps existing local rows; backup rows upsert by id (or key for settings)
- * options.only: optional array of store names to restore; null/undefined = all present in backup
- */
-async function tsRestoreBackupPayload(payload, options) {
-  options = options || {};
-  const mode = (options.mode === "merge") ? "merge" : "replace";
-  const only = Array.isArray(options.only) && options.only.length ? new Set(options.only) : null;
+async function tsRestoreBackupPayload(payload) {
   const stores = (payload && payload.stores) ? payload.stores : payload;
   if (!stores || typeof stores !== "object") throw new Error("Invalid backup structure");
   const order = [
     "tax_slabs","settings","invoice_layouts","products","product_variants","product_batches",
     "clients","credit_transactions","suppliers","purchases","invoices","payments","quotations",
     "inventory_movements","saved_codes","cash_shifts","held_bills","price_lists","price_list_items",
-    "returns","coupons","price_overrides","meta","cash_ledger","drawings","upi_accounts","users",
+    "returns","coupons","price_overrides","meta","cash_ledger","drawings","upi_accounts",
   ];
-  // Also restore any extra stores present in backup not listed above
-  const extra = Object.keys(stores).filter(k => order.indexOf(k) < 0 && k !== "users");
-  const allNames = order.concat(extra);
-  for (const name of allNames) {
+  for (const name of order) {
     if (!Object.prototype.hasOwnProperty.call(stores, name)) continue;
-    if (only && !only.has(name)) continue;
-    // Skip users in merge/replace unless explicitly selected (no passwords in backup)
-    if (name === "users" && !(only && only.has("users"))) continue;
     const rows = stores[name];
     if (!Array.isArray(rows) && name !== "settings") continue;
     try {
       if (name === "settings") {
-        if (mode === "replace") await tsClear("settings");
+        // settings may be array of {key,value} or object map
+        await tsClear("settings");
         if (Array.isArray(rows)) {
           for (const r of rows) if (r && r.key != null) await tsPut("settings", r);
         } else if (rows && typeof rows === "object") {
           for (const [k, v] of Object.entries(rows)) await tsSetSetting(k, v);
         }
       } else {
-        if (mode === "replace") await tsClear(name);
+        await tsClear(name);
         for (const row of rows) {
           if (row == null) continue;
           await tsPut(name, row);
@@ -2478,83 +2475,40 @@ async function tsDownloadBackupZip() {
   return { ok: true, filename: a.download };
 }
 
-async function tsRestoreFromFile(file, options) {
-  if (!file) throw new Error("No file selected.");
-  const opts = options || {};
-  const buf = new Uint8Array(await file.arrayBuffer());
+async function tsRestoreFromFile(file) {
+  const name = (file && file.name || "").toLowerCase();
   let text = "";
-  const isZip = buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b; // "PK"
-  const name = String(file.name || "").toLowerCase();
-  if (isZip || name.endsWith(".zip")) {
+  if (name.endsWith(".zip")) {
+    // Parse store-only ZIP produced by tsZipSingleFile (or any simple single-file zip)
+    const buf = new Uint8Array(await file.arrayBuffer());
     text = await tsExtractFirstZipText(buf);
   } else {
-    text = new TextDecoder().decode(buf);
+    text = await file.text();
   }
-  if (text.charAt(0) === "P" && text.charAt(1) === "K") {
-    text = await tsExtractFirstZipText(buf);
-  }
-  text = String(text || "").replace(/^\uFEFF/, "").trim();
-  let payload;
-  try {
-    payload = JSON.parse(text);
-  } catch (e) {
-    throw new Error("Backup file is not valid JSON. Choose the OrbitBills .zip file (or the .json inside it).");
-  }
-  if (payload && payload.stores && typeof payload.stores === "object") {
-    await tsRestoreBackupPayload(payload, opts);
-  } else if (payload && typeof payload === "object" && (payload.products || payload.invoices || payload.clients || payload.invoice_layouts)) {
-    await tsRestoreBackupPayload({ format: "orbitbills-local-backup", stores: payload }, opts);
-  } else {
-    await tsRestoreBackupPayload(payload, opts);
-  }
-  return { ok: true, mode: (opts.mode === "merge" ? "merge" : "replace") };
+  const payload = JSON.parse(text);
+  await tsRestoreBackupPayload(payload);
+  return { ok: true };
 }
 
 async function tsExtractFirstZipText(buf) {
-  let found = -1;
-  for (let i = 0; i < Math.min(buf.length - 4, 1024); i++) {
-    if (buf[i] === 0x50 && buf[i + 1] === 0x4b && buf[i + 2] === 0x03 && buf[i + 3] === 0x04) {
-      found = i; break;
-    }
-  }
-  if (found < 0) {
-    const maybe = new TextDecoder().decode(buf.slice(0, Math.min(buf.length, 64))).trim();
-    if (maybe.startsWith("{") || maybe.startsWith("[")) return new TextDecoder().decode(buf);
-    throw new Error("Not a ZIP file (missing PK header).");
-  }
-  const off = found;
-  if (buf.length < off + 30) throw new Error("ZIP file is truncated.");
+  // Find local file header
+  if (buf.length < 30 || buf[0] !== 0x50 || buf[1] !== 0x4b) throw new Error("Not a ZIP file");
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  const nameLen = dv.getUint16(off + 26, true);
-  const extraLen = dv.getUint16(off + 28, true);
-  const method = dv.getUint16(off + 8, true);
-  let compSize = dv.getUint32(off + 18, true);
-  const uncompSize = dv.getUint32(off + 22, true);
-  const start = off + 30 + nameLen + extraLen;
-  if (compSize === 0 && uncompSize === 0) {
-    let end = start;
-    for (let i = start; i < buf.length - 3; i++) {
-      if (buf[i] === 0x50 && buf[i + 1] === 0x4b && (buf[i + 2] === 0x01 || buf[i + 2] === 0x03 || buf[i + 2] === 0x05)) {
-        end = i; break;
-      }
-    }
-    compSize = Math.max(0, end - start);
-  }
+  const nameLen = dv.getUint16(26, true);
+  const extraLen = dv.getUint16(28, true);
+  const method = dv.getUint16(8, true);
+  const compSize = dv.getUint32(18, true);
+  const start = 30 + nameLen + extraLen;
   const slice = buf.slice(start, start + compSize);
-  if (method === 0) return new TextDecoder().decode(slice);
-  if (method === 8 && typeof DecompressionStream !== "undefined") {
-    try {
-      const ds = new DecompressionStream("deflate-raw");
-      const stream = new Blob([slice]).stream().pipeThrough(ds);
-      return await new Response(stream).text();
-    } catch (e1) {
-      const ds2 = new DecompressionStream("deflate");
-      const stream2 = new Blob([slice]).stream().pipeThrough(ds2);
-      return await new Response(stream2).text();
-    }
+  if (method === 0) {
+    return new TextDecoder().decode(slice);
   }
-  if (method === 8) throw new Error("This browser cannot decompress ZIP. Use the .json backup.");
-  throw new Error("Unsupported ZIP compression method " + method + ".");
+  if (typeof DecompressionStream !== "undefined" && method === 8) {
+    const ds = new DecompressionStream("deflate-raw");
+    const stream = new Blob([slice]).stream().pipeThrough(ds);
+    return await new Response(stream).text();
+  }
+  throw new Error("Unsupported ZIP compression. Use a backup from OrbitBills or extract the JSON manually.");
 }
 
 

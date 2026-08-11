@@ -38,13 +38,13 @@
 
   /* Skeletal loading screen */
   #orbitBoot{
-    display:none;position:fixed;inset:0;z-index:999999;
+    display:none!important;position:fixed;inset:0;z-index:999999;
     background:#f5f8fe;
     flex-direction:column;align-items:stretch;justify-content:flex-start;
     padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
     overflow:hidden;
   }
-  #orbitBoot.show{display:flex;}
+  #orbitBoot.show{display:flex!important;}
   #orbitBoot .sk-top{
     display:flex;align-items:center;gap:12px;margin-bottom:20px;
   }
@@ -95,6 +95,13 @@
       <button type="submit" class="btn" id="loginSubmit">Sign in</button>
     </form>
     <div class="form-msg" id="loginMsg"></div>
+    <div id="panelPicker" style="display:none;margin-top:18px">
+      <p class="sub" style="margin-bottom:12px">Choose where to go</p>
+      <button type="button" class="btn" data-go="/billing.html" style="margin-bottom:8px;background:#0b3d91">Billing</button>
+      <button type="button" class="btn" data-go="/admin-dashboard.html" style="margin-bottom:8px;background:#2f6feb">Admin</button>
+      <button type="button" class="btn" data-go="/accountant-dashboard.html" style="margin-bottom:8px;background:#158a53">Accountant</button>
+    </div>
+    <p style="font-size:11px;color:var(--slate);margin-top:14px;text-align:center;line-height:1.4">Demo login<br><strong>orbitbills@techserenia.com</strong><br>TechSerenia@2026</p>
     <div class="back-link"><a href="index.html">Back to home</a></div>
   </div>
 
@@ -138,7 +145,17 @@
 
   function showBoot(){
     var el = document.getElementById("orbitBoot");
-    if(el) el.classList.add("show");
+    if(el){
+      el.classList.add("show");
+      el.style.setProperty("display","flex","important");
+    }
+  }
+  function hideBoot(){
+    var el = document.getElementById("orbitBoot");
+    if(el){
+      el.classList.remove("show");
+      el.style.setProperty("display","none","important");
+    }
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -158,25 +175,37 @@
       }
       // Skeletal loader while warming IndexedDB, max 1.5s
       showBoot();
-      const redirect = data.redirect || "/billing.html";
       const started = Date.now();
       try {
         if (typeof tsSeedDefaults === "function") await tsSeedDefaults();
         if (typeof tsGetAllSafe === "function") {
           await Promise.all([
-            tsGetAllSafe("products"),
-            tsGetAllSafe("clients"),
-            tsGetAllSafe("settings"),
-            tsGetAllSafe("tax_slabs"),
+            tsGetAllSafe("products").catch(function(){}),
+            tsGetAllSafe("clients").catch(function(){}),
+            tsGetAllSafe("settings").catch(function(){}),
+            tsGetAllSafe("tax_slabs").catch(function(){}),
           ]);
         } else if (typeof tsLocalApi === "function") {
           await tsLocalApi("/pos-sync").catch(function(){});
         }
       } catch (warmErr) { /* continue */ }
       const elapsed = Date.now() - started;
-      const wait = Math.max(0, 1500 - elapsed);
+      const wait = Math.max(0, Math.min(1200, 800 - elapsed < 0 ? 0 : 800 - elapsed));
       await new Promise(function(r){ setTimeout(r, wait); });
-      window.location.href = redirect;
+      // Uniform master account → panel picker (same login for all modes)
+      if (data.uniform || (data.panels && data.panels.length)) {
+        var boot = document.getElementById("orbitBoot");
+        hideBoot();
+        var picker = document.getElementById("panelPicker");
+        if (picker) {
+          picker.style.display = "block";
+          submitBtn.disabled = false;
+          msg.textContent = "Signed in — pick a panel";
+          msg.className = "form-msg success";
+          return;
+        }
+      }
+      window.location.href = data.redirect || "/billing.html";
     } catch (err) {
       msg.textContent = "Something went wrong. Please try again.";
       msg.className = "form-msg error";
@@ -185,6 +214,19 @@
       if(boot) boot.classList.remove("show");
     }
   });
+  document.querySelectorAll("#panelPicker [data-go]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      showBoot();
+      window.location.href = btn.getAttribute("data-go");
+    });
+  });
+  // Prefill master credentials for convenience
+  try {
+    var em = document.getElementById("loginEmail");
+    var pw = document.getElementById("loginPassword");
+    if (em && !em.value) em.value = "orbitbills@techserenia.com";
+    if (pw && !pw.value) pw.placeholder = "TechSerenia@2026";
+  } catch(e){}
   (async function () { await tsSeedDefaults().catch(() => {}); })();
 </script>
 </body>
