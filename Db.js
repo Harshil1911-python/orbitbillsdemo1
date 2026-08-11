@@ -2428,39 +2428,98 @@ async function tsDownloadBackupZip() {
 }
 
 async function tsRestoreFromFile(file) {
-  const name = (file && file.name || "").toLowerCase();
+  if (!file) throw new Error("No file selected.");
+  const buf = new Uint8Array(await file.arrayBuffer());
   let text = "";
-  if (name.endsWith(".zip")) {
-    // Parse store-only ZIP produced by tsZipSingleFile (or any simple single-file zip)
-    const buf = new Uint8Array(await file.arrayBuffer());
+  const isZip = buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b; // "PK"
+  const name = String(file.name || "").toLowerCase();
+  if (isZip || name.endsWith(".zip")) {
     text = await tsExtractFirstZipText(buf);
   } else {
-    text = await file.text();
+    text = new TextDecoder().decode(buf);
   }
-  const payload = JSON.parse(text);
-  await tsRestoreBackupPayload(payload);
+  // If text still looks like a ZIP (mis-detected), try extract
+  if (text.charAt(0) === "P" && text.charAt(1) === "K") {
+    text = await tsExtractFirstZipText(buf);
+  }
+  text = String(text || "").replace(/^﻿/, "").trim();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    throw new Error("Backup file is not valid JSON. Choose the OrbitBills .zip (or the .json inside it).");
+  }
+  // Accept wrapper { format, stores } or raw stores object
+  if (payload && payload.stores && typeof payload.stores === "object") {
+    await tsRestoreBackupPayload(payload);
+  } else if (payload && typeof payload === "object" && (payload.products || payload.invoices || payload.clients)) {
+    await tsRestoreBackupPayload({ format: "orbitbills-local-backup", stores: payload });
+  } else {
+    await tsRestoreBackupPayload(payload);
+  }
   return { ok: true };
 }
 
 async function tsExtractFirstZipText(buf) {
-  // Find local file header
-  if (buf.length < 30 || buf[0] !== 0x50 || buf[1] !== 0x4b) throw new Error("Not a ZIP file");
+  // Scan for local file header (handles extra leading bytes)
+  let off = 0;
+  let found = -1;
+  for (let i = 0; i < Math.min(buf.length - 4, 1024); i++) {
+    if (buf[i] === 0x50 && buf[i + 1] === 0x4b && buf[i + 2] === 0x03 && buf[i + 3] === 0x04) {
+      found = i;
+      break;
+    }
+  }
+  if (found < 0) {
+    // maybe already JSON
+    const maybe = new TextDecoder().decode(buf.slice(0, Math.min(buf.length, 64))).trim();
+    if (maybe.startsWith("{") || maybe.startsWith("[")) return new TextDecoder().decode(buf);
+    throw new Error("Not a ZIP file (missing PK header).");
+  }
+  off = found;
+  if (buf.length < off + 30) throw new Error("ZIP file is truncated.");
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  const nameLen = dv.getUint16(26, true);
-  const extraLen = dv.getUint16(28, true);
-  const method = dv.getUint16(8, true);
-  const compSize = dv.getUint32(18, true);
-  const start = 30 + nameLen + extraLen;
+  const nameLen = dv.getUint16(off + 26, true);
+  const extraLen = dv.getUint16(off + 28, true);
+  const method = dv.getUint16(off + 8, true);
+  let compSize = dv.getUint32(off + 18, true);
+  const uncompSize = dv.getUint32(off + 22, true);
+  // Zip64 / data descriptor: if sizes are 0, read until central directory
+  const start = off + 30 + nameLen + extraLen;
+  if (compSize === 0 && uncompSize === 0) {
+    // find next signature
+    let end = start;
+    for (let i = start; i < buf.length - 3; i++) {
+      if (buf[i] === 0x50 && buf[i + 1] === 0x4b && (buf[i + 2] === 0x01 || buf[i + 2] === 0x03 || buf[i + 2] === 0x05)) {
+        end = i;
+        break;
+      }
+    }
+    compSize = Math.max(0, end - start);
+  }
   const slice = buf.slice(start, start + compSize);
   if (method === 0) {
     return new TextDecoder().decode(slice);
   }
-  if (typeof DecompressionStream !== "undefined" && method === 8) {
-    const ds = new DecompressionStream("deflate-raw");
-    const stream = new Blob([slice]).stream().pipeThrough(ds);
-    return await new Response(stream).text();
+  if (method === 8 && typeof DecompressionStream !== "undefined") {
+    try {
+      const ds = new DecompressionStream("deflate-raw");
+      const stream = new Blob([slice]).stream().pipeThrough(ds);
+      return await new Response(stream).text();
+    } catch (e1) {
+      try {
+        const ds2 = new DecompressionStream("deflate");
+        const stream2 = new Blob([slice]).stream().pipeThrough(ds2);
+        return await new Response(stream2).text();
+      } catch (e2) {
+        throw new Error("Could not decompress ZIP. Re-download backup from OrbitBills.");
+      }
+    }
   }
-  throw new Error("Unsupported ZIP compression. Use a backup from OrbitBills or extract the JSON manually.");
+  if (method === 8) {
+    throw new Error("This browser cannot decompress ZIP. Use the .json backup or a modern browser/WebView.");
+  }
+  throw new Error("Unsupported ZIP compression method " + method + ". Use an OrbitBills backup.");
 }
 
 

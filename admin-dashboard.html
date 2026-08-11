@@ -296,10 +296,18 @@
   .mm-brand-link{font-size:12px;font-weight:600;color:var(--blue-deep);text-decoration:none;}
 
   @media (max-width:900px){
-    html,body{max-width:100%;overflow-x:hidden;}
+    html,body{
+      max-width:100%;
+      overflow-x:hidden!important;
+      overflow-y:auto!important;
+      height:auto!important;
+      min-height:100%;
+      position:relative;
+    }
     body{
       padding-top:calc(52px + env(safe-area-inset-top, 0px));
       background:var(--blue-tint-2);
+      /* never permanently lock scroll */
     }
     body::before{
       content:"";position:fixed;top:0;left:0;right:0;
@@ -369,15 +377,29 @@
   }
   .overlay-scrim{display:none!important;position:fixed;inset:0;background:rgba(16,26,43,.4);z-index:480;pointer-events:none;}
   .overlay-scrim.show{display:block!important;pointer-events:auto;}
+  html.m-menu-open, html.m-menu-open body{overflow:hidden!important;touch-action:none;}
+  html:not(.m-menu-open), html:not(.m-menu-open) body{overflow-x:hidden!important;overflow-y:auto!important;}
 
 
   /* ---- Native app shell (phone) ---- */
   @media (max-width:900px){
     html{-webkit-text-size-adjust:100%;}
     body{
-      overscroll-behavior-y:none;
+      overscroll-behavior-y:contain;
       -webkit-user-select:none;user-select:none;
       background:#f2f4f7!important;
+      overflow-y:auto!important;
+      height:auto!important;
+      position:static!important;
+    }
+    .layout{
+      min-height:0!important;
+      height:auto!important;
+      overflow:visible!important;
+    }
+    .main{
+      overflow:visible!important;
+      height:auto!important;
     }
     input,textarea,select,.modal,[contenteditable]{-webkit-user-select:text;user-select:text;}
     .main{
@@ -2168,15 +2190,36 @@ function openMobileNav(){
   var scrim = document.getElementById("mobileScrim");
   if(side){ side.classList.add("mobile-open"); side.style.display = "flex"; }
   if(scrim){ scrim.classList.add("show"); }
-  try{ document.body.style.overflow = "hidden"; }catch(e){}
+  try{ document.documentElement.classList.add("m-menu-open"); document.body.classList.add("m-menu-open"); }catch(e){}
 }
 function closeMobileNav(){
   var side = document.getElementById("sidebar");
   var scrim = document.getElementById("mobileScrim");
   if(side){ side.classList.remove("mobile-open"); side.style.display = ""; }
   if(scrim){ scrim.classList.remove("show"); }
-  try{ document.body.style.overflow = ""; }catch(e){}
+  try{
+    document.documentElement.classList.remove("m-menu-open");
+    document.body.classList.remove("m-menu-open");
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  }catch(e){}
 }
+// Ensure page can always scroll after load
+(function(){
+  function unlock(){
+    try{
+      if(!document.body.classList.contains("m-menu-open")){
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      }
+    }catch(e){}
+  }
+  unlock();
+  document.addEventListener("DOMContentLoaded", unlock);
+  window.addEventListener("pageshow", unlock);
+  setTimeout(unlock, 100);
+  setTimeout(unlock, 500);
+})();
 (function bindAdminHamburger(){
   function bind(){
     var btn = document.getElementById("hamburgerBtn");
@@ -4436,12 +4479,18 @@ document.getElementById("btnExportClientsCsv")?.addEventListener("click", async 
     if (!confirm("This will REPLACE all products, clients, invoices, tax slabs, branding and layouts on this device. Continue?")) return;
     msg.textContent = "Restoring..."; msg.className = "msg";
     try {
-      await tsRestoreFromFile(input.files[0]);
+      const f = input.files[0];
+      if (!f) { msg.textContent = "Choose a backup file first."; msg.className = "msg error"; return; }
+      await tsRestoreFromFile(f);
       msg.textContent = "Restored successfully. Reloading..."; msg.className = "msg success";
       setTimeout(() => location.reload(), 800);
     } catch (e) {
       console.error(e);
-      msg.textContent = "Restore failed: " + (e.message || e); msg.className = "msg error";
+      var em = (e && e.message) ? e.message : String(e);
+      if (/PK|not valid JSON|Unexpected token/i.test(em)) {
+        em = "Could not read backup. Select the OrbitBills .zip file (not a photo/screenshot). If it still fails, open the zip on a computer and restore the .json inside.";
+      }
+      msg.textContent = "Restore failed: " + em; msg.className = "msg error";
     }
   });
 })();
