@@ -1580,18 +1580,48 @@
       <div class="page-head">
         <div>
           <h1>Backup &amp; restore</h1>
-          <p>Downloads a ZIP of all IndexedDB business data on this device (products, clients, invoices, settings, layouts, images as data URLs). Password hashes are not included. Works fully offline.</p>
+          <p>Full offline backup of this device: products <strong>with photos</strong>, clients, invoices, <strong>invoice layouts</strong>, branding/logos, tax, stock, and more. User passwords are never included.</p>
         </div>
       </div>
       <div class="card">
         <h3>Create backup</h3>
+        <p class="hint" style="margin-bottom:10px">Includes product photos, brand logo / UPI QR, and all invoice paper layouts (A4, thermal, etc.).</p>
         <button class="btn btn-primary btn-sm" id="createBackupBtn">Download backup ZIP</button>
         <div class="msg" id="backupMsg"></div>
       </div>
       <div class="card">
         <h3>Restore backup</h3>
-        <input type="file" id="restoreFile" accept=".zip,.json,application/json,application/zip" style="margin-bottom:10px;font-size:13px;">
-        <button class="btn btn-danger btn-sm" id="restoreBackupBtn">Restore from file</button>
+        <input type="file" id="restoreFile" accept=".zip,.json,application/json,application/zip" style="margin-bottom:12px;font-size:13px;">
+
+        <p style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--ink)">How to restore</p>
+        <label class="checkbox-row" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:13px;line-height:1.4">
+          <input type="radio" name="restoreMode" value="merge" checked style="margin-top:3px">
+          <span><strong>Keep existing data (merge)</strong> — add / update records from the backup. Local data that is not in the backup stays.</span>
+        </label>
+        <label class="checkbox-row" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-size:13px;line-height:1.4">
+          <input type="radio" name="restoreMode" value="replace" style="margin-top:3px">
+          <span><strong>Replace selected data</strong> — wipe only the categories you tick below, then load them from the backup.</span>
+        </label>
+
+        <p style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--ink)">What to restore</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:12px;font-size:13px" id="restoreCats">
+          <label><input type="checkbox" class="restore-cat" value="products,product_variants,product_batches" checked> Products + photos + variants</label>
+          <label><input type="checkbox" class="restore-cat" value="invoice_layouts" checked> Invoice layouts</label>
+          <label><input type="checkbox" class="restore-cat" value="invoices,payments,returns" checked> Invoices + payments</label>
+          <label><input type="checkbox" class="restore-cat" value="clients,credit_transactions" checked> Clients + credit</label>
+          <label><input type="checkbox" class="restore-cat" value="settings" checked> Branding / logos / settings</label>
+          <label><input type="checkbox" class="restore-cat" value="tax_slabs" checked> Tax slabs</label>
+          <label><input type="checkbox" class="restore-cat" value="suppliers,purchases,inventory_movements"> Suppliers + purchases</label>
+          <label><input type="checkbox" class="restore-cat" value="quotations,coupons,price_lists,price_list_items,price_overrides"> Quotes / coupons / prices</label>
+          <label><input type="checkbox" class="restore-cat" value="cash_shifts,cash_ledger,held_bills,drawings,upi_accounts"> Cash / shifts / UPI</label>
+          <label><input type="checkbox" class="restore-cat" value="saved_codes,meta"> Saved codes + meta</label>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button type="button" class="btn btn-ghost btn-sm" id="restoreSelectAll">Select all</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="restoreSelectNone">Select none</button>
+        </div>
+
+        <button class="btn btn-primary btn-sm" id="restoreBackupBtn">Restore from file</button>
         <div class="msg" id="restoreMsg"></div>
       </div>
     </section>
@@ -4492,9 +4522,14 @@ document.getElementById("btnExportClientsCsv")?.addEventListener("click", async 
         dialogTitle: "Save backup to Files / Drive"
       });
       if(result && result.ok){
-        msg.textContent = result.native
-          ? ("Saved — use the share sheet to put it in Downloads/Files (" + filename + ")")
-          : ("Downloaded to your Downloads folder (" + filename + ")");
+        var st = payload.stats || {};
+        var extra = " · products " + (st.products||0) +
+          ", photos " + (st.productPhotos||0) +
+          ", layouts " + (st.invoiceLayouts||0) +
+          ", invoices " + (st.invoices||0);
+        msg.textContent = (result.native
+          ? ("Saved — use the share sheet for Downloads/Files (" + filename + ")")
+          : ("Downloaded to Downloads (" + filename + ")")) + extra;
         msg.className = "msg success";
       } else {
         // last resort: original helper
@@ -4507,6 +4542,12 @@ document.getElementById("btnExportClientsCsv")?.addEventListener("click", async 
       msg.textContent = "Backup failed: " + (e.message || e); msg.className = "msg error";
     }
   });
+  document.getElementById("restoreSelectAll")?.addEventListener("click", () => {
+    document.querySelectorAll(".restore-cat").forEach(c => { c.checked = true; });
+  });
+  document.getElementById("restoreSelectNone")?.addEventListener("click", () => {
+    document.querySelectorAll(".restore-cat").forEach(c => { c.checked = false; });
+  });
   document.getElementById("restoreBackupBtn").addEventListener("click", async () => {
     const msg = document.getElementById("restoreMsg");
     const input = document.getElementById("restoreFile");
@@ -4514,13 +4555,26 @@ document.getElementById("btnExportClientsCsv")?.addEventListener("click", async 
     if (!tsRequireRole("admin")) {
       msg.textContent = "Admin sign-in required."; msg.className = "msg error"; return;
     }
-    if (!confirm("This will REPLACE all products, clients, invoices, tax slabs, branding and layouts on this device. Continue?")) return;
-    msg.textContent = "Restoring..."; msg.className = "msg";
+    const modeEl = document.querySelector('input[name="restoreMode"]:checked');
+    const mode = modeEl ? modeEl.value : "merge";
+    const only = [];
+    document.querySelectorAll(".restore-cat:checked").forEach(c => {
+      String(c.value).split(",").forEach(s => { s = s.trim(); if (s) only.push(s); });
+    });
+    if (!only.length) {
+      msg.textContent = "Select at least one category to restore."; msg.className = "msg error"; return;
+    }
+    const modeLabel = mode === "merge"
+      ? "MERGE into existing data (nothing is wiped; matching IDs are updated)"
+      : "REPLACE only the selected categories (those categories are cleared first)";
+    if (!confirm("Restore mode: " + modeLabel + "\n\nCategories: " + only.join(", ") + "\n\nContinue?")) return;
+    msg.textContent = "Restoring (" + mode + ")..."; msg.className = "msg";
     try {
       const f = input.files[0];
       if (!f) { msg.textContent = "Choose a backup file first."; msg.className = "msg error"; return; }
-      await tsRestoreFromFile(f);
-      msg.textContent = "Restored successfully. Reloading..."; msg.className = "msg success";
+      const result = await tsRestoreFromFile(f, { mode: mode, only: only });
+      msg.textContent = "Restored successfully (" + ((result && result.mode) || mode) + "). Reloading...";
+      msg.className = "msg success";
       setTimeout(() => location.reload(), 800);
     } catch (e) {
       console.error(e);

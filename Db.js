@@ -2296,39 +2296,90 @@ async function tsBuildBackupPayload() {
       id: u.id, name: u.name, email: u.email, role: u.role, created_at: u.created_at || u.createdAt,
     }));
   } catch (e) { data.users = []; }
+
+  // Photo / media stats (photos live as data-URLs on products + branding settings)
+  let photoCount = 0;
+  try {
+    for (const p of (data.products || [])) {
+      if (p && p.photo_path && String(p.photo_path).length > 32) photoCount++;
+    }
+  } catch (e) {}
+  let brandingAssets = 0;
+  try {
+    const settings = data.settings || [];
+    const list = Array.isArray(settings) ? settings : Object.entries(settings).map(([key, value]) => ({ key, value }));
+    for (const r of list) {
+      const k = String((r && r.key) || "");
+      const v = r && r.value;
+      if (/logo|qr|photo|image|upi_qr|custom_brand/i.test(k) && v && String(v).length > 32) brandingAssets++;
+    }
+  } catch (e) {}
+
   return {
     format: "orbitbills-local-backup",
-    version: 1,
+    version: 2,
     exportedAt: tsNowIso(),
     deviceId: (typeof localStorage !== "undefined" && localStorage.getItem("ts_device_id")) || "",
+    includes: {
+      products: true,
+      productPhotos: true,
+      clients: true,
+      invoices: true,
+      invoiceLayouts: true,
+      brandingSettings: true,
+      inventory: true,
+      taxSlabs: true,
+    },
+    stats: {
+      products: (data.products || []).length,
+      productPhotos: photoCount,
+      clients: (data.clients || []).length,
+      invoices: (data.invoices || []).length,
+      invoiceLayouts: (data.invoice_layouts || []).length,
+      brandingAssets: brandingAssets,
+    },
     stores: data,
   };
 }
 
-async function tsRestoreBackupPayload(payload) {
+/**
+ * Restore backup.
+ * options.mode: "replace" (default) wipes each selected store then writes backup rows
+ *               "merge" keeps existing local rows; backup rows upsert by id (or key for settings)
+ * options.only: optional array of store names to restore; null/undefined = all present in backup
+ */
+async function tsRestoreBackupPayload(payload, options) {
+  options = options || {};
+  const mode = (options.mode === "merge") ? "merge" : "replace";
+  const only = Array.isArray(options.only) && options.only.length ? new Set(options.only) : null;
   const stores = (payload && payload.stores) ? payload.stores : payload;
   if (!stores || typeof stores !== "object") throw new Error("Invalid backup structure");
   const order = [
     "tax_slabs","settings","invoice_layouts","products","product_variants","product_batches",
     "clients","credit_transactions","suppliers","purchases","invoices","payments","quotations",
     "inventory_movements","saved_codes","cash_shifts","held_bills","price_lists","price_list_items",
-    "returns","coupons","price_overrides","meta","cash_ledger","drawings","upi_accounts",
+    "returns","coupons","price_overrides","meta","cash_ledger","drawings","upi_accounts","users",
   ];
-  for (const name of order) {
+  // Also restore any extra stores present in backup not listed above
+  const extra = Object.keys(stores).filter(k => order.indexOf(k) < 0 && k !== "users");
+  const allNames = order.concat(extra);
+  for (const name of allNames) {
     if (!Object.prototype.hasOwnProperty.call(stores, name)) continue;
+    if (only && !only.has(name)) continue;
+    // Skip users in merge/replace unless explicitly selected (no passwords in backup)
+    if (name === "users" && !(only && only.has("users"))) continue;
     const rows = stores[name];
     if (!Array.isArray(rows) && name !== "settings") continue;
     try {
       if (name === "settings") {
-        // settings may be array of {key,value} or object map
-        await tsClear("settings");
+        if (mode === "replace") await tsClear("settings");
         if (Array.isArray(rows)) {
           for (const r of rows) if (r && r.key != null) await tsPut("settings", r);
         } else if (rows && typeof rows === "object") {
           for (const [k, v] of Object.entries(rows)) await tsSetSetting(k, v);
         }
       } else {
-        await tsClear(name);
+        if (mode === "replace") await tsClear(name);
         for (const row of rows) {
           if (row == null) continue;
           await tsPut(name, row);
@@ -2427,8 +2478,9 @@ async function tsDownloadBackupZip() {
   return { ok: true, filename: a.download };
 }
 
-async function tsRestoreFromFile(file) {
+async function tsRestoreFromFile(file, options) {
   if (!file) throw new Error("No file selected.");
+  const opts = options || {};
   const buf = new Uint8Array(await file.arrayBuffer());
   let text = "";
   const isZip = buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b; // "PK"
@@ -2438,45 +2490,39 @@ async function tsRestoreFromFile(file) {
   } else {
     text = new TextDecoder().decode(buf);
   }
-  // If text still looks like a ZIP (mis-detected), try extract
   if (text.charAt(0) === "P" && text.charAt(1) === "K") {
     text = await tsExtractFirstZipText(buf);
   }
-  text = String(text || "").replace(/^﻿/, "").trim();
+  text = String(text || "").replace(/^\uFEFF/, "").trim();
   let payload;
   try {
     payload = JSON.parse(text);
   } catch (e) {
-    throw new Error("Backup file is not valid JSON. Choose the OrbitBills .zip (or the .json inside it).");
+    throw new Error("Backup file is not valid JSON. Choose the OrbitBills .zip file (or the .json inside it).");
   }
-  // Accept wrapper { format, stores } or raw stores object
   if (payload && payload.stores && typeof payload.stores === "object") {
-    await tsRestoreBackupPayload(payload);
-  } else if (payload && typeof payload === "object" && (payload.products || payload.invoices || payload.clients)) {
-    await tsRestoreBackupPayload({ format: "orbitbills-local-backup", stores: payload });
+    await tsRestoreBackupPayload(payload, opts);
+  } else if (payload && typeof payload === "object" && (payload.products || payload.invoices || payload.clients || payload.invoice_layouts)) {
+    await tsRestoreBackupPayload({ format: "orbitbills-local-backup", stores: payload }, opts);
   } else {
-    await tsRestoreBackupPayload(payload);
+    await tsRestoreBackupPayload(payload, opts);
   }
-  return { ok: true };
+  return { ok: true, mode: (opts.mode === "merge" ? "merge" : "replace") };
 }
 
 async function tsExtractFirstZipText(buf) {
-  // Scan for local file header (handles extra leading bytes)
-  let off = 0;
   let found = -1;
   for (let i = 0; i < Math.min(buf.length - 4, 1024); i++) {
     if (buf[i] === 0x50 && buf[i + 1] === 0x4b && buf[i + 2] === 0x03 && buf[i + 3] === 0x04) {
-      found = i;
-      break;
+      found = i; break;
     }
   }
   if (found < 0) {
-    // maybe already JSON
     const maybe = new TextDecoder().decode(buf.slice(0, Math.min(buf.length, 64))).trim();
     if (maybe.startsWith("{") || maybe.startsWith("[")) return new TextDecoder().decode(buf);
     throw new Error("Not a ZIP file (missing PK header).");
   }
-  off = found;
+  const off = found;
   if (buf.length < off + 30) throw new Error("ZIP file is truncated.");
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const nameLen = dv.getUint16(off + 26, true);
@@ -2484,42 +2530,31 @@ async function tsExtractFirstZipText(buf) {
   const method = dv.getUint16(off + 8, true);
   let compSize = dv.getUint32(off + 18, true);
   const uncompSize = dv.getUint32(off + 22, true);
-  // Zip64 / data descriptor: if sizes are 0, read until central directory
   const start = off + 30 + nameLen + extraLen;
   if (compSize === 0 && uncompSize === 0) {
-    // find next signature
     let end = start;
     for (let i = start; i < buf.length - 3; i++) {
       if (buf[i] === 0x50 && buf[i + 1] === 0x4b && (buf[i + 2] === 0x01 || buf[i + 2] === 0x03 || buf[i + 2] === 0x05)) {
-        end = i;
-        break;
+        end = i; break;
       }
     }
     compSize = Math.max(0, end - start);
   }
   const slice = buf.slice(start, start + compSize);
-  if (method === 0) {
-    return new TextDecoder().decode(slice);
-  }
+  if (method === 0) return new TextDecoder().decode(slice);
   if (method === 8 && typeof DecompressionStream !== "undefined") {
     try {
       const ds = new DecompressionStream("deflate-raw");
       const stream = new Blob([slice]).stream().pipeThrough(ds);
       return await new Response(stream).text();
     } catch (e1) {
-      try {
-        const ds2 = new DecompressionStream("deflate");
-        const stream2 = new Blob([slice]).stream().pipeThrough(ds2);
-        return await new Response(stream2).text();
-      } catch (e2) {
-        throw new Error("Could not decompress ZIP. Re-download backup from OrbitBills.");
-      }
+      const ds2 = new DecompressionStream("deflate");
+      const stream2 = new Blob([slice]).stream().pipeThrough(ds2);
+      return await new Response(stream2).text();
     }
   }
-  if (method === 8) {
-    throw new Error("This browser cannot decompress ZIP. Use the .json backup or a modern browser/WebView.");
-  }
-  throw new Error("Unsupported ZIP compression method " + method + ". Use an OrbitBills backup.");
+  if (method === 8) throw new Error("This browser cannot decompress ZIP. Use the .json backup.");
+  throw new Error("Unsupported ZIP compression method " + method + ".");
 }
 
 
