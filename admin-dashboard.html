@@ -370,6 +370,87 @@
   .overlay-scrim{display:none!important;position:fixed;inset:0;background:rgba(16,26,43,.4);z-index:480;pointer-events:none;}
   .overlay-scrim.show{display:block!important;pointer-events:auto;}
 
+
+  /* ---- Native app shell (phone) ---- */
+  @media (max-width:900px){
+    html{-webkit-text-size-adjust:100%;}
+    body{
+      overscroll-behavior-y:none;
+      -webkit-user-select:none;user-select:none;
+      background:#f2f4f7!important;
+    }
+    input,textarea,select,.modal,[contenteditable]{-webkit-user-select:text;user-select:text;}
+    .main{
+      padding:12px 12px calc(24px + env(safe-area-inset-bottom,0px))!important;
+      max-width:100%!important;
+    }
+    .page-head{margin-bottom:14px!important;}
+    .page-head h1{font-size:22px!important;letter-spacing:-.02em;}
+    .page-head p{font-size:13px;color:var(--slate);}
+    .card{
+      border-radius:16px!important;border:none!important;
+      box-shadow:0 1px 3px rgba(15,23,42,.06),0 4px 16px rgba(15,23,42,.04)!important;
+      padding:16px!important;margin-bottom:14px!important;
+      background:#fff;
+    }
+    .stat-card{
+      border-radius:16px!important;border:none!important;
+      box-shadow:0 1px 3px rgba(15,23,42,.06)!important;
+    }
+    .btn,.btn-sm,.btn-primary,.btn-ghost,.btn-danger{
+      border-radius:12px!important;font-weight:600;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn-primary{box-shadow:0 2px 8px rgba(11,61,145,.25);}
+    .nav-item,.nav-group-head{border-radius:12px!important;}
+    .sidebar.mobile-open{
+      background:#fff!important;
+      border-right:none!important;
+    }
+    .toolbar{gap:10px!important;flex-direction:column;align-items:stretch!important;}
+    .search-input{width:100%!important;min-height:46px;border-radius:12px;}
+    .table-scroll{
+      margin:0 -4px;padding:0;
+      -webkit-overflow-scrolling:touch;
+      border-radius:12px;
+    }
+    table{font-size:13px;}
+    th{position:sticky;top:0;background:#fff;z-index:1;}
+    /* Invoice preview: fit paper on screen */
+    #viewInvoiceModal .modal{
+      max-width:100%!important;width:100%!important;
+      max-height:96vh!important;
+      border-radius:18px 18px 0 0!important;
+      padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))!important;
+    }
+    #viewInvoiceModal h3{font-size:16px;margin-bottom:8px;}
+    .invoice-preview-outer{
+      width:100%!important;overflow:hidden!important;
+      background:#e8eef5;border-radius:12px;padding:12px 8px;
+      display:flex;justify-content:center;align-items:flex-start;
+      min-height:120px;
+    }
+    .invoice-preview-scale-wrap{
+      transform-origin:top center;
+      will-change:transform;
+    }
+    .invoice-preview{
+      box-shadow:0 8px 28px rgba(15,23,42,.12);
+      border-radius:2px;
+    }
+  }
+  /* Desktop invoice preview also constrained */
+  #viewInvoiceModal .modal{max-width:min(720px,96vw)!important;}
+  .invoice-preview-outer{
+    overflow:auto;max-height:70vh;
+    background:#eef2f7;border-radius:12px;padding:16px;
+    display:flex;justify-content:center;
+  }
+  .invoice-paper-label{
+    text-align:center;font-size:11px;font-weight:600;color:var(--slate);
+    margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;
+  }
+
 </style>
 </head>
 <body>
@@ -692,7 +773,7 @@
           <p>Photos, tax slabs, and stock &mdash; works for grocery, restaurant, or any other store.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <a class="btn btn-ghost" href="/api/admin/products/export" target="_blank">Export CSV</a>
+          <button type="button" class="btn btn-ghost" id="btnExportProductsCsv">Export CSV</button>
           <button class="btn btn-primary" id="openAddProduct">Add product</button>
         </div>
       </div>
@@ -797,7 +878,7 @@
           <p>Everyone you invoice &mdash; manage details, credit balance, and purchase history.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <a class="btn btn-ghost" href="/api/admin/clients/export" target="_blank">Export CSV</a>
+          <button type="button" class="btn btn-ghost" id="btnExportClientsCsv">Export CSV</button>
           <button class="btn btn-primary" id="openAddClient">Add client</button>
         </div>
       </div>
@@ -1760,14 +1841,18 @@
 
 
 <div class="modal-backdrop" id="viewInvoiceModal">
-  <div class="modal" style="max-width:680px;">
+  <div class="modal" style="max-width:720px;">
     <h3>Invoice</h3>
+    <p class="invoice-paper-label" id="viewInvoicePaperLabel">A4 preview</p>
     <div id="printArea" class="invoice-preview-outer">
-      <div class="invoice-preview" id="viewInvoiceCanvas" style="margin:0 auto;"></div>
+      <div class="invoice-preview-scale-wrap" id="viewInvoiceScaleWrap">
+        <div class="invoice-preview" id="viewInvoiceCanvas" style="margin:0 auto;"></div>
+      </div>
     </div>
-    <div class="modal-actions" style="margin-top:16px;">
+    <div class="modal-actions" style="margin-top:16px;flex-wrap:wrap;gap:8px;">
       <button type="button" class="btn btn-ghost" onclick="closeModal('viewInvoiceModal')">Close</button>
-      <button type="button" class="btn btn-ghost" id="emailInvoiceBtn">Email to client</button>
+      <button type="button" class="btn btn-ghost" id="emailInvoiceBtn">Email</button>
+      <button type="button" class="btn btn-primary" id="shareInvoiceSocialBtn" style="background:#128C7E;border-color:#128C7E;">Share…</button>
       <button type="button" class="btn btn-primary" id="printInvoiceBtn">Print</button>
     </div>
   </div>
@@ -2825,7 +2910,8 @@ function invoiceMore(id){
   if(!inv) return;
   const acts = [
     { label: "View invoice", primary: true, run: () => viewInvoice(inv.id) },
-    { label: "Share", run: () => shareInvoice(inv.id) },
+    { label: "Share to apps", primary: true, run: async () => { await viewInvoice(inv.id); setTimeout(function(){ orbitShareInvoiceSocial(inv); }, 400); } },
+    { label: "Copy summary", run: () => shareInvoice(inv.id) },
     { label: "WhatsApp", run: () => whatsappInvoice(inv.id) },
     { label: "Record payment", run: () => openPayment(inv.id) },
     { label: "Payment link", run: () => paymentLink(inv.id) },
@@ -2844,6 +2930,29 @@ function invoiceMore(id){
   openAdminActions(inv.invoice_number || "Invoice", inv.client_name || "", acts);
 }
 document.getElementById("invoiceSearch").addEventListener("input", e => renderInvoices(e.target.value));
+document.getElementById("btnExportInvoicesCsv")?.addEventListener("click", async function(){
+  try{
+    const rows = invoicesCache || [];
+    const header = ["invoice_number","client_name","status","total","amount_paid","created_at","due_date"];
+    const lines = [header.join(",")];
+    rows.forEach(inv => {
+      lines.push([
+        inv.invoice_number, inv.client_name, inv.status, inv.total, inv.amount_paid, inv.created_at, inv.due_date
+      ].map(v => '"' + String(v??"").replace(/"/g,'""') + '"').join(","));
+    });
+    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+    const filename = "invoices-" + new Date().toISOString().slice(0,10) + ".csv";
+    const result = await orbitSaveFile(blob, filename, {
+      share: true, title: "Invoices CSV", text: "OrbitBills invoices export",
+      mime: "text/csv", dialogTitle: "Save CSV to Files / Downloads"
+    });
+    if(result && result.ok){
+      alert(result.native
+        ? ("CSV ready — choose Downloads or Files in the share sheet (" + filename + ")")
+        : ("CSV saved to Downloads (" + filename + ")"));
+    } else alert("Could not save CSV");
+  }catch(err){ console.error(err); alert("Export failed"); }
+});
 
 async function populateClientSelect(selectedId){
   const data = await api("/clients");
@@ -4052,9 +4161,231 @@ function formatIndiaTime(d){
   } catch (e) { return ""; }
 }
 
+
+// =========================================================================
+// Native file save (Android Downloads / Files) + system share
+// =========================================================================
+async function orbitBlobToBase64(blob){
+  return await new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(){
+      var s = String(r.result || "");
+      var i = s.indexOf(",");
+      resolve(i >= 0 ? s.slice(i + 1) : s);
+    };
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+function orbitIsNative(){
+  try{ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+  catch(e){ return false; }
+}
+function orbitPlugin(name){
+  try{ return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]; }
+  catch(e){ return null; }
+}
+/** Save blob to device Downloads/Documents and optionally open system share (WhatsApp, Drive, etc.) */
+async function orbitSaveFile(blob, filename, opts){
+  opts = opts || {};
+  filename = filename || ("orbitbills-" + Date.now());
+  var mime = (blob && blob.type) || opts.mime || "application/octet-stream";
+  var savedPath = null;
+  var shared = false;
+  try{
+    if(orbitIsNative()){
+      var FS = orbitPlugin("Filesystem");
+      var Share = orbitPlugin("Share");
+      if(FS && FS.writeFile){
+        var b64 = await orbitBlobToBase64(blob);
+        var path = "Download/" + filename;
+        var dirs = ["EXTERNAL_STORAGE", "DOCUMENTS", "CACHE", "DATA"];
+        // Capacitor uses enum values on plugin: Directory.ExternalStorage etc.
+        var dirMap = {
+          EXTERNAL_STORAGE: "EXTERNAL",
+          DOCUMENTS: "DOCUMENTS",
+          CACHE: "CACHE",
+          DATA: "DATA"
+        };
+        var written = false;
+        var tryDirs = ["EXTERNAL", "DOCUMENTS", "CACHE"];
+        for(var d = 0; d < tryDirs.length && !written; d++){
+          try{
+            await FS.writeFile({ path: path, data: b64, directory: tryDirs[d], recursive: true });
+            written = true;
+            var uriRes = await FS.getUri({ path: path, directory: tryDirs[d] });
+            savedPath = (uriRes && (uriRes.uri || uriRes)) || path;
+          }catch(eDir){
+            // try without Download/ prefix
+            try{
+              await FS.writeFile({ path: filename, data: b64, directory: tryDirs[d], recursive: true });
+              written = true;
+              var uriRes2 = await FS.getUri({ path: filename, directory: tryDirs[d] });
+              savedPath = (uriRes2 && (uriRes2.uri || uriRes2)) || filename;
+            }catch(e2){}
+          }
+        }
+        if(written && opts.share !== false && Share && Share.share && savedPath){
+          try{
+            await Share.share({
+              title: opts.title || filename,
+              text: opts.text || "",
+              url: savedPath,
+              dialogTitle: opts.dialogTitle || "Save or share"
+            });
+            shared = true;
+          }catch(eShare){ console.warn("Share", eShare); }
+        }
+        if(written){
+          return { ok: true, path: savedPath, shared: shared, native: true };
+        }
+      }
+      // Fallback: Share with object URL may not work on native; still try web path below
+    }
+  }catch(eNat){ console.warn("orbitSaveFile native", eNat); }
+
+  // Web / browser download (Chrome on Android saves to Downloads)
+  try{
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{ URL.revokeObjectURL(url); a.remove(); }catch(e){} }, 1500);
+    // Also offer system share if available (Android Chrome)
+    if(opts.share && navigator.share && navigator.canShare){
+      try{
+        var file = new File([blob], filename, { type: mime });
+        if(navigator.canShare({ files: [file] })){
+          await navigator.share({ files: [file], title: opts.title || filename, text: opts.text || "" });
+          shared = true;
+        }
+      }catch(eW){ if(!(eW && eW.name === "AbortError")) console.warn(eW); }
+    }
+    return { ok: true, path: "Downloads/" + filename, shared: shared, native: false };
+  }catch(eWeb){
+    console.error(eWeb);
+    return { ok: false, error: eWeb.message || String(eWeb) };
+  }
+}
+
+function orbitPaperSize(layout){
+  var key = (layout && (layout.paper_size || layout.paperSize || layout.size)) || "a4";
+  key = String(key).toLowerCase();
+  var map = {
+    a4: { w: 600, h: 848, label: "A4" },
+    a5: { w: 420, h: 595, label: "A5" },
+    letter: { w: 612, h: 792, label: "Letter" },
+    thermal80: { w: 302, h: 800, label: "Thermal 80mm" },
+    thermal58: { w: 220, h: 700, label: "Thermal 58mm" }
+  };
+  return map[key] || map.a4;
+}
+
+function orbitScaleInvoicePreview(){
+  var canvas = document.getElementById("viewInvoiceCanvas");
+  var wrap = document.getElementById("viewInvoiceScaleWrap");
+  var outer = document.querySelector("#viewInvoiceModal .invoice-preview-outer");
+  if(!canvas || !outer) return;
+  var designW = parseFloat(canvas.getAttribute("data-design-w") || canvas.offsetWidth || 600) || 600;
+  var designH = parseFloat(canvas.getAttribute("data-design-h") || canvas.offsetHeight || 848) || 848;
+  // Fixed design size
+  canvas.style.width = designW + "px";
+  canvas.style.height = designH + "px";
+  canvas.style.maxWidth = "none";
+  var avail = Math.max(120, outer.clientWidth - 24);
+  var scale = Math.min(1, avail / designW);
+  var target = wrap || canvas;
+  if(wrap){
+    wrap.style.width = designW + "px";
+    wrap.style.height = designH + "px";
+    wrap.style.transform = "scale(" + scale + ")";
+    wrap.style.transformOrigin = "top center";
+    outer.style.height = Math.ceil(designH * scale + 16) + "px";
+  } else {
+    canvas.style.transform = "scale(" + scale + ")";
+    canvas.style.transformOrigin = "top center";
+    outer.style.height = Math.ceil(designH * scale + 16) + "px";
+  }
+}
+
+async function orbitShareInvoiceSocial(inv){
+  if(!inv){ alert("Open an invoice first"); return; }
+  var title = "Invoice " + (inv.invoice_number || inv.id || "");
+  var text = title + "\\n" + (inv.client_name || "Walk-in") + "\\nTotal: " + money(inv.total) + "\\nStatus: " + (inv.status || "");
+  // Try capture preview as PNG for Instagram / WhatsApp
+  var blob = null;
+  try{
+    var canvasEl = document.getElementById("viewInvoiceCanvas");
+    if(canvasEl && window.html2canvas){
+      var shot = await html2canvas(canvasEl, { scale: 2, backgroundColor: "#ffffff" });
+      blob = await new Promise(function(res){ shot.toBlob(res, "image/png"); });
+    }
+  }catch(e){}
+  // Simple canvas draw fallback: not available without html2canvas — share text
+  var filename = "invoice-" + String(inv.invoice_number || inv.id || "doc").replace(/[^a-zA-Z0-9_-]/g, "_") + ".png";
+  if(blob){
+    var r = await orbitSaveFile(blob, filename, {
+      share: true,
+      title: title,
+      text: text,
+      mime: "image/png",
+      dialogTitle: "Share invoice"
+    });
+    if(r && r.ok) return;
+  }
+  // Text / system share
+  if(navigator.share){
+    try{ await navigator.share({ title: title, text: text }); return; }catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  if(window.__orbitNativeShare){
+    try{
+      // share text-only via native if no blob
+      await navigator.share({ title: title, text: text });
+      return;
+    }catch(e){}
+  }
+  // WhatsApp deep link as last resort
+  var wa = "https://wa.me/?text=" + encodeURIComponent(text);
+  window.open(wa, "_blank");
+}
+
+
 // =========================================================================
 // Backup / restore
 // =========================================================================
+
+document.getElementById("btnExportProductsCsv")?.addEventListener("click", async function(){
+  try{
+    const rows = productsCache || [];
+    const header = ["name","brand","category","unit","price","cost","stock","sku","barcode","hsn"];
+    const lines = [header.join(",")];
+    rows.forEach(p => {
+      lines.push([p.name,p.brand,p.category,p.unit,p.price,p.cost,p.stock,p.sku,p.barcode,p.hsn_code]
+        .map(v => '"' + String(v??"").replace(/"/g,'""') + '"').join(","));
+    });
+    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+    const filename = "products-" + new Date().toISOString().slice(0,10) + ".csv";
+    await orbitSaveFile(blob, filename, { share:true, title:"Products CSV", mime:"text/csv", dialogTitle:"Save products CSV" });
+  }catch(e){ alert("Export failed"); }
+});
+document.getElementById("btnExportClientsCsv")?.addEventListener("click", async function(){
+  try{
+    const rows = clientsCache || [];
+    const header = ["name","email","phone","credit_balance"];
+    const lines = [header.join(",")];
+    rows.forEach(c => {
+      lines.push([c.name,c.email,c.phone,c.credit_balance]
+        .map(v => '"' + String(v??"").replace(/"/g,'""') + '"').join(","));
+    });
+    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+    const filename = "clients-" + new Date().toISOString().slice(0,10) + ".csv";
+    await orbitSaveFile(blob, filename, { share:true, title:"Clients CSV", mime:"text/csv", dialogTitle:"Save clients CSV" });
+  }catch(e){ alert("Export failed"); }
+});
+
 (function wireBackup(){
   const createBtn = document.getElementById("createBackupBtn");
   if (!createBtn) return;
@@ -4065,9 +4396,31 @@ function formatIndiaTime(d){
       if (!tsRequireRole("admin")) {
         msg.textContent = "Admin sign-in required."; msg.className = "msg error"; return;
       }
-      const result = await tsDownloadBackupZip();
-      msg.textContent = "Backup ZIP downloaded" + (result.filename ? " (" + result.filename + ")" : "") + ".";
-      msg.className = "msg success";
+      // Build ZIP blob then save to Android Downloads / share sheet
+      const payload = await tsBuildBackupPayload();
+      const json = JSON.stringify(payload, null, 2);
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      const innerName = "orbitbills-backup-" + stamp + ".json";
+      const filename = "orbitbills-backup-" + stamp + ".zip";
+      const blob = typeof tsZipSingleFile === "function" ? tsZipSingleFile(innerName, json) : new Blob([json], {type:"application/json"});
+      const result = await orbitSaveFile(blob, filename, {
+        share: true,
+        title: "OrbitBills backup",
+        text: "OrbitBills backup " + stamp,
+        mime: blob.type || "application/zip",
+        dialogTitle: "Save backup to Files / Drive"
+      });
+      if(result && result.ok){
+        msg.textContent = result.native
+          ? ("Saved — use the share sheet to put it in Downloads/Files (" + filename + ")")
+          : ("Downloaded to your Downloads folder (" + filename + ")");
+        msg.className = "msg success";
+      } else {
+        // last resort: original helper
+        const r2 = await tsDownloadBackupZip();
+        msg.textContent = "Backup ZIP downloaded" + (r2.filename ? " (" + r2.filename + ")" : "") + ".";
+        msg.className = "msg success";
+      }
     } catch (e) {
       console.error(e);
       msg.textContent = "Backup failed: " + (e.message || e); msg.className = "msg error";
@@ -4159,7 +4512,21 @@ async function viewInvoice(id){
     canvas.innerHTML = layout.elements.map(el => `<div class="p-block" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${blockHtml[el.id]||""}</div>`).join("") + wm;
   }
   window.__viewingInvoice = inv;
+  // Paper size from layout
+  try{
+    var paper = orbitPaperSize(layout);
+    canvas.setAttribute("data-design-w", paper.w);
+    canvas.setAttribute("data-design-h", paper.h);
+    canvas.style.width = paper.w + "px";
+    canvas.style.height = paper.h + "px";
+    canvas.className = "invoice-preview size-" + ((layout && (layout.paper_size||layout.paperSize||"a4")) || "a4");
+    var lab = document.getElementById("viewInvoicePaperLabel");
+    if(lab) lab.textContent = paper.label + " paper preview";
+  }catch(e){}
   openModal("viewInvoiceModal");
+  setTimeout(orbitScaleInvoicePreview, 50);
+  setTimeout(orbitScaleInvoicePreview, 200);
+  window.addEventListener("resize", orbitScaleInvoicePreview);
   }catch(err){
     console.error("viewInvoice", err);
     alert("Could not open invoice");
@@ -4167,6 +4534,11 @@ async function viewInvoice(id){
 }
 async function markPaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "paid", method: "cash" } }); renderInvoices(); renderOverview(); }
 async function markUnpaid(id){ await api(`/invoices/${id}/status`, { method: "POST", body: { status: "unpaid" } }); renderInvoices(); renderOverview(); }
+
+
+document.getElementById("shareInvoiceSocialBtn")?.addEventListener("click", function(){
+  orbitShareInvoiceSocial(window.__viewingInvoice);
+});
 
 document.getElementById("printInvoiceBtn")?.addEventListener("click", () => window.print());
 document.getElementById("emailInvoiceBtn")?.addEventListener("click", async () => {
