@@ -2573,12 +2573,15 @@ function closeMobileNav(){
       if(!menu.hidden && !btn.contains(e.target) && !menu.contains(e.target)) closeMenu();
     });
     menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
-      a.addEventListener("click", function(){
+      a.addEventListener("click", function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+        var href = a.getAttribute("href") || a.getAttribute("data-href") || "";
+        if(!href) return;
         try{
-          var href = a.getAttribute("href") || "";
           if(typeof tsRememberPanel === "function") tsRememberPanel(href);
           else localStorage.setItem("ts_last_panel", href);
         }catch(err){}
+        window.location.assign(href);
       });
     });
   }
@@ -5028,21 +5031,14 @@ document.getElementById("invoiceStatusFilter")?.addEventListener("change", () =>
 document.getElementById("invoiceFromFilter")?.addEventListener("change", () => renderInvoices());
 document.getElementById("invoiceToFilter")?.addEventListener("change", () => renderInvoices());
 
-// Auth check on load — any signed-in role can open Admin (Change panel)
+// Auth check on load — any valid session can open Admin (Change panel)
 (async function authBoot(){
   await tsSeedDefaults().catch(() => {});
   try { if (window.__orbitHideBoot) window.__orbitHideBoot(); } catch (e0) {}
-  const who = tsWhoami();
-  const canOpen = who && who.ok && (
-    who.role === "admin" ||
-    who.role === "billing" ||
-    who.role === "accountant" ||
-    who.uniform === true ||
-    (Array.isArray(who.roles) && who.roles.length > 0) ||
-    String(who.email || "").toLowerCase() === "orbitbills@techserenia.com" ||
-    String(who.email || "").toLowerCase() === "admin@techserenia.com"
-  );
-  if (!canOpen) {
+  var who = { ok: false };
+  try { who = tsWhoami() || { ok: false }; } catch (e) { who = { ok: false }; }
+  // Only redirect to sign-in when there is truly no session
+  if (!who || !who.ok) {
     try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){}
     setTimeout(function(){ window.location.replace("signin.html"); }, 80);
     return;
@@ -5053,10 +5049,12 @@ document.getElementById("invoiceToFilter")?.addEventListener("change", () => ren
   }catch(e){}
   try { renderOverview(); } catch (e) { console.warn(e); }
   try { renderLowStock(); } catch (e) { console.warn(e); }
-  tsOnSync(() => {
-    try { renderOverview(); } catch (e) {}
-    try { renderLowStock(); } catch (e) {}
-  });
+  try {
+    tsOnSync(() => {
+      try { renderOverview(); } catch (e) {}
+      try { renderLowStock(); } catch (e) {}
+    });
+  } catch (e) {}
 })();
 
 

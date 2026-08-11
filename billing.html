@@ -3683,15 +3683,10 @@ window.__calcOpen = false;
 
 (async function init(){
   await tsSeedDefaults().catch(()=>{});
-  const who=tsWhoami();
-  // Any signed-in staff role can open Billing via Change panel
-  const canBill = who && who.ok && (
-    who.role === "admin" || who.role === "billing" || who.role === "accountant" ||
-    who.uniform === true ||
-    (Array.isArray(who.roles) && who.roles.length > 0) ||
-    String(who.email||"").toLowerCase() === "orbitbills@techserenia.com"
-  );
-  if(!canBill){
+  var who={ok:false};
+  try{ who=tsWhoami()||{ok:false}; }catch(e){ who={ok:false}; }
+  // Any valid session can open Billing (Change panel)
+  if(!who || !who.ok){
     // Only redirect if truly signed out — avoid login loop on reopen
     try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){}
     location.replace("signin.html");
@@ -4095,12 +4090,15 @@ window.__calcOpen = false;
       if(!menu.hidden && !btn.contains(e.target) && !menu.contains(e.target)) closeMenu();
     });
     menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
-      a.addEventListener("click", function(){
+      a.addEventListener("click", function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+        var href = a.getAttribute("href") || a.getAttribute("data-href") || "";
+        if(!href) return;
         try{
-          var href = a.getAttribute("href") || "";
           if(typeof tsRememberPanel === "function") tsRememberPanel(href);
           else localStorage.setItem("ts_last_panel", href);
         }catch(err){}
+        window.location.assign(href);
       });
     });
   }
