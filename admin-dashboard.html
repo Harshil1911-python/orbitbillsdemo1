@@ -2,31 +2,8 @@
 <html lang="en">
 <head>
 
-<script>
-(function(){try{document.documentElement.classList.add("orbit-booting");}catch(e){}})();
-</script>
-<style id="orbit-boot-css">
-html.orbit-booting body > *:not(#orbitBoot){visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
-html.orbit-booting #orbitBoot,
-#orbitBoot.show{
-  display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
-  position:fixed!important;inset:0!important;z-index:2147483646!important;
-  background:#f5f8fe!important;flex-direction:column;padding:20px 16px;
-}
-html:not(.orbit-booting) #orbitBoot{display:none!important;pointer-events:none!important;}
-#orbitBoot .sk-line,#orbitBoot .sk-avatar,#orbitBoot .sk-tile{
-  background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;
-  animation:skShimmer 1.1s ease-in-out infinite;
-}
-#orbitBoot .sk-line{height:14px;border-radius:8px;}
-#orbitBoot .sk-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);}
-#orbitBoot .sk-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;}
-#orbitBoot .sk-avatar{width:44px;height:44px;border-radius:12px;flex-shrink:0;}
-#orbitBoot .sk-block{flex:1;display:flex;flex-direction:column;gap:8px;}
-#orbitBoot .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-#orbitBoot .sk-tile{height:72px;border-radius:14px;}
-@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-</style>
+
+
 
 
 
@@ -610,15 +587,63 @@ html:not(.orbit-booting) #orbitBoot{display:none!important;pointer-events:none!i
 
 
 
+
+<style id="orbit-boot-css">
+#orbitBoot{
+  display:flex!important;position:fixed!important;inset:0!important;z-index:2147483646!important;
+  background:#f5f8fe!important;flex-direction:column;padding:20px 16px;
+  margin:0;pointer-events:auto;
+}
+#orbitBoot.orbit-boot-done,
+#orbitBoot[data-done="1"]{
+  display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important;
+}
+#orbitBoot .sk-line,#orbitBoot .sk-avatar,#orbitBoot .sk-tile{
+  background:linear-gradient(90deg,#e8eef8 25%,#f5f8fe 50%,#e8eef8 75%);background-size:200% 100%;
+  animation:skShimmer 1.1s ease-in-out infinite;
+}
+#orbitBoot .sk-line{height:14px;border-radius:8px;}
+#orbitBoot .sk-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);}
+#orbitBoot .sk-row{display:flex;gap:10px;margin-bottom:12px;align-items:center;}
+#orbitBoot .sk-avatar{width:44px;height:44px;border-radius:12px;flex-shrink:0;}
+#orbitBoot .sk-block{flex:1;display:flex;flex-direction:column;gap:8px;}
+#orbitBoot .sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+#orbitBoot .sk-tile{height:72px;border-radius:14px;}
+@keyframes skShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+
 </head>
 <body>
-<div id="orbitBoot" class="show" style="display:flex!important;position:fixed;inset:0;z-index:2147483646;background:#f5f8fe;flex-direction:column;padding:20px 16px;" aria-hidden="true">
+<div id="orbitBoot" style="display:flex;position:fixed;inset:0;z-index:2147483646;background:#f5f8fe;flex-direction:column;padding:20px 16px;">
   <div class="sk-grid"><div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div></div>
   <div class="sk-card">
     <div class="sk-row"><div class="sk-avatar"></div><div class="sk-block"><div class="sk-line" style="width:55%"></div><div class="sk-line" style="width:35%;height:10px"></div></div></div>
     <div class="sk-row"><div class="sk-avatar"></div><div class="sk-block"><div class="sk-line" style="width:48%"></div><div class="sk-line" style="width:30%;height:10px"></div></div></div>
   </div>
 </div>
+<script>
+(function(){
+  function killBoot(){
+    try{
+      var el = document.getElementById("orbitBoot");
+      if(!el) return;
+      el.setAttribute("data-done","1");
+      el.className = "orbit-boot-done";
+      el.style.cssText = "display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important;";
+      if(el.parentNode){ try{ el.parentNode.removeChild(el); }catch(e){} }
+    }catch(e){}
+  }
+  window.__orbitHideBoot = killBoot;
+  // Hard deadlines — panel must appear within 1s
+  setTimeout(killBoot, 400);
+  setTimeout(killBoot, 800);
+  setTimeout(killBoot, 1000);
+  document.addEventListener("DOMContentLoaded", function(){ setTimeout(killBoot, 300); });
+  window.addEventListener("load", function(){ setTimeout(killBoot, 100); });
+})();
+</script>
+
+
 
 
 
@@ -6747,29 +6772,13 @@ renderOverview();
 
 
 
+
+
 <script>
 (function(){
-  function hideBoot(){
-    try{
-      document.documentElement.classList.remove("orbit-booting");
-      document.documentElement.classList.add("orbit-ready");
-      var el = document.getElementById("orbitBoot");
-      if(el){
-        el.classList.remove("show");
-        el.style.cssText = "display:none!important";
-        if(el.parentNode) el.parentNode.removeChild(el);
-      }
-    }catch(e){
-      try{ document.documentElement.classList.remove("orbit-booting"); }catch(e2){}
-    }
-  }
-  window.__orbitHideBoot = hideBoot;
-  setTimeout(hideBoot, 700);
-  if(document.readyState === "complete") setTimeout(hideBoot, 50);
-  else {
-    document.addEventListener("DOMContentLoaded", function(){ setTimeout(hideBoot, 200); });
-    window.addEventListener("load", function(){ setTimeout(hideBoot, 50); });
-  }
+  try{ document.documentElement.classList.remove("orbit-booting"); }catch(e){}
+  setTimeout(function(){ try{ document.documentElement.classList.remove("orbit-booting"); }catch(e){} }, 50);
+  setTimeout(function(){ try{ document.documentElement.classList.remove("orbit-booting"); if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){} }, 1000);
 })();
 </script>
 </body>
