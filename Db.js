@@ -319,7 +319,14 @@ function tsLogout() { tsClearSession(); return { ok: true, redirect: "/signin.ht
 function tsWhoami() {
   const s = tsGetSession();
   if (!s || !s.email) return { ok: false };
-  // Touch current session last_active (throttled via sessionStorage)
+  // Never expire local session on app reopen — keep until explicit Sign out
+  // Touch last_active in localStorage so reopen always has a fresh stamp
+  try {
+    if (!s.lastActiveAt || (Date.now() - (s.lastActiveAt || 0) > 30000)) {
+      s.lastActiveAt = Date.now();
+      localStorage.setItem("ts_session", JSON.stringify(s));
+    }
+  } catch (e) {}
   try {
     const key = "ts_sess_touch";
     const last = parseInt(sessionStorage.getItem(key) || "0", 10);
@@ -336,7 +343,19 @@ function tsWhoami() {
       }).catch(() => {});
     }
   } catch (e) {}
-  return { ok: true, email: s.email, role: s.role, name: s.name, roles: s.roles || [s.role], uniform: !!s.uniform };
+  const roles = Array.isArray(s.roles) && s.roles.length ? s.roles : [s.role];
+  const email = String(s.email || "").toLowerCase();
+  const uniform = !!s.uniform || email === String(TS_MASTER_EMAIL || "orbitbills@techserenia.com").toLowerCase();
+  return { ok: true, email: s.email, role: s.role, name: s.name, roles: roles, uniform: uniform };
+}
+
+function tsRememberPanel(href) {
+  try {
+    if (href) localStorage.setItem("ts_last_panel", href);
+  } catch (e) {}
+}
+function tsLastPanel() {
+  try { return localStorage.getItem("ts_last_panel") || ""; } catch (e) { return ""; }
 }
 function tsRequireRole(...roles) {
   const s = tsWhoami();

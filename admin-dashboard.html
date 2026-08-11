@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script>
+(function(){
+  try{ document.documentElement.classList.add("orbit-booting"); }catch(e){}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
@@ -577,10 +584,16 @@
   }
 }
 </style>
+
+/* Hide UI until ready — prevents content flash before skeleton */
+html.orbit-booting body > *:not(#orbitBoot){visibility:hidden!important;}
+html.orbit-booting #orbitBoot{display:flex!important;visibility:visible!important;pointer-events:auto!important;}
+html:not(.orbit-booting) #orbitBoot{display:none!important;}
+
 </head>
 <body>
 
-<div id="orbitBoot" class="show" aria-hidden="true">
+<div id="orbitBoot" class="show" style="display:flex!important;position:fixed;inset:0;z-index:999999;background:#f5f8fe;flex-direction:column;padding:20px 16px;" aria-hidden="true">
   <div class="sk-grid">
     <div class="sk-tile"></div><div class="sk-tile" style="animation-delay:.12s"></div>
     <div class="sk-tile" style="animation-delay:.24s"></div><div class="sk-tile" style="animation-delay:.36s"></div>
@@ -2264,7 +2277,6 @@ function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 async function api(path, options){
   options = options || {};
   if (!tsRequireRole("admin", "billing", "accountant")) {
-    window.location.href = "signin.html";
     return { ok: false, error: "Not signed in." };
   }
   try {
@@ -4825,9 +4837,14 @@ document.getElementById("invoiceToFilter")?.addEventListener("change", () => ren
     String(who.email || "").toLowerCase() === "orbitbills@techserenia.com"
   );
   if (!canAdmin) {
-    setTimeout(function(){ window.location.href = "signin.html"; }, 80);
+    try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(e){}
+    setTimeout(function(){ window.location.replace("signin.html"); }, 80);
     return;
   }
+  try{
+    if(typeof tsRememberPanel === "function") tsRememberPanel("admin-dashboard.html");
+    else localStorage.setItem("ts_last_panel","admin-dashboard.html");
+  }catch(e){}
   try { renderOverview(); } catch (e) { console.warn(e); }
   try { renderLowStock(); } catch (e) { console.warn(e); }
   tsOnSync(() => {
@@ -6703,62 +6720,39 @@ renderOverview();
 </script>
 
 <script src="orbit-native.js"></script>
+
 <script>
 (function orbitEntrySkeleton(){
   function hideBoot(){
     try{
+      document.documentElement.classList.remove("orbit-booting");
+      document.documentElement.classList.add("orbit-ready");
       var el = document.getElementById("orbitBoot");
-      if(!el) return;
-      el.classList.remove("show");
-      el.style.setProperty("display","none","important");
-      el.style.setProperty("pointer-events","none","important");
-      el.setAttribute("aria-hidden","true");
-      if(el.parentNode) try{ el.parentNode.removeChild(el); }catch(e){}
-    }catch(e){}
+      if(el){
+        el.classList.remove("show");
+        el.style.setProperty("display","none","important");
+        el.style.setProperty("pointer-events","none","important");
+        if(el.parentNode) try{ el.parentNode.removeChild(el); }catch(e){}
+      }
+    }catch(e){
+      try{ document.documentElement.classList.remove("orbit-booting"); }catch(e2){}
+    }
   }
   window.__orbitHideBoot = hideBoot;
   var t0 = Date.now();
-  function finish(){
-    var wait = Math.max(0, 300 - (Date.now() - t0));
-    setTimeout(hideBoot, wait);
-  }
+  function finish(){ setTimeout(hideBoot, Math.max(0, 280 - (Date.now()-t0))); }
   async function warm(){
     try{
       if(typeof tsSeedDefaults === "function"){
-        await Promise.race([tsSeedDefaults().catch(function(){}), new Promise(function(r){setTimeout(r,600);})]);
+        await Promise.race([tsSeedDefaults().catch(function(){}), new Promise(function(r){setTimeout(r,500);})]);
       }
     }catch(e){}
     finish();
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", warm);
   else warm();
-  window.addEventListener("load", function(){ setTimeout(hideBoot, 30); });
-  setTimeout(hideBoot, 1200); // hard max — never stuck
-})();
-</script>
-<script>
-(function orbitPanelSwitch(){
-  function bind(){
-    var btn = document.getElementById("panelSwitchBtn");
-    var menu = document.getElementById("panelSwitchMenu");
-    if(!btn || !menu || btn.dataset.bound) return;
-    btn.dataset.bound = "1";
-    btn.addEventListener("click", function(e){
-      e.preventDefault(); e.stopPropagation();
-      var open = menu.hasAttribute("hidden");
-      if(open){ menu.removeAttribute("hidden"); btn.setAttribute("aria-expanded","true"); }
-      else { menu.setAttribute("hidden",""); btn.setAttribute("aria-expanded","false"); }
-    });
-    // Navigate without re-login — session stays in localStorage
-    menu.querySelectorAll("a.panel-switch-item").forEach(function(a){
-      a.addEventListener("click", function(e){
-        // allow normal navigation; session already present
-        try{ if(window.__orbitHideBoot) window.__orbitHideBoot(); }catch(err){}
-      });
-    });
-  }
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
-  else bind();
+  window.addEventListener("load", function(){ setTimeout(hideBoot, 20); });
+  setTimeout(hideBoot, 1000);
 })();
 </script>
 </body>

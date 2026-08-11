@@ -117,6 +117,48 @@
   </div>
 </div>
 <script src="Db.js"></script>
+
+<script>
+(function orbitAutoResume(){
+  try{
+    var raw = localStorage.getItem("ts_session");
+    if(!raw) return;
+    var s = JSON.parse(raw);
+    if(!s || !s.email) return;
+    // Already signed in — skip login screen, go to last panel or picker
+    var last = "";
+    try{ last = localStorage.getItem("ts_last_panel") || ""; }catch(e){}
+    var email = String(s.email||"").toLowerCase();
+    var uniform = !!s.uniform || email === "orbitbills@techserenia.com";
+    var role = s.role || "";
+    function go(href){ window.location.replace(href); }
+    // Prefer last panel if set
+    if(last && /billing|admin-dashboard|accountant-dashboard/.test(last)){
+      go(last); return;
+    }
+    if(uniform){
+      // show picker instead of forcing login again
+      document.addEventListener("DOMContentLoaded", function(){
+        var form = document.getElementById("loginForm");
+        if(form) form.style.display = "none";
+        var picker = document.getElementById("panelPicker");
+        if(picker){
+          picker.style.display = "block";
+          var msg = document.getElementById("loginMsg");
+          if(msg){ msg.textContent = "Welcome back — pick a panel"; msg.className = "form-msg success"; }
+        } else {
+          go("/billing.html");
+        }
+      });
+      return;
+    }
+    if(role === "admin") go("/admin-dashboard.html");
+    else if(role === "accountant") go("/accountant-dashboard.html");
+    else go("/billing.html");
+  }catch(e){}
+})();
+</script>
+
 <script>
   document.getElementById("togglePassword")?.addEventListener("click", function(){
     var input = document.getElementById("loginPassword");
@@ -225,8 +267,13 @@
   });
   document.querySelectorAll("#panelPicker [data-go]").forEach(function(btn){
     btn.addEventListener("click", function(){
+      var href = btn.getAttribute("data-go");
+      try{
+        if(typeof tsRememberPanel === "function") tsRememberPanel(href);
+        else localStorage.setItem("ts_last_panel", href);
+      }catch(e){}
       showBoot();
-      window.location.href = btn.getAttribute("data-go");
+      window.location.replace(href);
     });
   });
   // Prefill master credentials for convenience
