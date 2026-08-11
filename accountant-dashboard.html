@@ -19,8 +19,11 @@
 body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--blue-tint-2);line-height:1.45}
 h1,h2,h3{font-family:'Space Grotesk',sans-serif}
 .layout{display:flex;min-height:100vh}
-.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
-.brand{padding:0 8px 20px;display:flex;align-items:center}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.sidebar-logo-fixed{display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:16px 14px 12px;border-bottom:1px solid var(--border);background:#fff}
+.sidebar-logo-fixed img{height:36px;width:auto;display:block;object-fit:contain}
+.sidebar-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 20px;display:flex;flex-direction:column}
+.brand{padding:0 8px 20px;display:none;align-items:center}
 .brand img{height:36px;width:auto;display:block}
 .nav-item{display:block;width:100%;text-align:left;padding:10px 12px;border:0;background:none;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--slate);cursor:pointer;margin-bottom:2px}
 .nav-item:hover{background:var(--blue-tint);color:var(--blue-deep)}
@@ -52,8 +55,60 @@ td{padding:9px 10px;border-bottom:1px solid var(--border)}
 .msg{font-size:13px;margin-top:8px}.msg.ok{color:var(--green)}.msg.err{color:var(--red)}
 .check-list{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
 .check-list label{display:flex;gap:8px;align-items:flex-start}
-@media(max-width:900px){.layout{flex-direction:column}.sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;gap:4px}.brand{width:100%}.stat-grid{grid-template-columns:1fr 1fr}.main{padding:16px}}
-@media print{.sidebar,.toolbar .btn,.no-print{display:none!important}.main{padding:0;max-width:none}.panel.active{display:block!important}body{background:#fff}}
+.mobile-bar{display:none}
+.overlay-scrim{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:510}
+.sidebar-logo-fixed{display:none}
+.sidebar-scroll{display:contents}
+.hamburger{border:1px solid var(--border);background:#fff;border-radius:9px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+@media(max-width:900px){
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column;padding-top:0}
+  .mobile-bar{
+    display:flex!important;position:fixed;top:0;left:0;right:0;z-index:500;
+    padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top,0px));
+    min-height:calc(48px + env(safe-area-inset-top,0px));
+    align-items:center;justify-content:space-between;
+    background:#fff;border-bottom:1px solid var(--border);box-sizing:border-box
+  }
+  .mobile-bar img{height:30px;width:auto}
+  .hamburger{width:44px;height:44px;border-radius:11px}
+  .layout{
+    flex-direction:column;flex:1;min-height:0;overflow:hidden;
+    margin-top:calc(52px + env(safe-area-inset-top,0px));
+    height:calc(100dvh - 52px - env(safe-area-inset-top,0px))
+  }
+  .sidebar{display:none}
+  .sidebar.mobile-open{
+    display:flex!important;flex-direction:column;
+    position:fixed!important;top:0;left:0;bottom:0;
+    width:min(300px,88vw)!important;z-index:520;height:100%!important;
+    padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));
+    padding-top:max(0px,env(safe-area-inset-top,0px));
+    box-shadow:8px 0 28px rgba(15,23,42,.15);overflow:hidden!important;background:#fff
+  }
+  .sidebar.mobile-open .brand{display:none!important}
+  .sidebar.mobile-open .sidebar-logo-fixed{
+    display:flex!important;align-items:center;justify-content:center;
+    flex-shrink:0;padding:12px 8px;padding-top:max(12px,env(safe-area-inset-top,0px));
+    border-bottom:1px solid var(--border);background:#fff
+  }
+  .sidebar.mobile-open .sidebar-logo-fixed img{height:36px;width:auto}
+  .sidebar.mobile-open .sidebar-scroll{
+    display:flex!important;flex-direction:column;flex:1 1 auto;min-height:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px 0
+  }
+  .overlay-scrim.open{display:block!important}
+  .main{
+    flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:16px 14px calc(28px + env(safe-area-inset-bottom,0px))
+  }
+  .stat-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .page-head h1{font-size:20px}
+  .toolbar{gap:8px}
+  .toolbar input,.toolbar select{min-height:40px;font-size:16px}
+  .btn,.btn-sm{min-height:40px}
+}
+@media print{.sidebar,.toolbar .btn,.no-print,.mobile-bar,.overlay-scrim{display:none!important}.main{padding:0;max-width:none}.panel.active{display:block!important}body{background:#fff}}
 
 
 #orbitBoot{
@@ -173,8 +228,17 @@ td{padding:9px 10px;border-bottom:1px solid var(--border)}
 
 
 
+<div class="mobile-bar">
+  <div class="brand" style="padding:0"><img src="logo.png" alt="TechSerenia" onerror="this.style.display='none'"></div>
+  <button class="hamburger" id="hamburgerBtn" type="button" aria-label="Open menu">&#9776;</button>
+</div>
+<div class="overlay-scrim" id="mobileScrim"></div>
 <div class="layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo-fixed">
+      <img src="logo.png" alt="TechSerenia" onerror="this.style.display='none'">
+    </div>
+    <div class="sidebar-scroll">
     <div class="brand">
       <img src="logo.png" alt="TechSerenia" onerror="this.style.display='none'">
     </div>
@@ -195,7 +259,8 @@ td{padding:9px 10px;border-bottom:1px solid var(--border)}
           <a class="panel-switch-item" href="accountant-dashboard.html">Accountant</a>
         </div>
       </div>
-      <button class="nav-item" type="button" id="signOutBtn" style="color:var(--blue-deep)">PLACEHOLDER_SO</button>
+      <button class="nav-item" type="button" id="signOutBtn" style="color:var(--blue-deep)">Sign out</button>
+    </div>
     </div>
   </aside>
   <main class="main">
@@ -549,6 +614,50 @@ document.getElementById("btnExportB2cCsv").addEventListener("click", () => {
           if(typeof tsRememberPanel === "function") tsRememberPanel(href);
           else localStorage.setItem("ts_last_panel", href);
         }catch(err){}
+      });
+    });
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
+  setTimeout(bind, 300);
+})();
+/* Mobile hamburger for accountant */
+(function bindAcctHamburger(){
+  function openNav(){
+    var side = document.getElementById("sidebar");
+    var scrim = document.getElementById("mobileScrim");
+    if(side) side.classList.add("mobile-open");
+    if(scrim) scrim.classList.add("open");
+  }
+  function closeNav(){
+    var side = document.getElementById("sidebar");
+    var scrim = document.getElementById("mobileScrim");
+    if(side) side.classList.remove("mobile-open");
+    if(scrim) scrim.classList.remove("open");
+  }
+  function bind(){
+    var btn = document.getElementById("hamburgerBtn");
+    var scrim = document.getElementById("mobileScrim");
+    if(btn && !btn.dataset.bound){
+      btn.dataset.bound = "1";
+      function toggle(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
+        var side = document.getElementById("sidebar");
+        if(side && side.classList.contains("mobile-open")) closeNav();
+        else openNav();
+      }
+      btn.addEventListener("click", toggle, true);
+      btn.addEventListener("touchend", function(e){ toggle(e); }, {passive:false});
+    }
+    if(scrim && !scrim.dataset.bound){
+      scrim.dataset.bound = "1";
+      scrim.addEventListener("click", closeNav);
+    }
+    document.querySelectorAll(".nav-item[data-panel]").forEach(function(n){
+      if(n.dataset.closeBound) return;
+      n.dataset.closeBound = "1";
+      n.addEventListener("click", function(){
+        if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeNav();
       });
     });
   }

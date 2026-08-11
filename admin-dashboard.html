@@ -39,8 +39,17 @@
   /* ---------- Sidebar ---------- */
   .sidebar{
     width:236px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);
-    display:flex;flex-direction:column;padding:22px 16px;position:sticky;top:0;height:100vh;
-    overflow-y:auto;
+    display:flex;flex-direction:column;padding:0;position:sticky;top:0;height:100vh;
+    overflow:hidden;
+  }
+  .sidebar-logo-fixed{
+    flex-shrink:0;padding:18px 16px 12px;border-bottom:1px solid var(--border);
+    background:#fff;display:flex;align-items:center;justify-content:center;
+  }
+  .sidebar-logo-fixed img{height:36px;width:auto;display:block;object-fit:contain;}
+  .sidebar-scroll{
+    flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:12px 16px 22px;display:flex;flex-direction:column;
   }
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;padding:0 8px 24px;}
   .brand img{height:34px;width:auto;border-radius:8px;object-fit:contain;flex-shrink:0;}
@@ -362,12 +371,26 @@
       display:flex!important;flex-direction:column;
       position:fixed!important;top:0;left:0;bottom:0;
       width:min(300px,88vw)!important;z-index:520!important;height:100%!important;
-      padding:12px 10px calc(16px + env(safe-area-inset-bottom,0px));
-      padding-top:max(12px, env(safe-area-inset-top, 0px));
+      padding:0 0 calc(16px + env(safe-area-inset-bottom,0px));
+      padding-top:max(0px, env(safe-area-inset-top, 0px));
       box-shadow:8px 0 28px rgba(15,23,42,.15);
-      overflow-y:auto;-webkit-overflow-scrolling:touch;
+      overflow:hidden!important;
     }
-    .sidebar.mobile-open .brand{display:none;}
+    .sidebar.mobile-open .brand{display:none!important;}
+    .sidebar.mobile-open .sidebar-logo-fixed{
+      display:flex!important;
+      padding-top:max(12px, env(safe-area-inset-top, 0px));
+      position:sticky;top:0;z-index:2;
+    }
+    .sidebar.mobile-open .sidebar-scroll{
+      flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+      padding:8px 10px 0;
+    }
+    #panelCloseFloat{
+      display:none;
+      top:calc(52px + env(safe-area-inset-top, 0px) + 8px);
+    }
+    body.has-panel-open #panelCloseFloat{display:inline-flex!important;}
     .main{
       flex:1 1 auto!important;
       min-height:0!important;
@@ -559,13 +582,37 @@
   .panel-switch-item:active,.panel-switch-item:hover{background:var(--blue-tint,#eaf1fc);color:var(--blue-deep,#0b3d91);}
   .panel-close-x{
     width:36px;height:36px;border-radius:10px;border:1px solid var(--border,#dfe7f5);
-    background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
-    font-family:inherit;padding:0;
+    background:#fff;color:#64748b;font-size:22px;line-height:1;cursor:pointer;
+    display:none;align-items:center;justify-content:center;flex-shrink:0;
+    font-family:inherit;padding:0;box-shadow:0 1px 4px rgba(15,23,42,.08);
   }
   .panel-close-x:hover,.panel-close-x:active{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
   .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
   .page-head > div:first-child{flex:1;min-width:0;}
+  /* Floating X below mobile bar — right side */
+  #panelCloseFloat{
+    display:none;
+    position:fixed;
+    right:12px;
+    z-index:510;
+    width:40px;height:40px;border-radius:11px;
+    border:1px solid var(--border,#dfe7f5);
+    background:#fff;color:#64748b;font-size:22px;line-height:1;
+    align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(15,23,42,.12);
+    cursor:pointer;padding:0;font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #panelCloseFloat:active{background:#fef2f2;color:#b91c1c;}
+  .sidebar-logo-fixed{
+    flex-shrink:0;
+    padding:8px 8px 12px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sidebar-logo-fixed img{height:36px;width:auto;display:block;object-fit:contain;}
+  .sidebar-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
 </style>
 
@@ -660,11 +707,16 @@
   <div class="brand"><img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'"></div>
   <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">&#9776;</button>
 </div>
+<button type="button" id="panelCloseFloat" aria-label="Close screen" title="Close">×</button>
 <div class="overlay-scrim" id="mobileScrim"></div>
 
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <div class="brand">
+    <div class="sidebar-logo-fixed">
+      <img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'">
+    </div>
+    <div class="sidebar-scroll">
+    <div class="brand" style="display:none">
       <img src="logo.png" alt="TechSerenia logo" onerror="this.style.display='none'">
     </div>
     <button class="nav-item active" data-panel="overview"><span class="nav-icon">OV</span>Overview</button>
@@ -746,6 +798,7 @@
         <a class="mm-brand-link" href="aboutus.html">About us</a>
       </div>
     </div>
+    </div><!-- /.sidebar-scroll -->
   </aside>
 
   <main class="main">
@@ -2533,8 +2586,18 @@ function closeMobileNav(){
   else bind();
   setTimeout(bind, 300);
 })();
-/* X close on every admin screen → go back to Overview */
+/* X close — fixed under top bar on the right; goes back to Overview */
 (function bindPanelCloseX(){
+  function isOverviewActive(){
+    var ov = document.getElementById("panel-overview");
+    return !!(ov && ov.classList.contains("active"));
+  }
+  function syncFloat(){
+    try{
+      if(isOverviewActive()) document.body.classList.remove("has-panel-open");
+      else document.body.classList.add("has-panel-open");
+    }catch(e){}
+  }
   function goOverview(){
     var overviewBtn = document.querySelector('.nav-item[data-panel="overview"]');
     if(overviewBtn) overviewBtn.click();
@@ -2545,38 +2608,31 @@ function closeMobileNav(){
       document.querySelectorAll(".nav-item[data-panel]").forEach(function(b){ b.classList.remove("active"); });
       if(overviewBtn) overviewBtn.classList.add("active");
     }
+    document.body.classList.remove("has-panel-open");
     try{ if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav(); }catch(e){}
   }
-  function inject(){
-    document.querySelectorAll("section.panel").forEach(function(sec){
-      if(sec.id === "panel-overview") return;
-      if(sec.querySelector(".panel-close-x")) return;
-      var head = sec.querySelector(".page-head");
-      if(!head){
-        head = document.createElement("div");
-        head.className = "page-head";
-        sec.insertBefore(head, sec.firstChild);
-      }
-      var x = document.createElement("button");
-      x.type = "button";
-      x.className = "panel-close-x";
-      x.setAttribute("aria-label","Close screen");
-      x.title = "Close";
-      x.textContent = "×";
-      x.addEventListener("click", function(e){
+  function bind(){
+    var btn = document.getElementById("panelCloseFloat");
+    if(btn && !btn.dataset.bound){
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", function(e){
         try{ e.preventDefault(); e.stopPropagation(); }catch(err){}
         goOverview();
       });
-      head.appendChild(x);
-    });
+    }
+    syncFloat();
   }
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
-  else inject();
-  setTimeout(inject, 400);
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind);
+  else bind();
+  setTimeout(bind, 300);
+  window.__orbitSyncPanelClose = syncFloat;
 })();
 document.querySelectorAll(".nav-item[data-panel]").forEach(function(btn){
   btn.addEventListener("click", function(){
     if(window.matchMedia && window.matchMedia("(max-width:900px)").matches) closeMobileNav();
+    setTimeout(function(){
+      try{ if(window.__orbitSyncPanelClose) window.__orbitSyncPanelClose(); }catch(e){}
+    }, 30);
   });
 });
 
